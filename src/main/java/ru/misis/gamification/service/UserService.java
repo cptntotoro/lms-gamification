@@ -1,0 +1,35 @@
+package ru.misis.gamification.service;
+
+import ru.misis.gamification.exception.UserNotFoundException;
+import ru.misis.gamification.model.entity.User;
+
+/**
+ * Сервис управления пользователями
+ */
+public interface UserService {
+
+    /**
+     * Создать пользователя, если его не существует
+     *
+     * @param userId Идентификатор пользователя из LMS
+     * @return Пользователь
+     */
+    User createIfNotExists(String userId);
+
+    /**
+     * Получить пользователя
+     *
+     * @param userId Идентификатор пользователя из LMS
+     * @return Пользователь
+     * @throws UserNotFoundException
+     */
+    User get(String userId) throws UserNotFoundException;
+
+    /**
+     * Обновить пользователя
+     *
+     * @param user Пользователь
+     * @return Пользователь
+     */
+    User update(User user);
+}
