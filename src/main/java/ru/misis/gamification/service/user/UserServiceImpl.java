@@ -1,4 +1,4 @@
-package ru.misis.gamification.service;
+package ru.misis.gamification.service.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
 
                     User saved = userRepository.save(newUser);
                     log.info("Создан новый пользователь: userId={}, id={}",
-                            userId, saved.getId());
+                            userId, saved.getUuid());
                     return saved;
                 });
     }
@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User update(User user) {
-        if (user.getId() == null) {
+        if (user.getUuid() == null) {
             log.error("Попытка обновить пользователя без ID: userId={}", user.getUserId());
             throw new IllegalArgumentException("Нельзя обновлять пользователя без внутреннего ID");
         }

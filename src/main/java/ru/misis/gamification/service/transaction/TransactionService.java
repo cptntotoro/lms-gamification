@@ -1,4 +1,4 @@
-package ru.misis.gamification.service;
+package ru.misis.gamification.service.transaction;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -21,7 +21,7 @@ public interface TransactionService {
     boolean isEventTransactionExists(String eventId);
 
     /**
-     * Сохранить транзакцию, если событие с таким eventId ещё не обрабатывалось.
+     * Сохранить транзакцию, если событие с таким {@link Transaction#getEventId()} ещё не обрабатывалось
      *
      * @param transaction Транзакция
      * @return Транзакция
@@ -30,5 +30,12 @@ public interface TransactionService {
      */
     Transaction saveIfNotExists(Transaction transaction) throws DuplicateEventException;
 
+    /**
+     * Получить страницу транзакции по идентификатору пользователя из LMS
+     *
+     * @param userId Идентификатор пользователя из LMS
+     * @param pageable Параметры пагинации и сортировки
+     * @return Страница транзакций
+     */
     Page<Transaction> getTransactionsByUserId(String userId, Pageable pageable);
 }

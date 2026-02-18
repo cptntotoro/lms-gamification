@@ -1,5 +1,6 @@
 package ru.misis.gamification.service;
 
+import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,8 @@ import ru.misis.gamification.exception.DuplicateEventException;
 import ru.misis.gamification.model.admin.Transaction;
 import ru.misis.gamification.model.entity.LmsEvent;
 import ru.misis.gamification.model.entity.User;
+import ru.misis.gamification.service.transaction.TransactionService;
+import ru.misis.gamification.service.user.UserService;
 
 /**
  * Сервис обработки событий от LMS
@@ -32,45 +35,49 @@ public class EventManagementServiceImpl implements EventManagementService {
     @Override
     @Transactional
     public LmsEventResponsetDto process(LmsEvent lmsEvent) {
-        String eventId = lmsEvent.getEventId();
-        String userId = lmsEvent.getUserId();
-        Integer pointsEarned = lmsEvent.getPointsEarned();
-
-        if (pointsEarned == null || pointsEarned <= 0) {
-            log.warn("Получено событие с некорректным количеством очков: userId={}, eventId={}, points={}",
-                    userId, eventId, pointsEarned);
-            return LmsEventResponsetDto.error("Некорректное количество начисляемых очков");
+        if (lmsEvent == null) {
+            log.warn("Получен null LmsEvent");
+            return LmsEventResponsetDto.error("Событие не может быть null");
         }
 
-        log.info("Обработка события от LMS → userId={}, eventId={}, points={}", userId, eventId, pointsEarned);
+        String userId = lmsEvent.getUserId();
+        String eventId = lmsEvent.getEventId();
+        Integer points = lmsEvent.getPointsEarned();
+
+        if (StringUtils.isBlank(userId)) {
+            return LmsEventResponsetDto.error("Идентификатор пользователя обязателен");
+        }
+        if (StringUtils.isBlank(eventId)) {
+            return LmsEventResponsetDto.error("Идентификатор события обязателен");
+        }
+        if (points == null || points <= 0) {
+            log.warn("Некорректное количество очков: userId={}, eventId={}, points={}", userId, eventId, points);
+            return LmsEventResponsetDto.error("Количество начисляемых очков должно быть положительным числом");
+        }
+
+        log.info("Начата обработка события: userId={}, eventId={}, points={}", userId, eventId, points);
 
         User user = userService.createIfNotExists(userId);
-        log.debug("Пользователь получен/создан: id={}, totalPoints до={}", user.getId(), user.getTotalPoints());
 
-        Transaction transaction = Transaction.builder()
+        Transaction tx = Transaction.builder()
                 .userId(userId)
                 .eventId(eventId)
-                .pointsEarned(pointsEarned)
+                .pointsEarned(points)
                 .build();
 
-        Transaction savedTransaction;
+        Transaction savedTx;
         try {
-            savedTransaction = transactionService.saveIfNotExists(transaction);
-            log.info("Транзакция успешно сохранена: transactionId={}, eventId={}",
-                    savedTransaction.getId(), eventId);
-
+            savedTx = transactionService.saveIfNotExists(tx);
         } catch (DuplicateEventException | DataIntegrityViolationException e) {
-            log.info("Событие уже было обработано ранее (дубликат): eventId={}", eventId);
+            log.info("Дубликат события: eventId={}", eventId);
             return LmsEventResponsetDto.duplicate(eventId);
         } catch (Exception e) {
-            log.error("Ошибка при сохранении транзакции: userId={}, eventId={}, points={}",
-                    userId, eventId, pointsEarned, e);
-            return LmsEventResponsetDto.error("Внутренняя ошибка при сохранении транзакции");
+            log.error("Ошибка сохранения транзакции", e);
+            return LmsEventResponsetDto.error("Внутренняя ошибка при сохранении");
         }
 
-        // Только после успешного сохранения транзакции обновляем пользователя
         int oldPoints = user.getTotalPoints();
-        user.setTotalPoints(oldPoints + pointsEarned);
+        user.setTotalPoints(oldPoints + points);
         user.recalculateLevel();
 
         User updatedUser = userService.update(user);
@@ -80,10 +87,10 @@ public class EventManagementServiceImpl implements EventManagementService {
 
         return LmsEventResponsetDto.success(
                 userId,
-                pointsEarned,
+                points,
                 updatedUser.getTotalPoints(),
                 eventId,
-                savedTransaction.getId()
+                savedTx.getUuid()
         );
     }
 }

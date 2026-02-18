@@ -1,6 +1,7 @@
 package ru.misis.gamification.dto.lms.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,10 +9,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Ответ LMS-системе на обработанное событие.
+ * DTO ответа LMS-системе на обработанное событие.
  * Содержит статус обработки и актуальные данные о прогрессе пользователя
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class LmsEventResponsetDto {
@@ -68,34 +70,44 @@ public class LmsEventResponsetDto {
 
     public static LmsEventResponsetDto success(String userId, Integer pointsEarned,
                                                Integer totalPoints, String eventId,
-//                                               Integer newLevel,
-//                                               Boolean levelUp,
                                                UUID transactionId) {
-        LmsEventResponsetDto response = new LmsEventResponsetDto();
-        response.setStatus("success");
-        response.setUserId(userId);
-        response.setPointsEarned(pointsEarned);
-        response.setTotalPoints(totalPoints);
-//        response.setNewLevel(newLevel);
-//        response.setLevelUp(levelUp);
-        response.setTransactionId(transactionId);
-        response.setProcessedAt(LocalDateTime.now());
-        return response;
+        return LmsEventResponsetDto.builder()
+                .status("success")
+                .userId(userId)
+                .eventId(eventId)
+                .pointsEarned(pointsEarned)
+                .totalPoints(totalPoints)
+                .transactionId(transactionId)
+                .processedAt(LocalDateTime.now())
+                .build();
     }
 
     public static LmsEventResponsetDto duplicate(String eventId) {
-        LmsEventResponsetDto response = new LmsEventResponsetDto();
-        response.setStatus("duplicate");
-        response.setMessage("Событие с ID " + eventId + " уже обработано");
-        response.setProcessedAt(LocalDateTime.now());
-        return response;
+        return LmsEventResponsetDto.builder()
+                .status("duplicate")
+                .eventId(eventId)
+                .message("Событие с ID " + eventId + " уже обработано ранее")
+                .processedAt(LocalDateTime.now())
+                .build();
     }
 
     public static LmsEventResponsetDto error(String message) {
-        LmsEventResponsetDto dto = new LmsEventResponsetDto();
-        dto.setStatus("error");
-        dto.setMessage(message != null ? message : "Внутренняя ошибка обработки события");
-        dto.setProcessedAt(LocalDateTime.now());
-        return dto;
+        return LmsEventResponsetDto.builder()
+                .status("error")
+                .message(message != null ? message : "Внутренняя ошибка обработки события")
+                .processedAt(LocalDateTime.now())
+                .build();
+    }
+
+    public boolean isSuccess() {
+        return "success".equals(status);
+    }
+
+    public boolean isDuplicate() {
+        return "duplicate".equals(status);
+    }
+
+    public boolean isError() {
+        return "error".equals(status);
     }
 }

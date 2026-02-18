@@ -2,8 +2,8 @@ package ru.misis.gamification.mapper;
 
 import org.mapstruct.Mapper;
 import org.springframework.data.domain.Page;
-import ru.misis.gamification.dto.admin.TransactionPageDto;
 import ru.misis.gamification.dto.admin.response.TransactionItemDto;
+import ru.misis.gamification.dto.admin.response.TransactionPageDto;
 import ru.misis.gamification.model.admin.Transaction;
 
 import java.util.stream.Collectors;
@@ -15,18 +15,18 @@ import java.util.stream.Collectors;
 public interface TransactionMapper {
 
     /**
-     * Смаппить сущность транзакции в DTO для ответа клиенту
+     * Смаппить сущность транзакции в DTO транзакции для администратора
      *
-     * @param transaction сущность из базы данных
-     * @return DTO для передачи в API
+     * @param transaction Транзакция
+     * @return DTO транзакции для администратора
      */
     TransactionItemDto toDto(Transaction transaction);
 
     /**
-     * Смаппить страницу транзакций в страничный DTO-ответ
+     * Смаппить страницу транзакций в DTO страницы транзакций для администратора
      *
-     * @param page страница из Spring Data
-     * @return DTO с содержимым страницы и метаинформацией
+     * @param page Страница транзакций
+     * @return DTO страницы транзакций для администратора
      */
     default TransactionPageDto toPageDto(Page<Transaction> page) {
         return TransactionPageDto.builder()

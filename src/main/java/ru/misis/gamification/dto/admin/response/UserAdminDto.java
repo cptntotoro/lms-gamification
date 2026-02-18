@@ -9,18 +9,18 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * DTO транзакции для администратора
+ * DTO пользователя для администратора
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionItemDto {
+public class UserAdminDto {
 
     /**
      * Идентификатор записи в таблице
      */
-    private UUID id;
+    private UUID uuid;
 
     /**
      * Идентификатор пользователя из LMS
@@ -28,22 +28,22 @@ public class TransactionItemDto {
     private String userId;
 
     /**
-     * Идентификатор события из LMS
+     * Общее количество очков
      */
-    private String eventId;
+    private Integer totalPoints;
 
     /**
-     * Количество начисленных очков
+     * Уровень
      */
-    private Integer pointsEarned;
-
-    /**
-     * Описание события
-     */
-    private String description;
+    private Integer level;
 
     /**
      * Дата создания записи
      */
     private LocalDateTime createdAt;
+
+    /**
+     * Дата обновления записи
+     */
+    private LocalDateTime updatedAt;
 }

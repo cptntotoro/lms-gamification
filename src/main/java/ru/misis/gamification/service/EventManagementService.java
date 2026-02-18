@@ -15,7 +15,7 @@ public interface EventManagementService {
      * затем обновляется профиль пользователя.
      *
      * @param lmsEvent Событие из LMS
-     * @return Ответ на событие из LMS
+     * @return DTO ответа LMS-системе на обработанное событие
      */
     LmsEventResponsetDto process(LmsEvent lmsEvent);
 }

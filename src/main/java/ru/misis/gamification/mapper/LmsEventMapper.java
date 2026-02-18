@@ -11,9 +11,9 @@ import ru.misis.gamification.model.entity.LmsEvent;
 public interface LmsEventMapper {
 
     /**
-     * Смаппить запрос на событие из LMS в событие из LMS
+     * Смаппить DTO события из LMS в событие из LMS
      *
-     * @param lmsEventRequestDto Запрос на событие из LMS
+     * @param lmsEventRequestDto DTO события из LMS
      * @return Событие из LMS
      */
     LmsEvent lmsEventRequestDtotoLmsEvent(LmsEventRequestDto lmsEventRequestDto);
