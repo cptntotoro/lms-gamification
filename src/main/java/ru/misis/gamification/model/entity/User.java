@@ -31,8 +31,9 @@ public class User {
      * Идентификатор записи в таблице
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid DEFAULT gen_random_uuid()")
+    private UUID uuid;
 
     /**
      * Идентификатор пользователя из LMS
@@ -43,12 +44,14 @@ public class User {
     /**
      * Общее количество очков
      */
+    @Builder.Default
     @Column(name = "total_points", nullable = false)
     private Integer totalPoints = 0;
 
     /**
-     * Уровень пользователя
+     * Текущий уровень
      */
+    @Builder.Default
     @Column(name = "level", nullable = false)
     private Integer level = 1;
 

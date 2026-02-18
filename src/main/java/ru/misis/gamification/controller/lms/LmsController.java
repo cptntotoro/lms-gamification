@@ -1,5 +1,6 @@
 package ru.misis.gamification.controller.lms;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,7 @@ public class LmsController {
     private final LmsEventMapper lmsEventMapper;
 
     @PostMapping
-    public ResponseEntity<LmsEventResponsetDto> sendUserEvent(@RequestBody LmsEventRequestDto dto) {
+    public ResponseEntity<LmsEventResponsetDto> processUserEvent(@RequestBody @Valid LmsEventRequestDto dto) {
         log.info("Получен запрос от LMS: userId={}, eventId={}, points={}",
                 dto.getUserId(), dto.getEventId(), dto.getPointsEarned());
 

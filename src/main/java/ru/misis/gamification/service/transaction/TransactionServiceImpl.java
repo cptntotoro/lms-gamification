@@ -1,4 +1,4 @@
-package ru.misis.gamification.service;
+package ru.misis.gamification.service.transaction;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,14 +39,14 @@ public class TransactionServiceImpl implements TransactionService {
 
         try {
             Transaction saved = transactionRepository.save(transaction);
-            log.info("Транзакция успешно сохранена: id={}, eventId={}", saved.getId(), eventId);
+            log.info("Транзакция успешно сохранена: id={}, eventId={}", saved.getUuid(), eventId);
             return saved;
         } catch (DataIntegrityViolationException e) {
             log.info("Обнаружен дубликат события при сохранении: eventId={}", eventId);
             throw new DuplicateEventException(eventId);
         } catch (Exception e) {
             log.error("Неожиданная ошибка при сохранении транзакции: eventId={}", eventId, e);
-            throw e; // пробрасываем дальше — будет обработано выше
+            throw e;
         }
     }
 

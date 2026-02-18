@@ -30,11 +30,12 @@ public class Transaction {
      * Идентификатор записи в таблице
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid DEFAULT gen_random_uuid()")
+    private UUID uuid;
 
     /**
-     * userId из LMS
+     * Идентификатор пользователя из LMS
      */
     @Column(name = "user_id", nullable = false, unique = true, length = 100)
     String userId;
@@ -42,7 +43,7 @@ public class Transaction {
     /**
      * Идентификатор события из LMS (защита от дублей)
      */
-    @Column(name = "event_id", nullable = false, unique = true, length = 255)
+    @Column(name = "event_id", nullable = false, unique = true)
     String eventId;
 
     /**
