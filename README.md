@@ -1,5 +1,7 @@
 # Геймификация образовательного процесса в LMS
 
+[![Coverage Status](https://coveralls.io/repos/github/cptntotoro/lms-gamification/badge.svg?branch=main)](https://coveralls.io/github/cptntotoro/lms-gamification?branch=main)
+
 [![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.4-brightgreen?style=for-the-badge&logo=spring)](https://spring.io/projects/spring-boot)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
