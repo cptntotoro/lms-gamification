@@ -37,7 +37,7 @@ public class Transaction {
     /**
      * Идентификатор пользователя из LMS
      */
-    @Column(name = "user_id", nullable = false, unique = true, length = 100)
+    @Column(name = "user_id", nullable = false, length = 100)
     String userId;
 
     /**
