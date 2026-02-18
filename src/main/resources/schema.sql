@@ -26,7 +26,7 @@ CREATE INDEX idx_users_level ON users (level DESC);
 CREATE TABLE transactions
 (
     uuid        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id     VARCHAR(100) NOT NULL UNIQUE,
+    user_id     VARCHAR(100) NOT NULL,
     event_id    VARCHAR(255) NOT NULL UNIQUE,
     points      INTEGER      NOT NULL CHECK (points > 0),
     description VARCHAR(500),
