@@ -1,5 +1,11 @@
 package ru.misis.gamification.controller.web;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +23,7 @@ import ru.misis.gamification.service.user.UserService;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "Widget API", description = "API для виджетов и фронтенда пользователей")
 public class WidgetController {
 
     /**
@@ -33,6 +40,16 @@ public class WidgetController {
      * Получить прогресс пользователя для виджета
      */
     @GetMapping("/{userId}/progress")
+    @Operation(
+            summary = "Получить прогресс пользователя для виджета",
+            description = "Возвращает текущий уровень, очки и базовую информацию для отображения в виджете"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Прогресс пользователя успешно получен",
+                    content = @Content(schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "400", description = "Некорректный userId")
+    })
     public ResponseEntity<UserDto> getUserProgress(@PathVariable String userId) {
         User user = userService.get(userId);
         UserDto userDto = userMapper.userToUserDto(user);

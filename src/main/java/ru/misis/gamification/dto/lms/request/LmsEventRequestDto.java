@@ -1,5 +1,6 @@
 package ru.misis.gamification.dto.lms.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,23 +15,28 @@ import ru.misis.gamification.model.admin.EventType;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Запрос от LMS на обработку события (начисление очков)")
 public class LmsEventRequestDto {
 
     /**
      * Идентификатор пользователя из LMS
      */
     @NotBlank(message = "userId не может быть пустым")
+    @Schema(description = "Идентификатор пользователя из LMS", example = "user-12345")
     private String userId;
 
     /**
      * Идентификатор события из LMS
      */
     @NotBlank(message = "userId не может быть пустым")
+    @Schema(description = "Уникальный идентификатор события из LMS (защита от дублей)",
+            example = "event-uuid-001")
     private String eventId;
 
     /**
      * Тип события {@link EventType#getTypeCode()}
      */
     @NotBlank(message = "eventType обязателен")
+    @Schema(description = "Код типа события (должен существовать в системе)", example = "quiz")
     private String eventType;
 }
