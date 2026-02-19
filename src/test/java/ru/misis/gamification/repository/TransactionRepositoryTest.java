@@ -52,31 +52,37 @@ class TransactionRepositoryTest {
     void findByUserIdOrderByCreatedAtDesc_shouldReturnSortedPage() {
         String userId = "lms-user-abc";
 
-        // Фиксированная базовая дата — чтобы избежать миллисекундных гонок
-        LocalDateTime baseTime = LocalDateTime.of(2026, 2, 18, 12, 0, 0);
+        // Фиксированная базовая дата + большая разница (часы)
+        LocalDateTime base = LocalDateTime.of(2026, 2, 18, 12, 0, 0);
 
         Transaction t1 = Transaction.builder()
                 .userId(userId)
                 .eventId("e1-" + UUID.randomUUID().toString().substring(0, 8))
                 .pointsEarned(50)
-                .createdAt(baseTime.minusDays(2))
+                .createdAt(base.minusHours(48))
                 .build();
 
         Transaction t2 = Transaction.builder()
                 .userId(userId)
                 .eventId("e2-" + UUID.randomUUID().toString().substring(0, 8))
                 .pointsEarned(100)
-                .createdAt(baseTime.minusDays(1))
+                .createdAt(base.minusHours(24))
                 .build();
 
         Transaction t3 = Transaction.builder()
                 .userId("other-user")
                 .eventId("e3-" + UUID.randomUUID().toString().substring(0, 8))
                 .pointsEarned(200)
-                .createdAt(baseTime)
+                .createdAt(base)
                 .build();
 
         transactionRepository.saveAll(List.of(t1, t2, t3));
+
+        // Для отладки — выведем реальные сохранённые даты
+        System.out.println("После сохранения:");
+        transactionRepository.findAll().forEach(tx ->
+                System.out.println(tx.getEventId() + " → " + tx.getCreatedAt())
+        );
 
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
 

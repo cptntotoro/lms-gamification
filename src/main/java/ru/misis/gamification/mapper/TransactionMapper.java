@@ -6,6 +6,7 @@ import ru.misis.gamification.dto.admin.response.TransactionItemDto;
 import ru.misis.gamification.dto.admin.response.TransactionPageDto;
 import ru.misis.gamification.model.admin.Transaction;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +30,18 @@ public interface TransactionMapper {
      * @return DTO страницы транзакций для администратора
      */
     default TransactionPageDto toPageDto(Page<Transaction> page) {
+        if (page == null) {
+            return TransactionPageDto.builder()
+                    .content(List.of())
+                    .pageNumber(0)
+                    .pageSize(0)
+                    .totalElements(0L)
+                    .totalPages(0)
+                    .hasNext(false)
+                    .hasPrevious(false)
+                    .build();
+        }
+
         return TransactionPageDto.builder()
                 .content(page.getContent().stream()
                         .map(this::toDto)
