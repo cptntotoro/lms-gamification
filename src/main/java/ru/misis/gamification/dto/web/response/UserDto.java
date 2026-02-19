@@ -21,4 +21,9 @@ public class UserDto {
      * Сумма очков
      */
     Integer totalPoints;
+
+    /**
+     * Текущий уровень
+     */
+    private Integer level;
 }
