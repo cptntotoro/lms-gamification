@@ -1,5 +1,11 @@
 package ru.misis.gamification.controller.admin;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -14,16 +20,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.admin.response.TransactionPageDto;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
+import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.mapper.TransactionMapper;
 import ru.misis.gamification.model.admin.Transaction;
 import ru.misis.gamification.service.transaction.TransactionService;
 import ru.misis.gamification.service.user.UserAdminService;
-import ru.misis.gamification.exception.UserNotFoundException;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
+@Tag(name = "Admin - Пользователи", description = "Административные операции с пользователями и их транзакциями")
 public class UserAdminController {
 
     /**
@@ -50,6 +57,16 @@ public class UserAdminController {
      * @param sortDir Направление сортировки: asc / desc (по умолчанию desc по дате)
      * @return Страница транзакций
      */
+    @Operation(
+            summary = "Получить историю транзакций пользователя",
+            description = "Возвращает пагинированный список транзакций для указанного пользователя с сортировкой по дате"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Список транзакций успешно получен",
+                    content = @Content(schema = @Schema(implementation = TransactionPageDto.class))),
+            @ApiResponse(responseCode = "400", description = "Некорректные параметры пагинации или сортировки"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
     @GetMapping("/{userId}/transactions")
     public ResponseEntity<TransactionPageDto> getUserTransactions(
             @PathVariable String userId,
@@ -73,13 +90,16 @@ public class UserAdminController {
      * @throws UserNotFoundException если пользователь не найден
      */
     @GetMapping("/{userId}")
-//    @Operation(summary = "Получение информации о пользователе по ID из LMS",
-//            description = "Возвращает базовую информацию о пользователе для админ-панели")
-//    @ApiResponses({
-//            @ApiResponse(responseCode = "200", description = "Пользователь найден"),
-//            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
-//            @ApiResponse(responseCode = "400", description = "Некорректный userId")
-//    })
+    @Operation(
+            summary = "Получить информацию о пользователе по ID из LMS",
+            description = "Возвращает полную информацию о пользователе для административной панели"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователь найден",
+                    content = @Content(schema = @Schema(implementation = UserAdminDto.class))),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "400", description = "Некорректный формат userId")
+    })
     public ResponseEntity<UserAdminDto> getUserById(@PathVariable String userId) {
         UserAdminDto dto = userAdminService.findByUserId(userId);
         return ResponseEntity.ok(dto);

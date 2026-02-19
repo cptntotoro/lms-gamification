@@ -1,5 +1,6 @@
 package ru.misis.gamification.dto.lms.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,61 +17,76 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Ответ LMS-системе после обработки события")
 public class LmsEventResponsetDto {
 
     /**
      * Идентификатор пользователя из LMS
      */
+    @Schema(description = "Идентификатор пользователя из LMS", example = "user-12345")
     private String userId;
 
     /**
      * Идентификатор события из LMS
      */
+    @Schema(description = "Идентификатор события из LMS", example = "event-uuid-001")
     private String eventId;
 
     /**
      * Название для отображения
      */
+    @Schema(description = "Отображаемое название типа события", example = "Квиз / Тест", nullable = true)
     private String displayName;
 
     /**
      * Статус события (success, duplicate, error)
      */
+    @Schema(description = "Статус обработки",
+            allowableValues = {"success", "duplicate", "error"},
+            example = "success")
     private String status;
 
     /**
      * Сообщение (опционально)
      */
+    @Schema(description = "Сообщение об ошибке или причине (при status = error/duplicate)",
+            example = "Событие уже обработано ранее", nullable = true)
     private String message;
 
     /**
      * Количество начисленных очков
      */
+    @Schema(description = "Количество начисленных очков за это событие", example = "80", nullable = true)
     private Integer pointsEarned;
 
     /**
      * Сумма очков
      */
+    @Schema(description = "Общее количество очков пользователя после начисления", example = "1250", nullable = true)
     private Integer totalPoints;
 
     /**
      * Новый уровень
      */
+    @Schema(description = "Новый уровень пользователя (если изменился)", example = "7", nullable = true)
     private Integer newLevel;
 
     /**
      * Флаг повышения уровня
      */
+    @Schema(description = "Флаг повышения уровня в этом событии", example = "true", nullable = true)
     private Boolean levelUp;
 
     /**
      * Идентификатор транзакции
      */
+    @Schema(description = "UUID созданной транзакции", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890", nullable = true)
     private UUID transactionId;
 
     /**
      * Дата и время транзакции
      */
+    @Schema(description = "Дата и время обработки события", example = "2026-02-19T16:30:00")
     private LocalDateTime processedAt;
 
     public static LmsEventResponsetDto success(String userId, Integer pointsEarned,
