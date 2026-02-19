@@ -24,6 +24,9 @@ public class WidgetController {
      */
     private final UserService userService;
 
+    /**
+     * Маппер пользователей
+     */
     private final UserMapper userMapper;
 
     /**

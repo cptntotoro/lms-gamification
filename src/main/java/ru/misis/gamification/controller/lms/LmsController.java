@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;
-import ru.misis.gamification.mapper.LmsEventMapper;
 import ru.misis.gamification.service.EventManagementService;
 
 /**
@@ -27,18 +26,12 @@ public class LmsController {
      */
     private final EventManagementService eventManagementService;
 
-    /**
-     * Маппер событий из LMS
-     */
-    private final LmsEventMapper lmsEventMapper;
-
     @PostMapping
-    public ResponseEntity<LmsEventResponsetDto> processUserEvent(@RequestBody @Valid LmsEventRequestDto dto) {
-        log.info("Получен запрос от LMS: userId={}, eventId={}, points={}",
-                dto.getUserId(), dto.getEventId(), dto.getPointsEarned());
+    public ResponseEntity<LmsEventResponsetDto> processUserEvent(@RequestBody @Valid LmsEventRequestDto lmsEventRequestDto) {
+        log.info("Получен запрос от LMS: userId={}, eventId={}, eventType={}",
+                lmsEventRequestDto.getUserId(), lmsEventRequestDto.getEventId(), lmsEventRequestDto.getEventType());
 
-        var event = lmsEventMapper.lmsEventRequestDtotoLmsEvent(dto);
-        LmsEventResponsetDto response = eventManagementService.process(event);
+        LmsEventResponsetDto response = eventManagementService.process(lmsEventRequestDto);
 
         log.debug("Ответ для LMS сформирован: status={}", response.getStatus());
         return ResponseEntity.ok(response);

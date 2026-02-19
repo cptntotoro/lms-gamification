@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
+import ru.misis.gamification.model.admin.EventType;
 import ru.misis.gamification.model.admin.Transaction;
 
 import java.time.LocalDateTime;
@@ -25,11 +26,25 @@ class TransactionRepositoryTest {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private EventTypeRepository eventTypeRepository;
+
     @Test
     void existsByEventId_existingEventId_shouldReturnTrue() {
+        // 1. Создаём тип события (обязательно!)
+        EventType type = EventType.builder()
+                .typeCode("test-type")
+                .displayName("Тестовый тип")  // обязательно для @NotBlank
+                .points(100)
+                .active(true)
+                .build();
+        eventTypeRepository.save(type);
+
+        // 2. Создаём транзакцию с существующим type_code
         Transaction transaction = Transaction.builder()
                 .userId("lms-user-123")
                 .eventId("event-unique-001")
+                .eventTypeCode("test-type")   // ← теперь существует в event_types
                 .pointsEarned(100)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -52,12 +67,38 @@ class TransactionRepositoryTest {
     void findByUserIdOrderByCreatedAtDesc_shouldReturnSortedPage() {
         String userId = "lms-user-abc";
 
-        // Фиксированная базовая дата + большая разница (часы)
         LocalDateTime base = LocalDateTime.of(2026, 2, 18, 12, 0, 0);
 
+        // 1. Создаём типы событий заранее
+        EventType type1 = EventType.builder()
+                .typeCode("type1")
+                .displayName("Тип 1")
+                .points(50)
+                .active(true)
+                .build();
+        eventTypeRepository.save(type1);
+
+        EventType type2 = EventType.builder()
+                .typeCode("type2")
+                .displayName("Тип 2")
+                .points(100)
+                .active(true)
+                .build();
+        eventTypeRepository.save(type2);
+
+        EventType type3 = EventType.builder()
+                .typeCode("type3")
+                .displayName("Тип 3")
+                .points(200)
+                .active(true)
+                .build();
+        eventTypeRepository.save(type3);
+
+        // 2. Создаём транзакции с существующими type_code
         Transaction t1 = Transaction.builder()
                 .userId(userId)
                 .eventId("e1-" + UUID.randomUUID().toString().substring(0, 8))
+                .eventTypeCode("type1")
                 .pointsEarned(50)
                 .createdAt(base.minusHours(48))
                 .build();
@@ -65,6 +106,7 @@ class TransactionRepositoryTest {
         Transaction t2 = Transaction.builder()
                 .userId(userId)
                 .eventId("e2-" + UUID.randomUUID().toString().substring(0, 8))
+                .eventTypeCode("type2")
                 .pointsEarned(100)
                 .createdAt(base.minusHours(24))
                 .build();
@@ -72,6 +114,7 @@ class TransactionRepositoryTest {
         Transaction t3 = Transaction.builder()
                 .userId("other-user")
                 .eventId("e3-" + UUID.randomUUID().toString().substring(0, 8))
+                .eventTypeCode("type3")
                 .pointsEarned(200)
                 .createdAt(base)
                 .build();

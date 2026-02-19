@@ -1,7 +1,7 @@
 package ru.misis.gamification.service;
 
+import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;
-import ru.misis.gamification.model.entity.LmsEvent;
 
 /**
  * Сервис обработки событий от LMS
@@ -9,13 +9,19 @@ import ru.misis.gamification.model.entity.LmsEvent;
 public interface EventManagementService {
 
     /**
-     * Обработать событие из LMS
+     * Обработать входящее событие от LMS
      * <p>
-     * Важно: сначала сохраняется транзакция (чтобы при любом сбое пользователь не изменился),
-     * затем обновляется профиль пользователя.
+     * Алгоритм:
+     * 1. Валидация входных данных
+     * 2. Получение активного типа события по коду
+     * 3. Проверка дневного лимита начисления по типу
+     * 4. Создание/получение пользователя
+     * 5. Создание и сохранение транзакции (с защитой от дублей)
+     * 6. Обновление общего количества очков и уровня пользователя
+     * 7. Формирование ответа
      *
-     * @param lmsEvent Событие из LMS
+     * @param lmsEventRequestDto DTO события из LMS
      * @return DTO ответа LMS-системе на обработанное событие
      */
-    LmsEventResponsetDto process(LmsEvent lmsEvent);
+    LmsEventResponsetDto process(LmsEventRequestDto lmsEventRequestDto);
 }

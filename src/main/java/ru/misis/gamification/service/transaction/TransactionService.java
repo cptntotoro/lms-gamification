@@ -28,7 +28,7 @@ public interface TransactionService {
      * @throws DuplicateEventException         если событие уже существует
      * @throws DataIntegrityViolationException при нарушении уникальности
      */
-    Transaction saveIfNotExists(Transaction transaction) throws DuplicateEventException;
+    Transaction saveIfNotExists(Transaction transaction);
 
     /**
      * Получить страницу транзакции по идентификатору пользователя из LMS

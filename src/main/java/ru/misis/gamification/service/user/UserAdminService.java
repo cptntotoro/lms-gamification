@@ -2,8 +2,8 @@ package ru.misis.gamification.service.user;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
+import ru.misis.gamification.exception.UserNotFoundException;
 
 /**
  * Сервис управления пользователями для администратора
@@ -15,9 +15,8 @@ public interface UserAdminService {
      *
      * @param userId Идентификатор пользователя из LMS
      * @return DTO пользователя для администратора
-     * @throws ru.misis.gamification.exception.UserNotFoundException если пользователь не найден
+     * @throws UserNotFoundException если пользователь не найден
      */
-    @Transactional(readOnly = true)
     UserAdminDto findByUserId(String userId);
 
     /**

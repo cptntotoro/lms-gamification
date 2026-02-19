@@ -47,6 +47,12 @@ public class Transaction {
     String eventId;
 
     /**
+     * Уникальный код типа события {@link EventType#getTypeCode()} ()}
+     */
+    @Column(name = "event_type_code", nullable = false, length = 50)
+    private String eventTypeCode;
+
+    /**
      * Количество начисленных очков
      */
     @Column(name = "points", nullable = false)
