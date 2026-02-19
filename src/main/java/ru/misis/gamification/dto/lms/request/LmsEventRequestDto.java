@@ -1,11 +1,11 @@
 package ru.misis.gamification.dto.lms.request;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.misis.gamification.model.admin.EventType;
 
 /**
  * DTO события из LMS
@@ -29,8 +29,8 @@ public class LmsEventRequestDto {
     private String eventId;
 
     /**
-     * Количество начисленных очков
+     * Тип события {@link EventType#getTypeCode()}
      */
-    @Min(value = 1, message = "pointsEarned должен быть больше 0")
-    private Integer pointsEarned;
+    @NotBlank(message = "eventType обязателен")
+    private String eventType;
 }

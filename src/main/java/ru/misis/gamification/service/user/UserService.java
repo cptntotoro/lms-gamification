@@ -23,7 +23,7 @@ public interface UserService {
      * @return Пользователь
      * @throws UserNotFoundException если пользователь не найден
      */
-    User get(String userId) throws UserNotFoundException;
+    User get(String userId);
 
     /**
      * Обновить пользователя

@@ -29,6 +29,11 @@ public class LmsEventResponsetDto {
     private String eventId;
 
     /**
+     * Название для отображения
+     */
+    private String displayName;
+
+    /**
      * Статус события (success, duplicate, error)
      */
     private String status;
@@ -70,11 +75,12 @@ public class LmsEventResponsetDto {
 
     public static LmsEventResponsetDto success(String userId, Integer pointsEarned,
                                                Integer totalPoints, String eventId,
-                                               UUID transactionId) {
+                                               UUID transactionId, String displayName) {
         return LmsEventResponsetDto.builder()
                 .status("success")
                 .userId(userId)
                 .eventId(eventId)
+                .displayName(displayName)
                 .pointsEarned(pointsEarned)
                 .totalPoints(totalPoints)
                 .transactionId(transactionId)

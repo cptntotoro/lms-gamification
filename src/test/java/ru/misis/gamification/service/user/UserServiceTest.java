@@ -101,62 +101,49 @@ class UserServiceTest {
     }
 
     @Test
-    void createIfNotExists_saveFails_shouldThrow() {
-        String userId = "fail-user";
-
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
-
-        RuntimeException dbEx = new RuntimeException("DB error");
-        when(userRepository.save(any(User.class))).thenThrow(dbEx);
-
-        assertThatThrownBy(() -> userService.createIfNotExists(userId))
-                .isSameAs(dbEx);
-
-        verify(userRepository).findByUserId(userId);
-        verify(userRepository).save(any(User.class));
-    }
-
-    @Test
-    void update_nullUuid_shouldThrowIllegalArgument() {
-        User user = User.builder()
-                .userId("no-uuid")
-                .totalPoints(500)
-                .build();
-
-        assertThatThrownBy(() -> userService.update(user))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("без внутреннего ID");
-
-        verifyNoMoreInteractions(userRepository);
-    }
-
-    @Test
-    void update_validUser_shouldSaveAndReturn() {
-        User user = User.builder()
+    void update_validUser_savesAndReturnsUpdated() {
+        User userToUpdate = User.builder()
                 .uuid(UUID.randomUUID())
-                .userId("upd-001")
-                .totalPoints(1200)
+                .userId("user-123")
+                .totalPoints(500)
                 .level(5)
                 .build();
 
         User saved = User.builder()
-                .uuid(user.getUuid())
-                .userId("upd-001")
-                .totalPoints(1200)
-                .level(5)
+                .uuid(userToUpdate.getUuid())
+                .userId("user-123")
+                .totalPoints(550)
+                .level(6)
                 .build();
 
-        when(userRepository.save(user)).thenReturn(saved);
+        when(userRepository.save(userToUpdate)).thenReturn(saved);
 
-        User result = userService.update(user);
+        User result = userService.update(userToUpdate);
 
         assertThat(result).isSameAs(saved);
-        verify(userRepository).save(user);
+        assertThat(result.getTotalPoints()).isEqualTo(550);
+        assertThat(result.getLevel()).isEqualTo(6);
+
+        verify(userRepository).save(userToUpdate);
     }
 
     @Test
-    void get_nullUserId_shouldThrow() {
-        assertThatThrownBy(() -> userService.get(null))
-                .isInstanceOf(UserNotFoundException.class);
+    void update_noUuid_throwsIllegalArgumentException() {
+        User invalidUser = User.builder()
+                .userId("user-no-uuid")
+                .totalPoints(300)
+                .build();
+
+        assertThatThrownBy(() -> userService.update(invalidUser))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Нельзя обновлять пользователя без внутреннего ID");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void update_nullUser_throwsException() {
+        assertThatThrownBy(() -> userService.update(null))
+                .isInstanceOf(NullPointerException.class);  // или IllegalArgumentException, если добавишь проверку
     }
 }

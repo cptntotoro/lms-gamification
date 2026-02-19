@@ -21,8 +21,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.ok(LmsEventResponsetDto.duplicate(ex.getMessage().replaceAll(".*: ", "")));
     }
 
+    @ExceptionHandler(DuplicateEventTypeException.class)
+    public ResponseEntity<LmsEventResponsetDto> handleDuplicateEventType(DuplicateEventTypeException ex) {
+        log.info("Обнаружен дубликат типа события: {}", ex.getMessage());
+        return ResponseEntity.ok(LmsEventResponsetDto.duplicate(ex.getMessage().replaceAll(".*: ", "")));
+    }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<LmsEventResponsetDto> handleUserNotFound(UserNotFoundException ex) {
+        log.warn("Ошибка: {}", ex.getMessage());
+        return ResponseEntity.ok(LmsEventResponsetDto.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(EventTypeNotFoundException.class)
+    public ResponseEntity<LmsEventResponsetDto> handleUserNotFound(EventTypeNotFoundException ex) {
         log.warn("Ошибка: {}", ex.getMessage());
         return ResponseEntity.ok(LmsEventResponsetDto.error(ex.getMessage()));
     }
