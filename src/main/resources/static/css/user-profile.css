@@ -1,0 +1,94 @@
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 24px;
+}
+
+.user-main-info h1 {
+    margin: 0 0 8px 0;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.meta-info {
+    font-size: 1.1rem;
+    color: #64748b;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+}
+
+.id-badge {
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 0.95rem;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-family: monospace;
+}
+
+.pro-badge {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    color: #1e293b;
+    font-size: 0.9rem;
+    font-weight: bold;
+    padding: 6px 14px;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(245,158,11,0.3);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin: 32px 0;
+}
+
+.stat-item {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.progress-section {
+    margin: 40px 0;
+    padding: 24px;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+.progress-text {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 1.1rem;
+    color: #475569;
+}

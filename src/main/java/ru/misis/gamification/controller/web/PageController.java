@@ -27,7 +27,7 @@ public class PageController {
                 .build();
 
         model.addAttribute("user", demo);
-        return "index";
+        return "widget";
     }
 
     /**

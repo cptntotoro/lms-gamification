@@ -29,6 +29,10 @@ spring:
       platform: postgresql
       schema-locations: classpath:schema.sql
 
+  web:
+    resources:
+      static-locations: classpath:/static/
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
