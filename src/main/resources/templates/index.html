@@ -1,111 +1,154 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Геймификация LMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Геймификация</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .user-info {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .level {
-            font-size: 48px;
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        .points {
-            font-size: 24px;
-            color: #666;
-        }
-        .progress-bar {
+        .gamification-widget {
             width: 100%;
-            height: 30px;
-            background-color: #e0e0e0;
-            border-radius: 15px;
-            overflow: hidden;
-            margin: 20px 0;
+            max-width: 420px;
+            margin: 40px auto;
+            background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+            border-radius: 20px;
+            padding: 28px 32px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.10);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
         }
-        .progress-fill {
-            height: 100%;
-            background-color: #4CAF50;
-            width: 0%;
-            transition: width 0.3s;
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
         }
-        .next-level {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .events {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        .event-btn {
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.2s;
+
+        .avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
             color: white;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
         }
-        .event-btn:hover {
-            transform: scale(1.02);
+
+        .user-info h2 {
+            margin: 0 0 6px 0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #111827;
         }
-        .event-login { background-color: #2196F3; }
-        .event-task { background-color: #4CAF50; }
-        .event-quiz { background-color: #FF9800; }
-        .event-comment { background-color: #9C27B0; }
+
+        .user-info .level {
+            font-size: 1.1rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .progress-section {
+            margin: 28px 0 16px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .progress-bar-container {
+            height: 18px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 999px;
+            transition: width 1.2s ease-out;
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .progress-text {
+            margin-top: 16px;
+            font-size: 1rem;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .progress-text strong {
+            color: #111827;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="user-info">
-        <h1 th:text="${user.name}">Игрок</h1>
-        <div class="level" th:text="'Уровень ' + ${user.level}">Уровень 1</div>
-        <div class="points" th:text="${user.points} + ' очков'">0 очков</div>
-    </div>
 
-    <div class="progress-bar">
-        <div class="progress-fill" th:style="'width: ' + ${progress} + '%'"></div>
-    </div>
-
-    <div class="next-level">
-            <span th:text="'До следующего уровня: ' + ${pointsToNext} + ' очков'">
-                До следующего уровня: 100 очков
-            </span>
-    </div>
-
-    <form method="post" action="/add-points">
-        <div class="events">
-            <button type="submit" name="event" value="login" class="event-btn event-login">
-                Вход в систему (+5)
-            </button>
-            <button type="submit" name="event" value="task" class="event-btn event-task">
-                Выполнил задание (+20)
-            </button>
-            <button type="submit" name="event" value="quiz" class="event-btn event-quiz">
-                Прошел тест (+15)
-            </button>
-            <button type="submit" name="event" value="comment" class="event-btn event-comment">
-                Оставил комментарий (+10)
-            </button>
+<div class="gamification-widget" th:if="${user}">
+    <div class="header">
+        <div class="avatar">
+            <span th:text="${user.userId?.substring(0,1)?.toUpperCase()} ?: 'A'">A</span>
         </div>
-    </form>
+        <div class="user-info">
+            <h2 th:text="${user.userId} ?: 'Alex Johnson'">Alex Johnson</h2>
+            <span class="level">
+                Уровень <span th:text="${user.level} ?: '12'">12</span> Scholar
+            </span>
+        </div>
+    </div>
+
+    <div class="progress-section">
+        <div class="progress-header">
+            <span>Текущий прогресс</span>
+            <span th:text="${user.totalPoints} + ' / 2000 XP'">1,250 / 2,000 XP</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"
+                 th:style="'width: ' + ${user.totalPoints != null ? (user.totalPoints / 2000.0 * 100) : 0} + '%'"
+                 th:attr="data-progress=${user.totalPoints != null ? (user.totalPoints / 2000.0 * 100) : 0} + '%'"></div>
+        </div>
+        <div class="progress-text">
+            Осталось всего <strong th:text="${user.totalPoints != null ? (2000 - user.totalPoints) + ' XP' : '???'}">750
+            XP</strong>,
+            чтобы достичь <strong>уровня <span
+                th:text="${user.level != null ? user.level + 1 : '13'}">13</span></strong>!
+        </div>
+    </div>
 </div>
+
+<!-- Если данных нет -->
+<div th:unless="${user}" class="gamification-widget" style="text-align:center; color:#e74c3c; padding:40px;">
+    Данные пользователя пока недоступны
+</div>
+
+<script>
+    // Плавная анимация заполнения полоски
+    document.addEventListener('DOMContentLoaded', () => {
+        const bars = document.querySelectorAll('.progress-bar');
+        bars.forEach(bar => {
+            const targetWidth = bar.getAttribute('data-progress');
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = targetWidth;
+            }, 300);
+        });
+    });
+</script>
+
 </body>
 </html>

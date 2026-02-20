@@ -3,7 +3,9 @@ package ru.misis.gamification.controller.web;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import ru.misis.gamification.dto.web.response.UserDto;
 
 /**
  * Контроллер для HTML-страниц
@@ -17,7 +19,14 @@ public class PageController {
      */
     @GetMapping("/")
     @Operation(summary = "Главная страница", description = "Отображает демо-виджет геймификации")
-    public String index() {
+    public String index(Model model) {
+        UserDto demo = UserDto.builder()
+                .userId("AlexJohnson")
+                .totalPoints(1250)
+                .level(12)
+                .build();
+
+        model.addAttribute("user", demo);
         return "index";
     }
 
