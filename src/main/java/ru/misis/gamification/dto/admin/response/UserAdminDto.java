@@ -1,5 +1,6 @@
 package ru.misis.gamification.dto.admin.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,12 +47,14 @@ public class UserAdminDto {
     /**
      * Дата создания записи
      */
-    @Schema(description = "Дата создания записи", example = "2026-01-15T10:00:00")
+    @JsonFormat(pattern = "dd.MM.yyyy HH:mm")
+    @Schema(description = "Дата создания записи", example = "19.02.2026 14:30")
     private LocalDateTime createdAt;
 
     /**
      * Дата обновления записи
      */
-    @Schema(description = "Дата последнего обновления", example = "2026-02-19T14:30:00", nullable = true)
+    @JsonFormat(pattern = "dd.MM.yyyy HH:mm")
+    @Schema(description = "Дата последнего обновления", example = "19.02.2026 14:30", nullable = true)
     private LocalDateTime updatedAt;
 }

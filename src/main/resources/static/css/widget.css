@@ -1,0 +1,66 @@
+.gamification-widget {
+    max-width: 500px;
+    margin: 40px auto;
+    background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+    border-radius: 20px;
+    padding: 28px 32px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.10);
+    border: 1px solid #e2e8f0;
+}
+
+.widget-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 20px;
+}
+
+.user-info h2 {
+    margin: 0 0 6px 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.level-info {
+    font-size: 1.1rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.pro-badge {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    color: #1e293b;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(245,158,11,0.3);
+}
+
+.progress-section {
+    margin: 28px 0 16px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+.progress-text {
+    margin-top: 16px;
+    font-size: 1rem;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.progress-text strong {
+    color: #111827;
+    font-weight: 600;
+}

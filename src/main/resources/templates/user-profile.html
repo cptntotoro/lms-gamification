@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ: Профиль пользователя</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/user-profile.css}">
+</head>
+<body>
+
+<div class="container">
+    <div th:if="${user}" class="profile-card">
+        <div class="profile-header">
+            <div class="avatar">
+                <span th:text="${user.userId?.substring(0,1)?.toUpperCase()} ?: 'U'">U</span>
+            </div>
+            <div class="user-main-info">
+                <h1 th:text="${user.userId}"></h1>
+                <div class="meta-info">
+                    <span class="id-badge" th:text="'UUID: ' + ${user.uuid}"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-label">Общее количество очков</div>
+                <div class="stat-value" th:text="${user.totalPoints} ?: '0'">1250</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Текущий уровень</div>
+                <div class="stat-value" th:text="${user.level} ?: '1'"></div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Дата регистрации</div>
+                <div class="stat-value" th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd.MM.yyyy HH:mm') : '—'}"></div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Последнее обновление</div>
+                <div class="stat-value" th:text="${user.updatedAt != null ? #temporals.format(user.updatedAt, 'dd.MM.yyyy HH:mm') : '—'}"></div>
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-header">
+                <span>Прогресс до следующего уровня</span>
+                <span th:text="${user.totalPoints} + ' / ' + ${nextLevelThreshold} + ' XP'"></span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar"
+                     th:style="'width: ' + ${progressPercent} + '%'"
+                     th:attr="data-progress=${progressPercent} + '%'"></div>
+            </div>
+            <div class="progress-text">
+                Осталось <strong th:text="${pointsToNext} + ' XP'">5750 XP</strong> до уровня
+                <strong th:text="${user.level + 1}">13</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блок ошибки внутри карточки -->
+    <div th:if="${error}" class="error-message">
+        <h2>Ошибка</h2>
+        <p th:text="${error}">Пользователь не найден</p>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>
