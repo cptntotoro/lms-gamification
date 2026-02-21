@@ -82,32 +82,45 @@ mvn spring-boot:run
 
 Или через IDE: запустить класс GamificationApplication
 
-### Основные эндпоинты (на текущий момент)
+### Основные эндпоинты API (февраль 2026)
 
-| Метод  | Путь                                   | Описание                        | Доступ |
-|--------|----------------------------------------|---------------------------------|--------|
-| POST   | /api/events                            | Обработка события из LMS        | LMS    |
-| GET    | /api/admin/event-types                 | Список всех типов событий       | ADMIN  |
-| POST   | /api/admin/event-types                 | Создание нового типа события    | ADMIN  |
-| GET    | /api/admin/event-types/{id}            | /api/admin/event-types/{id}     | ADMIN  |
-| PUT    | /api/admin/event-types/{id}            | /api/admin/event-types/{id}     | ADMIN  |
-| DELETE | /api/admin/event-types/{id}            | /api/admin/event-types/{id}     | ADMIN  |
-| GET    | /api/admin/users/{userId}/transactions | История транзакций пользователя | ADMIN  |
-| GET    | /api/admin/users                       | Список всех пользователей       | ADMIN  |
+API спроектировано по принципам REST:
+
+- Все пути в нижнем регистре с дефисами
+- Ресурсы в множественном числе
+- Админ-функции под `/api/admin`
+- Виджет-функции под `/api/users` (для фронтенда)
+- События от LMS под `/api/events`
+
+| Метод   | Путь                                   | Описание                                      | Доступ     | Примечание                     |
+|---------|----------------------------------------|-----------------------------------------------|------------|--------------------------------|
+| POST    | `/api/events`                          | Обработка события из LMS (начисление очков)   | LMS        | Основной webhook-эндпоинт     |
+| GET     | `/api/users/{userId}/progress`         | Прогресс пользователя для виджета             | Публичный  | Используется фронтендом       |
+| GET     | `/api/admin/users`                     | Список всех пользователей                     | ADMIN      | Пагинация и фильтры позже     |
+| GET     | `/api/admin/users/{userId}`            | Полная информация о пользователе              | ADMIN      | Для админ-панели              |
+| GET     | `/api/admin/users/{userId}/transactions` | История транзакций пользователя             | ADMIN      | Пагинация, сортировка         |
+| GET     | `/api/admin/event-types`               | Список всех типов событий                     | ADMIN      | Пагинация                     |
+| POST    | `/api/admin/event-types`               | Создание нового типа события                  | ADMIN      | typeCode должен быть уникальным |
+| GET     | `/api/admin/event-types/{id}`          | Получение типа события по UUID                | ADMIN      | —                             |
+| PUT     | `/api/admin/event-types/{id}`          | Обновление типа события (частичное)           | ADMIN      | typeCode изменить нельзя      |
+| DELETE  | `/api/admin/event-types/{id}`          | Деактивация типа события (active = false)     | ADMIN      | Без физического удаления      |
+
+### Рекомендации по использованию
+
+- **LMS** → только POST `/api/events`
+- **Виджет / фронтенд** → только GET `/api/users/{userId}/progress`
+- **Админ-панель** → всё под `/api/admin`
+- Все админ-эндпоинты должны быть защищены (в будущем `@PreAuthorize("hasRole('ADMIN')")` + JWT или OAuth)
 
 ### Документация API
 
 Swagger UI доступен по адресу:
 
-```text
-http://localhost:8080/swagger-ui.html
-```
+[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
 OpenAPI спецификация:
 
-```text
-http://localhost:8080/v3/api-docs
-```
+[http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
 
 ### Cхема БД
 
