@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ: Типы событий</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/event-types.css}">
+</head>
+<body>
+
+<div class="container">
+    <h1 class="page-title">Типы событий</h1>
+
+    <!-- Кнопка создания -->
+    <div class="actions-bar">
+        <button class="btn btn-primary" onclick="openCreateModal()">Создать новый тип</button>
+    </div>
+
+    <!-- Таблица типов -->
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>Код</th>
+                <th>Название</th>
+                <th>Очки</th>
+                <th>Лимит в день</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="type : ${types}">
+                <td th:text="${type.typeCode}">quiz</td>
+                <td th:text="${type.displayName}">Квиз / Тест</td>
+                <td th:text="${type.points}">80</td>
+                <td th:text="${type.maxDailyPoints} ?: 'Без лимита'">300</td>
+                <td>
+                    <span th:classappend="${type.active} ? 'status-active' : 'status-inactive'"
+                          th:text="${type.active} ? 'Активен' : 'Отключён'">Активен</span>
+                </td>
+                <td class="actions-cell">
+                    <button class="icon-btn edit"
+                            th:attr="data-id=${type.uuid}"
+                            onclick="openEditModal(this)"
+                            title="Редактировать тип события">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="icon-btn deactivate"
+                            th:attr="data-id=${type.uuid}"
+                            onclick="deactivateType(this)"
+                            title="Деактивировать тип события">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                            <path d="M10 11l5 5m0-5l-5 5M6 18l12-12"></path>
+                            <circle cx="12" cy="12" r="10"></circle>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+            <tr th:if="${types.isEmpty()}">
+                <td colspan="6" class="no-data">Типы событий отсутствуют</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Пагинация -->
+    <div class="pagination" th:if="${page.totalPages > 1}">
+        <a th:href="@{/admin/event-types(page=${page.number - 1}, size=${page.size})}"
+           th:classappend="${page.first} ? 'disabled'">« Предыдущая</a>
+
+        <span th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+            <a th:href="@{/admin/event-types(page=${i}, size=${page.size})}"
+               th:classappend="${i == page.number} ? 'active'">${i + 1}</a>
+        </span>
+
+        <a th:href="@{/admin/event-types(page=${page.number + 1}, size=${page.size})}"
+           th:classappend="${page.last} ? 'disabled'">Следующая »</a>
+    </div>
+</div>
+
+<!-- Модальное окно создания/редактирования -->
+<div id="eventTypeModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle">Создать тип события</h2>
+
+        <form id="eventTypeForm">
+            <input type="hidden" id="modalId" name="id">
+
+            <div class="form-group">
+                <label for="typeCode">Код типа</label>
+                <input type="text" id="typeCode" name="typeCode" required placeholder="quiz">
+            </div>
+
+            <div class="form-group">
+                <label for="displayName">Название</label>
+                <input type="text" id="displayName" name="displayName" required placeholder="Квиз / Тест">
+            </div>
+
+            <div class="form-group">
+                <label for="points">Очки за событие</label>
+                <input type="number" id="points" name="points" min="1" required placeholder="80">
+            </div>
+
+            <div class="form-group">
+                <label for="maxDailyPoints">Макс. в день (опционально)</label>
+                <input type="number" id="maxDailyPoints" name="maxDailyPoints" min="0" placeholder="300">
+            </div>
+
+            <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="active" name="active" checked>
+                    <span>Активен</span>
+                </label>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="saveEventType()">Сохранить</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Открытие модалки для создания
+    function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'Создать тип события';
+        document.getElementById('eventTypeForm').reset();
+        document.getElementById('modalId').value = '';
+        document.getElementById('typeCode').disabled = false;
+        document.getElementById('eventTypeModal').style.display = 'block';
+    }
+
+    // Открытие модалки для редактирования — данные берём из строки таблицы
+    function openEditModal(btn) {
+        const row = btn.closest('tr'); // находим строку таблицы
+
+        // Извлекаем данные из ячеек (td)
+        const cells = row.querySelectorAll('td');
+        const typeCode     = cells[0].textContent.trim(); // Код
+        const displayName  = cells[1].textContent.trim(); // Название
+        const points       = cells[2].textContent.trim(); // Очки
+        const maxDaily     = cells[3].textContent.trim() === 'Без лимита' ? '' : cells[3].textContent.trim(); // Лимит
+        const activeText   = cells[4].textContent.trim(); // Статус
+        const active       = activeText === 'Активен';
+
+        // Заполняем форму
+        document.getElementById('modalTitle').textContent = 'Редактировать тип события';
+        document.getElementById('modalId').value = btn.getAttribute('data-id');
+        document.getElementById('typeCode').value = typeCode;
+        document.getElementById('typeCode').disabled = true; // нельзя менять код
+        document.getElementById('displayName').value = displayName;
+        document.getElementById('points').value = points;
+        document.getElementById('maxDailyPoints').value = maxDaily;
+        document.getElementById('active').checked = active;
+
+        document.getElementById('eventTypeModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('eventTypeModal').style.display = 'none';
+    }
+
+    async function deactivateType(btn) {
+        const id = btn.getAttribute('data-id');
+        if (!confirm('Деактивировать тип события?')) return;
+
+        try {
+            const response = await fetch(`/api/admin/event-types/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Ошибка деактивации');
+            location.reload();
+        } catch (error) {
+            alert('Не удалось деактивировать: ' + error.message);
+        }
+    }
+
+    async function saveEventType() {
+        const form = document.getElementById('eventTypeForm');
+        const id = document.getElementById('modalId').value;
+        const isEdit = !!id;
+        const url = isEdit ? `/api/admin/event-types/${id}` : '/api/admin/event-types';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const data = {
+            displayName: form.displayName.value.trim(),
+            points: parseInt(form.points.value),
+            maxDailyPoints: form.maxDailyPoints.value ? parseInt(form.maxDailyPoints.value) : null,
+            active: form.active.checked
+        };
+
+        if (!isEdit) {
+            data.typeCode = form.typeCode.value.trim();
+            if (!data.typeCode) {
+                alert('Укажите код типа события');
+                return;
+            }
+        }
+
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.message || 'Ошибка сохранения');
+            }
+
+            closeModal();
+            location.reload();
+        } catch (error) {
+            alert('Ошибка: ' + error.message);
+        }
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('eventTypeModal');
+        if (event.target === modal) closeModal();
+    }
+</script>
+
+</body>
+</html>

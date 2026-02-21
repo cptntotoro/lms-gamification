@@ -1,0 +1,248 @@
+.page-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 24px;
+}
+
+.actions-bar {
+    margin-bottom: 24px;
+    text-align: right;
+}
+
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background: #6366f1;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #4f46e5;
+}
+
+.btn-edit {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #2563eb;
+}
+
+.btn-deactivate {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-deactivate:hover {
+    background: #dc2626;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.data-table th,
+.data-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.data-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+}
+
+.data-table tr:hover {
+    background: #f8fafc;
+}
+
+.data-table th:nth-child(3),
+.data-table th:nth-child(4),
+.data-table th:nth-child(5),
+.data-table td:nth-child(3),
+.data-table td:nth-child(4),
+.data-table td:nth-child(5) {
+    text-align: center;
+}
+
+.status-active,
+.status-inactive {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.status-active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-inactive {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.actions-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding-right: 16px;
+}
+
+/* Компактные кнопки-иконки */
+.icon-btn {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    color: #64748b;
+    line-height: 1;
+}
+
+.icon-btn:hover {
+    background: #f1f5f9;
+    transform: translateY(-1px);
+}
+
+.icon-btn.edit {
+    color: #3b82f6;
+}
+
+.icon-btn.edit:hover {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.icon-btn.deactivate {
+    color: #ef4444;
+}
+
+.icon-btn.deactivate:hover {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.no-data {
+    text-align: center;
+    color: #64748b;
+    padding: 40px;
+    font-size: 1.1rem;
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    margin: 10% auto;
+    padding: 32px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+.pagination a {
+    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #475569;
+}
+
+.pagination a.active {
+    background: #6366f1;
+    color: white;
+    border-color: #6366f1;
+}
+
+.pagination a.disabled {
+    color: #cbd5e1;
+    pointer-events: none;
+}
+
+.checkbox-group {
+    margin-bottom: 20px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #475569;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #6366f1;
+    cursor: pointer;
+}
+
+.checkbox-label span {
+    font-weight: 500;
+}
