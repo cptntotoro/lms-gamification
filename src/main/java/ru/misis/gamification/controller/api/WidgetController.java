@@ -1,6 +1,7 @@
-package ru.misis.gamification.controller.web;
+package ru.misis.gamification.controller.api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -50,7 +51,8 @@ public class WidgetController {
             @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
             @ApiResponse(responseCode = "400", description = "Некорректный userId")
     })
-    public ResponseEntity<UserDto> getUserProgress(@PathVariable String userId) {
+    public ResponseEntity<UserDto> getUserProgress(@Parameter(description = "Внешний ID пользователя из LMS",
+            required = true, example = "alex123") @PathVariable String userId) {
         User user = userService.get(userId);
         UserDto userDto = userMapper.userToUserDto(user);
         return ResponseEntity.ok(userDto);

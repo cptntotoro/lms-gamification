@@ -10,11 +10,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.service.user.UserAdminService;
 
 @Tag(name = "Admin - Пользователи (страницы)", description = "HTML-страницы админ-панели")
 @Controller
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 public class UserAdminPageController {
 
@@ -22,6 +24,12 @@ public class UserAdminPageController {
      * Сервис управления пользователями для администратора
      */
     private final UserAdminService userAdminService;
+
+    @GetMapping
+    @Operation(summary = "Административная панель", description = "Отображает админ-панель (требуется авторизация)")
+    public String admin() {
+        return "admin";
+    }
 
     @Operation(
             summary = "Страница профиля пользователя в админ-панели",
@@ -31,7 +39,7 @@ public class UserAdminPageController {
             @ApiResponse(responseCode = "200", description = "Страница успешно отображена"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
-    @GetMapping("/admin/users/{userId}")
+    @GetMapping("/users/{userId}")
     public String getUserProfilePage(
             @Parameter(description = "Внешний ID пользователя из LMS", required = true, example = "alex123")
             @PathVariable String userId,
@@ -55,9 +63,8 @@ public class UserAdminPageController {
 
             return "user-profile";
         } catch (Exception e) {
-            // Ошибка отображается внутри виджета
             model.addAttribute("error", "Пользователь с ID '" + userId + "' не найден");
-            model.addAttribute("user", null); // чтобы th:if="${user}" не сработал
+            model.addAttribute("user", null);
             return "user-profile";
         }
     }
