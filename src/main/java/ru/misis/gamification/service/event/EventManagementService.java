@@ -1,4 +1,4 @@
-package ru.misis.gamification.service;
+package ru.misis.gamification.service.event;
 
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;

@@ -77,6 +77,8 @@ public class LmsEventResponsetDto {
     @Schema(description = "Флаг повышения уровня в этом событии", example = "true", nullable = true)
     private Boolean levelUp;
 
+    private Long pointsToNextLevel;
+
     /**
      * Идентификатор транзакции
      */
