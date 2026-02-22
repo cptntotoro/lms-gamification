@@ -52,3 +52,9 @@ logging:
 
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+leveling:
+  formula:
+    type: TRIANGULAR  # TRIANGULAR, QUADRATIC, LINEAR
+    base: 500         # базовый множитель
+    increment: 200    # только для LINEAR

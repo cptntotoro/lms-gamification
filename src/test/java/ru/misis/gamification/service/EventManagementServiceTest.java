@@ -15,6 +15,7 @@ import ru.misis.gamification.exception.DuplicateEventException;
 import ru.misis.gamification.model.admin.EventType;
 import ru.misis.gamification.model.admin.Transaction;
 import ru.misis.gamification.model.entity.User;
+import ru.misis.gamification.service.event.EventManagementServiceImpl;
 import ru.misis.gamification.service.event.EventTypeService;
 import ru.misis.gamification.service.transaction.TransactionService;
 import ru.misis.gamification.service.user.UserService;

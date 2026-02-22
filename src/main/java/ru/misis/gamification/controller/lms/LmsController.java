@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;
-import ru.misis.gamification.service.EventManagementService;
+import ru.misis.gamification.service.event.EventManagementService;
 
 /**
  * Контроллер для приема событий от LMS
