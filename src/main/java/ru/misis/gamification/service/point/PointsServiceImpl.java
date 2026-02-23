@@ -7,14 +7,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.dto.AwardResult;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
-import ru.misis.gamification.exception.InvalidEventTypeException;
 import ru.misis.gamification.model.admin.EventType;
 import ru.misis.gamification.model.admin.Transaction;
 import ru.misis.gamification.model.entity.User;
-import ru.misis.gamification.repository.EventTypeRepository;
-import ru.misis.gamification.repository.TransactionRepository;
-import ru.misis.gamification.repository.UserRepository;
-import ru.misis.gamification.service.level.LevelCalculator;
+import ru.misis.gamification.service.event.EventTypeService;
+import ru.misis.gamification.service.level.LevelCalculatorService;
+import ru.misis.gamification.service.transaction.TransactionService;
 import ru.misis.gamification.service.user.UserService;
 
 import java.time.LocalDate;
@@ -26,11 +24,25 @@ import java.time.LocalDateTime;
 @Slf4j
 public class PointsServiceImpl implements PointsService {
 
-    private final TransactionRepository transactionRepo;
-    private final UserRepository userRepo;
-    private final EventTypeRepository eventTypeRepo;
-    private final LevelCalculator levelCalculator;
+    /**
+     * Сервис управления транзакциями
+     */
+    private final TransactionService transactionService;
+
+    /**
+     * Сервис управления пользователями
+     */
     private final UserService userService;
+
+    /**
+     * Сервис расчета уровней
+     */
+    private final LevelCalculatorService levelCalculatorService;
+
+    /**
+     * Сервис управления типами событий
+     */
+    private final EventTypeService eventTypeService;
 
     @Override
     @Transactional
@@ -39,31 +51,40 @@ public class PointsServiceImpl implements PointsService {
         String eventId = request.getEventId();
         String typeCode = request.getEventType();
 
+        log.debug("Начало начисления очков: userId={}, eventId={}, typeCode={}", userId, eventId, typeCode);
+
         // 1. Проверка дубля
-        if (transactionRepo.existsByEventId(eventId)) {
+        if (transactionService.isExistsByEventId(eventId)) {
+            log.info("Дубликат события: {}", eventId);
             return AwardResult.duplicate();
         }
 
         // 2. Тип события
-        EventType type = eventTypeRepo.findByTypeCodeAndActiveTrue(typeCode)
-                .orElseThrow(() -> new EventTypeNotFoundException(typeCode));
+        EventType type;
+        try {
+            type = eventTypeService.getActiveByCode(typeCode);
+        } catch (EventTypeNotFoundException e) {
+            log.warn("Не найден активный тип события: {}", typeCode);
+            return AwardResult.rejected("Неизвестный или отключённый тип события: " + typeCode);
+        }
 
-        // 3. Пользователь с блокировкой
-        User user = userRepo.findByUserIdForUpdate(userId)
-                .orElseGet(() -> userService.createIfNotExists(userId));
+        // 3. Получаем или создаём пользователя (с блокировкой внутри сервиса)
+        User user = userService.createIfNotExists(userId);
 
-        // 4. Дневной лимит
+        // 4. Проверка дневного лимита
         LocalDate today = LocalDate.now();
-        long todaySum = transactionRepo.sumPointsByUserIdAndEventTypeAndDate(
+        long todaySum = transactionService.sumPointsByUserIdAndEventTypeAndDate(
                 userId, typeCode, today);
 
         int points = type.getPoints();
 
         if (type.getMaxDailyPoints() != null && todaySum + points > type.getMaxDailyPoints()) {
-            return AwardResult.rejected("Превышен дневной лимит по типу " + type.getDisplayName());
+            String reason = "Превышен дневной лимит по типу " + type.getDisplayName();
+            log.warn(reason);
+            return AwardResult.rejected(reason);
         }
 
-        // 5. Транзакция
+        // 5. Создание транзакции
         Transaction tx = Transaction.builder()
                 .userId(userId)
                 .eventId(eventId)
@@ -73,23 +94,27 @@ public class PointsServiceImpl implements PointsService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        Transaction savedTx = transactionRepo.save(tx);
+        Transaction savedTx = transactionService.saveIfNotExists(tx);
 
         // 6. Обновление пользователя
         int oldLevel = user.getLevel();
         int newTotal = user.getTotalPoints() + points;
         user.setTotalPoints(newTotal);
-        user.recalculateLevel(); // твой метод
-        userRepo.save(user);
+        user.setLevel(levelCalculatorService.calculateLevel(newTotal));
+        userService.update(user);
 
         boolean levelUp = user.getLevel() > oldLevel;
+
+        log.info("Успешно начислено {} очков → userId={}, total={}, level={}, levelUp={}",
+                points, userId, newTotal, user.getLevel(), levelUp);
 
         return AwardResult.success(
                 points,
                 newTotal,
                 user.getLevel(),
                 levelUp,
-                savedTx.getUuid()
+                savedTx.getUuid(),
+                levelCalculatorService.pointsToNextLevel(user.getLevel())
         );
     }
 }

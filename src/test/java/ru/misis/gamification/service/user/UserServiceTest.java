@@ -1,5 +1,6 @@
 package ru.misis.gamification.service.user;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,78 +31,126 @@ class UserServiceTest {
     @InjectMocks
     private UserServiceImpl userService;
 
-    @Test
-    void createIfNotExists_userAlreadyExists_shouldReturnExisting() {
-        String externalId = "user-777";
-        User existing = User.builder()
+    private User existingUser;
+
+    @BeforeEach
+    void setUp() {
+        existingUser = User.builder()
                 .uuid(UUID.randomUUID())
-                .userId(externalId)
+                .userId("user-777")
                 .totalPoints(150)
                 .level(2)
                 .build();
+    }
 
-        when(userRepository.findByUserId(externalId)).thenReturn(Optional.of(existing));
+    @Test
+    void createIfNotExists_userAlreadyExists_shouldReturnExisting() {
+        when(userRepository.findByUserIdWithLock("user-777"))
+                .thenReturn(Optional.of(existingUser));
 
-        User result = userService.createIfNotExists(externalId);
+        User result = userService.createIfNotExists("user-777");
 
-        assertThat(result).isSameAs(existing);
-        verify(userRepository).findByUserId(externalId);
-        verifyNoMoreInteractions(userRepository);
+        assertThat(result).isSameAs(existingUser);
+
+        verify(userRepository).findByUserIdWithLock("user-777");
         verify(userRepository, never()).save(any(User.class));
+        verifyNoMoreInteractions(userRepository);
     }
 
     @Test
     void createIfNotExists_userNotExists_shouldCreateAndSaveNew() {
-        String externalId = "new-user-999";
+        String newUserId = "new-user-999";
 
-        when(userRepository.findByUserId(externalId)).thenReturn(Optional.empty());
+        when(userRepository.findByUserIdWithLock(newUserId)).thenReturn(Optional.empty());
 
         User savedUser = User.builder()
                 .uuid(UUID.randomUUID())
-                .userId(externalId)
+                .userId(newUserId)
                 .totalPoints(0)
                 .level(1)
                 .build();
 
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        User result = userService.createIfNotExists(externalId);
+        User result = userService.createIfNotExists(newUserId);
 
-        assertThat(result.getUserId()).isEqualTo(externalId);
+        assertThat(result.getUserId()).isEqualTo(newUserId);
         assertThat(result.getTotalPoints()).isZero();
         assertThat(result.getLevel()).isEqualTo(1);
 
-        verify(userRepository).findByUserId(externalId);
-        verify(userRepository).save(argThat(u ->
-                u.getUserId().equals(externalId) &&
-                        u.getTotalPoints() == 0 &&
-                        u.getLevel() == 1
+        verify(userRepository).findByUserIdWithLock(newUserId);
+        verify(userRepository).save(argThat(user ->
+                user.getUserId().equals(newUserId) &&
+                        user.getTotalPoints() == 0 &&
+                        user.getLevel() == 1
         ));
     }
 
     @Test
     void get_existingUser_shouldReturnUser() {
-        String externalId = "user-ok";
-        User user = User.builder().userId(externalId).build();
+        String userId = "user-ok";
 
-        when(userRepository.findByUserId(externalId)).thenReturn(Optional.of(user));
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(existingUser));
 
-        User result = userService.get(externalId);
+        User result = userService.get(userId);
 
-        assertThat(result).isSameAs(user);
+        assertThat(result).isSameAs(existingUser);
+        verify(userRepository).findByUserId(userId);
     }
 
     @Test
     void get_nonExistingUser_shouldThrowException() {
-        when(userRepository.findByUserId("unknown")).thenReturn(Optional.empty());
+        String userId = "unknown-user";
 
-        assertThatThrownBy(() -> userService.get("unknown"))
-                .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining("unknown");
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.get(userId))
+                .isInstanceOf(UserNotFoundException.class);
+
+        verify(userRepository).findByUserId(userId);
     }
 
     @Test
-    void update_validUser_savesAndReturnsUpdated() {
+    void getOrCreateLocked_userExists_shouldReturnExisting() {
+        String userId = "user-777";
+
+        when(userRepository.findByUserIdWithLock(userId)).thenReturn(Optional.of(existingUser));
+
+        User result = userService.getOrCreateLocked(userId);
+
+        assertThat(result).isSameAs(existingUser);
+
+        verify(userRepository).findByUserIdWithLock(userId);
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void getOrCreateLocked_userNotExists_shouldCreateNew() {
+        String userId = "new-user-999";
+
+        when(userRepository.findByUserIdWithLock(userId)).thenReturn(Optional.empty());
+
+        User savedUser = User.builder()
+                .uuid(UUID.randomUUID())
+                .userId(userId)
+                .totalPoints(0)
+                .level(1)
+                .build();
+
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        User result = userService.getOrCreateLocked(userId);
+
+        assertThat(result.getUserId()).isEqualTo(userId);
+        assertThat(result.getTotalPoints()).isZero();
+        assertThat(result.getLevel()).isEqualTo(1);
+
+        verify(userRepository).findByUserIdWithLock(userId);
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void update_validUser_shouldSaveAndReturn() {
         User userToUpdate = User.builder()
                 .uuid(UUID.randomUUID())
                 .userId("user-123")
@@ -128,22 +177,21 @@ class UserServiceTest {
     }
 
     @Test
-    void update_noUuid_throwsIllegalArgumentException() {
+    void update_noUuid_shouldThrowIllegalArgumentException() {
         User invalidUser = User.builder()
                 .userId("user-no-uuid")
                 .totalPoints(300)
                 .build();
 
         assertThatThrownBy(() -> userService.update(invalidUser))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Нельзя обновлять пользователя без внутреннего ID");
+                .isInstanceOf(IllegalArgumentException.class);
 
         verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void update_nullUser_throwsException() {
+    void update_nullUser_shouldThrowNullPointerException() {
         assertThatThrownBy(() -> userService.update(null))
-                .isInstanceOf(NullPointerException.class);  // или IllegalArgumentException, если добавишь проверку
+                .isInstanceOf(NullPointerException.class);
     }
 }

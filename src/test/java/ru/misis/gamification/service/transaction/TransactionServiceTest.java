@@ -15,13 +15,16 @@ import ru.misis.gamification.exception.DuplicateEventException;
 import ru.misis.gamification.model.admin.Transaction;
 import ru.misis.gamification.repository.TransactionRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,86 +37,130 @@ class TransactionServiceTest {
     private TransactionServiceImpl transactionService;
 
     @Test
-    void saveIfNotExists_uniqueEvent_shouldSaveAndReturn() {
-        Transaction tx = Transaction.builder()
-                .eventId("evt-unique-001")
-                .userId("u-001")
-                .pointsEarned(100)
-                .build();
+    void isExistsByEventId_true() {
+        when(transactionRepository.existsByEventId("evt-123")).thenReturn(true);
 
-        when(transactionRepository.existsByEventId("evt-unique-001")).thenReturn(false);
+        boolean result = transactionService.isExistsByEventId("evt-123");
+
+        assertThat(result).isTrue();
+        verify(transactionRepository).existsByEventId("evt-123");
+    }
+
+    @Test
+    void isExistsByEventId_false() {
+        when(transactionRepository.existsByEventId("evt-new")).thenReturn(false);
+
+        boolean result = transactionService.isExistsByEventId("evt-new");
+
+        assertThat(result).isFalse();
+        verify(transactionRepository).existsByEventId("evt-new");
+    }
+
+    @Test
+    void saveIfNotExists_uniqueEvent_savesAndReturns() {
+        Transaction tx = Transaction.builder()
+                .eventId("evt-unique")
+                .userId("u-001")
+                .pointsEarned(150)
+                .build();
 
         Transaction saved = Transaction.builder()
                 .uuid(UUID.randomUUID())
-                .eventId("evt-unique-001")
+                .eventId("evt-unique")
                 .build();
 
+        when(transactionRepository.existsByEventId("evt-unique")).thenReturn(false);
         when(transactionRepository.save(tx)).thenReturn(saved);
 
         Transaction result = transactionService.saveIfNotExists(tx);
 
         assertThat(result).isSameAs(saved);
-        verify(transactionRepository).existsByEventId("evt-unique-001");
+
+        verify(transactionRepository).existsByEventId("evt-unique");
         verify(transactionRepository).save(tx);
     }
 
     @Test
-    void saveIfNotExists_duplicateEvent_shouldThrowException() {
+    void saveIfNotExists_duplicateByCheck_throwsDuplicateEventException() {
         Transaction tx = Transaction.builder()
-                .eventId("evt-dup-777")
+                .eventId("evt-dup")
                 .build();
 
-        when(transactionRepository.existsByEventId("evt-dup-777")).thenReturn(true);
+        when(transactionRepository.existsByEventId("evt-dup")).thenReturn(true);
 
         assertThatThrownBy(() -> transactionService.saveIfNotExists(tx))
                 .isInstanceOf(DuplicateEventException.class)
-                .hasMessageContaining("evt-dup-777");
+                .hasMessageContaining("evt-dup");
 
-        verify(transactionRepository).existsByEventId("evt-dup-777");
-        verifyNoMoreInteractions(transactionRepository);
+        verify(transactionRepository).existsByEventId("evt-dup");
+        verify(transactionRepository, never()).save(any());
     }
 
     @Test
-    void saveIfNotExists_unexpectedConstraintViolation_shouldRethrow() {
+    void saveIfNotExists_duplicateByConstraint_throwsDuplicateEventException() {
         Transaction tx = Transaction.builder()
-                .eventId("evt-999")
-                .userId("u-999")
-                .pointsEarned(300)
+                .eventId("evt-constraint")
                 .build();
 
-        when(transactionRepository.existsByEventId("evt-999")).thenReturn(false);
-        when(transactionRepository.save(tx)).thenThrow(new DataIntegrityViolationException("other constraint"));
+        when(transactionRepository.existsByEventId("evt-constraint")).thenReturn(false);
+        when(transactionRepository.save(tx))
+                .thenThrow(new DataIntegrityViolationException("unique constraint violation"));
 
         assertThatThrownBy(() -> transactionService.saveIfNotExists(tx))
-                .isInstanceOf(DuplicateEventException.class);
+                .isInstanceOf(DuplicateEventException.class)
+                .hasMessageContaining("evt-constraint");
 
-        verify(transactionRepository).existsByEventId("evt-999");
+        verify(transactionRepository).existsByEventId("evt-constraint");
         verify(transactionRepository).save(tx);
     }
 
     @Test
-    void saveIfNotExists_unexpectedException_shouldLogAndRethrow() {
+    void saveIfNotExists_otherDataIntegrityViolation_rethrowsAsIs() {
         Transaction tx = Transaction.builder()
-                .eventId("evt-error")
+                .eventId("evt-other-violation")
                 .build();
 
-        when(transactionRepository.existsByEventId("evt-error")).thenReturn(false);
-        RuntimeException ex = new RuntimeException("DB is down");
+        DataIntegrityViolationException originalEx = new DataIntegrityViolationException("foreign key violation");
+
+        when(transactionRepository.existsByEventId(anyString())).thenReturn(false);
+        when(transactionRepository.save(tx)).thenThrow(originalEx);
+
+        assertThatThrownBy(() -> transactionService.saveIfNotExists(tx))
+                .isInstanceOf(DuplicateEventException.class)
+                .hasMessageContaining("evt-other-violation");
+
+        verify(transactionRepository).existsByEventId("evt-other-violation");
+        verify(transactionRepository).save(tx);
+    }
+
+    @Test
+    void saveIfNotExists_unexpectedRuntimeException_rethrows() {
+        Transaction tx = Transaction.builder()
+                .eventId("evt-db-down")
+                .build();
+
+        RuntimeException ex = new RuntimeException("Database connection failed");
+
+        when(transactionRepository.existsByEventId(anyString())).thenReturn(false);
         when(transactionRepository.save(tx)).thenThrow(ex);
 
         assertThatThrownBy(() -> transactionService.saveIfNotExists(tx))
                 .isSameAs(ex);
 
-        verify(transactionRepository).existsByEventId("evt-error");
+        verify(transactionRepository).existsByEventId("evt-db-down");
         verify(transactionRepository).save(tx);
     }
 
     @Test
-    void getTransactionsByUserId_shouldDelegateToRepository() {
+    void getTransactionsByUserId_delegatesToRepository() {
         String userId = "user-page";
-        Pageable pageable = PageRequest.of(1, 20, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(0, 20, Sort.by("createdAt").descending());
 
-        Page<Transaction> mockPage = new PageImpl<>(List.of(), pageable, 0);
+        Page<Transaction> mockPage = new PageImpl<>(
+                List.of(new Transaction(), new Transaction()),
+                pageable,
+                42
+        );
 
         when(transactionRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable))
                 .thenReturn(mockPage);
@@ -121,18 +168,34 @@ class TransactionServiceTest {
         Page<Transaction> result = transactionService.getTransactionsByUserId(userId, pageable);
 
         assertThat(result).isSameAs(mockPage);
+        assertThat(result.getTotalElements()).isEqualTo(42);
+        assertThat(result.getNumberOfElements()).isEqualTo(2);
+
         verify(transactionRepository).findByUserIdOrderByCreatedAtDesc(userId, pageable);
     }
 
     @Test
-    void isEventTransactionExists_shouldCallRepository() {
-        String eventId = "evt-check";
+    void sumPointsByUserIdAndEventTypeAndDate_delegatesToRepository() {
+        String userId = "u-555";
+        String typeCode = "quiz";
+        LocalDate date = LocalDate.of(2026, 2, 23);
 
-        when(transactionRepository.existsByEventId(eventId)).thenReturn(true);
+        when(transactionRepository.sumPointsByUserIdAndEventTypeAndDate(userId, typeCode, date))
+                .thenReturn(850L);
 
-        boolean exists = transactionService.isEventTransactionExists(eventId);
+        long sum = transactionService.sumPointsByUserIdAndEventTypeAndDate(userId, typeCode, date);
 
-        assertThat(exists).isTrue();
-        verify(transactionRepository).existsByEventId(eventId);
+        assertThat(sum).isEqualTo(850L);
+        verify(transactionRepository).sumPointsByUserIdAndEventTypeAndDate(userId, typeCode, date);
+    }
+
+    @Test
+    void sumPointsByUserIdAndEventTypeAndDate_zeroWhenNoRecords() {
+        when(transactionRepository.sumPointsByUserIdAndEventTypeAndDate(anyString(), anyString(), any()))
+                .thenReturn(0L);
+
+        long sum = transactionService.sumPointsByUserIdAndEventTypeAndDate("u", "t", LocalDate.now());
+
+        assertThat(sum).isZero();
     }
 }

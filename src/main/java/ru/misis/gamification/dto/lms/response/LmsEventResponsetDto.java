@@ -77,6 +77,10 @@ public class LmsEventResponsetDto {
     @Schema(description = "Флаг повышения уровня в этом событии", example = "true", nullable = true)
     private Boolean levelUp;
 
+    /**
+     * Количество очков до следующего уровня
+     */
+    @Schema(description = "Количество очков до следующего уровня", example = "50", nullable = true)
     private Long pointsToNextLevel;
 
     /**
@@ -91,9 +95,15 @@ public class LmsEventResponsetDto {
     @Schema(description = "Дата и время обработки события", example = "2026-02-19T16:30:00")
     private LocalDateTime processedAt;
 
-    public static LmsEventResponsetDto success(String userId, Integer pointsEarned,
-                                               Integer totalPoints, String eventId,
-                                               UUID transactionId, String displayName) {
+    public static LmsEventResponsetDto success(
+            String userId,
+            Integer pointsEarned,
+            Integer totalPoints,
+            Long pointsToNextLevel,
+            String eventId,
+            UUID transactionId,
+            String displayName
+    ) {
         return LmsEventResponsetDto.builder()
                 .status("success")
                 .userId(userId)
@@ -101,6 +111,7 @@ public class LmsEventResponsetDto {
                 .displayName(displayName)
                 .pointsEarned(pointsEarned)
                 .totalPoints(totalPoints)
+                .pointsToNextLevel(pointsToNextLevel)
                 .transactionId(transactionId)
                 .processedAt(LocalDateTime.now())
                 .build();

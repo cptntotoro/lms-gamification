@@ -24,7 +24,7 @@ class UserRepositoryTest {
     private UserRepository userRepository;
 
     @Test
-    void findByUserId_existingUser_shouldReturnUser() {
+    void findByUserId_existingUser_shouldReturnUserLocked() {
         String externalUserId = "lms-user-12345";
         User user = User.builder()
                 .userId(externalUserId)
@@ -35,7 +35,7 @@ class UserRepositoryTest {
         entityManager.persist(user);
         entityManager.flush();
 
-        Optional<User> found = userRepository.findByUserId(externalUserId);
+        Optional<User> found = userRepository.findByUserIdWithLock(externalUserId);
 
         assertThat(found).isPresent();
         assertThat(found.get().getUserId()).isEqualTo(externalUserId);
@@ -44,8 +44,8 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findByUserId_nonExistingUser_shouldReturnEmpty() {
-        Optional<User> found = userRepository.findByUserId("non-existing-id");
+    void findByUserId_nonExistingUser_shouldReturnEmptyLocked() {
+        Optional<User> found = userRepository.findByUserIdWithLock("non-existing-id");
 
         assertThat(found).isEmpty();
     }

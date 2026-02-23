@@ -17,7 +17,7 @@ public class AwardResult {
     private final UUID transactionId;
     private final Long pointsToNextLevel;
 
-    public static AwardResult success(int pointsEarned, int totalAfter, int levelAfter, boolean levelUp, UUID txId) {
+    public static AwardResult success(int pointsEarned, int totalAfter, int levelAfter, boolean levelUp, UUID txId, long pointsToNext) {
         return AwardResult.builder()
                 .status(AwardStatus.SUCCESS)
                 .pointsEarned(pointsEarned)
@@ -25,6 +25,7 @@ public class AwardResult {
                 .levelAfter(levelAfter)
                 .levelUp(levelUp)
                 .transactionId(txId)
+                .pointsToNextLevel(pointsToNext)
                 .build();
     }
 

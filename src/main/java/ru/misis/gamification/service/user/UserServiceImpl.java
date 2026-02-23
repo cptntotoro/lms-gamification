@@ -3,6 +3,7 @@ package ru.misis.gamification.service.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.model.entity.User;
 import ru.misis.gamification.repository.UserRepository;
@@ -21,7 +22,7 @@ public class UserServiceImpl implements UserService {
     public User createIfNotExists(String userId) {
         log.debug("Проверка/создание пользователя: userId={}", userId);
 
-        return userRepository.findByUserId(userId)
+        return userRepository.findByUserIdWithLock(userId)
                 .orElseGet(() -> {
                     User newUser = User.builder()
                             .userId(userId)
@@ -30,8 +31,7 @@ public class UserServiceImpl implements UserService {
                             .build();
 
                     User saved = userRepository.save(newUser);
-                    log.info("Создан новый пользователь: userId={}, id={}",
-                            userId, saved.getUuid());
+                    log.info("Создан новый пользователь: userId={}, uuid={}", userId, saved.getUuid());
                     return saved;
                 });
     }
@@ -42,6 +42,23 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> {
                     log.warn("Пользователь не найден: userId={}", userId);
                     return new UserNotFoundException(userId);
+                });
+    }
+
+    @Transactional
+    @Override
+    public User getOrCreateLocked(String userId) {
+        log.debug("Получение пользователя с блокировкой: userId={}", userId);
+
+        return userRepository.findByUserIdWithLock(userId)
+                .orElseGet(() -> {
+                    log.info("Создаём нового пользователя: {}", userId);
+                    User newUser = User.builder()
+                            .userId(userId)
+                            .totalPoints(0)
+                            .level(1)
+                            .build();
+                    return userRepository.save(newUser);
                 });
     }
 
@@ -56,15 +73,5 @@ public class UserServiceImpl implements UserService {
         log.debug("Пользователь обновлён: userId={}, totalPoints={}, level={}",
                 updated.getUserId(), updated.getTotalPoints(), updated.getLevel());
         return updated;
-    }
-
-    /**
-     * Проверить существование пользователя
-     *
-     * @param userId Идентификатор пользователя из LMS
-     * @return Да / Нет
-     */
-    private boolean isExists(String userId) {
-        return userRepository.existsByUserId(userId);
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 @ConfigurationProperties(prefix = "leveling")
 @Data
-public class LevelCalculatorImpl implements LevelCalculator {
+public class LevelCalculatorServiceImpl implements LevelCalculatorService {
 
     private String formula = "TRIANGULAR";
     private int base = 500;
@@ -24,19 +24,22 @@ public class LevelCalculatorImpl implements LevelCalculator {
     }
 
     private int calculateTriangular(int total) {
+        if (total <= 0) return 1;
         // n * (n + 1) / 2 * base ≈ total
         // решаем квадратное уравнение
         double n = (-1 + Math.sqrt(1 + 8.0 * total / base)) / 2;
-        return (int) Math.floor(n) + 1;
+        return Math.max(1, (int) Math.floor(n) + 1);
     }
 
     private int calculateQuadratic(int total) {
+        if (total <= 0) return 1;
         // base * n² ≈ total
         double n = Math.sqrt(total / (double) base);
-        return (int) Math.floor(n) + 1;
+        return Math.max(1, (int) Math.floor(n) + 1);
     }
 
     private int calculateLinear(int total) {
+        if (total <= 0) return 1;
         int level = 1;
         int sum = 0;
         while (sum <= total) {
@@ -52,7 +55,7 @@ public class LevelCalculatorImpl implements LevelCalculator {
             case "TRIANGULAR" -> calculateTriangularToNext(currentLevel);
             case "QUADRATIC" -> calculateQuadraticToNext(currentLevel);
             case "LINEAR" -> calculateLinearToNext(currentLevel);
-            default -> 1000L; // fallback
+            default -> 1000L;
         };
     }
 
