@@ -1,284 +1,148 @@
 package ru.misis.gamification.service;
 
-import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.misis.gamification.dto.AwardResult;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;
-import ru.misis.gamification.exception.DuplicateEventException;
+import ru.misis.gamification.exception.EventTypeNotFoundException;
 import ru.misis.gamification.model.admin.EventType;
-import ru.misis.gamification.model.admin.Transaction;
-import ru.misis.gamification.model.entity.User;
 import ru.misis.gamification.service.event.EventManagementServiceImpl;
 import ru.misis.gamification.service.event.EventTypeService;
-import ru.misis.gamification.service.transaction.TransactionService;
-import ru.misis.gamification.service.user.UserService;
+import ru.misis.gamification.service.point.PointsService;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class EventManagementServiceTest {
 
     @Mock
-    private UserService userService;
-
-    @Mock
-    private TransactionService transactionService;
+    private PointsService pointsService;
 
     @Mock
     private EventTypeService eventTypeService;
 
     @InjectMocks
-    private EventManagementServiceImpl service;
+    private EventManagementServiceImpl eventManagementService;
 
-    @Captor
-    private ArgumentCaptor<User> userCaptor;
-
-    @Captor
-    private ArgumentCaptor<Transaction> txCaptor;
-
-    private User testUser;
-    private EventType testEventType;
-
-    @BeforeEach
-    void setUp() {
-        testUser = User.builder()
-                .uuid(UUID.randomUUID())
-                .userId("test-user-123")
-                .totalPoints(150)
-                .level(2)
-                .build();
-
-        testEventType = EventType.builder()
-                .typeCode("quiz")
-                .displayName("Тест/Квиз")
-                .points(80)
-                .maxDailyPoints(300)
-                .active(true)
-                .build();
-    }
+    private final String userId = "user-123";
+    private final String eventId = "evt-999";
+    private final String typeCode = "quiz";
+    private final UUID transactionId = UUID.randomUUID();
 
     @Test
-    void process_successNewEvent_updatesUserAndReturnsSuccess() {
-        LmsEventRequestDto request = LmsEventRequestDto.builder()
-                .userId("test-user-123")
-                .eventId("evt-001")
-                .eventType("quiz")
+    void shouldReturnSuccess_whenAwardResultIsSuccess() {
+        LmsEventRequestDto request = createRequest();
+
+        EventType eventType = EventType.builder()
+                .typeCode(typeCode)
+                .displayName("Квиз / Тест")
                 .build();
 
-        when(eventTypeService.getActiveByCode("quiz")).thenReturn(testEventType);
-        when(eventTypeService.canAwardPoints(eq("test-user-123"), eq("quiz"), eq(80), any(LocalDate.class)))
-                .thenReturn(true);
-        when(userService.createIfNotExists("test-user-123")).thenReturn(testUser);
+        AwardResult awardResult = AwardResult.success(
+                80, 1250, 12, true, transactionId, 750L
+        );
 
-        Transaction savedTx = Transaction.builder()
-                .uuid(UUID.randomUUID())
-                .userId("test-user-123")
-                .eventId("evt-001")
-                .eventTypeCode("quiz")
-                .pointsEarned(80)
-                .build();
+        when(pointsService.awardPoints(request)).thenReturn(awardResult);
+        when(eventTypeService.getActiveByCode(typeCode)).thenReturn(eventType);
 
-        when(transactionService.saveIfNotExists(any())).thenReturn(savedTx);
+        LmsEventResponsetDto response = eventManagementService.process(request);
 
-        User updatedUser = User.builder()
-                .uuid(testUser.getUuid())
-                .userId("test-user-123")
-                .totalPoints(230)
-                .level(3)
-                .build();
-
-        when(userService.update(any())).thenReturn(updatedUser);
-
-        LmsEventResponsetDto response = service.process(request);
-
-        assertThat(response.isSuccess()).isTrue();
-        assertThat(response.getUserId()).isEqualTo("test-user-123");
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo("success");
+        assertThat(response.getUserId()).isEqualTo(userId);
+        assertThat(response.getEventId()).isEqualTo(eventId);
+        assertThat(response.getDisplayName()).isEqualTo("Квиз / Тест");
         assertThat(response.getPointsEarned()).isEqualTo(80);
-        assertThat(response.getTotalPoints()).isEqualTo(230);
-        assertThat(response.getEventId()).isEqualTo("evt-001");
-        assertThat(response.getDisplayName()).isEqualTo("Тест/Квиз");
+        assertThat(response.getTotalPoints()).isEqualTo(1250);
+        assertThat(response.getPointsToNextLevel()).isEqualTo(750L);
+        assertThat(response.getTransactionId()).isEqualTo(transactionId);
+        assertThat(response.getLevelUp()).isTrue();
+        assertThat(response.getProcessedAt()).isNotNull();
 
-        // Проверяем вызовы
-        verify(eventTypeService).getActiveByCode("quiz");
-        verify(eventTypeService).canAwardPoints("test-user-123", "quiz", 80, LocalDate.now());
-        verify(userService).createIfNotExists("test-user-123");
-
-        verify(transactionService).saveIfNotExists(txCaptor.capture());
-        Transaction capturedTx = txCaptor.getValue();
-        assertThat(capturedTx.getEventId()).isEqualTo("evt-001");
-        assertThat(capturedTx.getEventTypeCode()).isEqualTo("quiz");
-        assertThat(capturedTx.getPointsEarned()).isEqualTo(80);
-        assertThat(capturedTx.getDescription()).isEqualTo("Тип события: Тест/Квиз");
-
-        verify(userService).update(userCaptor.capture());
-        User capturedUser = userCaptor.getValue();
-        assertThat(capturedUser.getTotalPoints()).isEqualTo(230);
-        assertThat(capturedUser.getLevel()).isEqualTo(3);
+        verify(pointsService).awardPoints(request);
+        verify(eventTypeService).getActiveByCode(typeCode);
+        verifyNoMoreInteractions(pointsService, eventTypeService);
     }
 
     @Test
-    void process_duplicateEvent_returnsDuplicateWithoutUpdate() {
-        LmsEventRequestDto request = LmsEventRequestDto.builder()
-                .userId("test-user-123")
-                .eventId("evt-dup")
-                .eventType("quiz")
+    void shouldReturnDuplicate_whenAwardResultIsDuplicate() {
+        LmsEventRequestDto request = createRequest();
+
+        when(pointsService.awardPoints(request)).thenReturn(AwardResult.duplicate());
+
+        LmsEventResponsetDto response = eventManagementService.process(request);
+
+        assertThat(response.getStatus()).isEqualTo("duplicate");
+        assertThat(response.getEventId()).isEqualTo(eventId);
+        assertThat(response.getMessage()).contains(eventId);
+
+        verify(pointsService).awardPoints(request);
+        verifyNoInteractions(eventTypeService);
+    }
+
+    @Test
+    void shouldReturnError_whenAwardResultIsRejected() {
+        LmsEventRequestDto request = createRequest();
+
+        when(pointsService.awardPoints(request)).thenReturn(
+                AwardResult.rejected("Превышен дневной лимит")
+        );
+
+        LmsEventResponsetDto response = eventManagementService.process(request);
+
+        assertThat(response.getStatus()).isEqualTo("error");
+        assertThat(response.getMessage()).isEqualTo("Превышен дневной лимит");
+
+        verify(pointsService).awardPoints(request);
+        verifyNoInteractions(eventTypeService);
+    }
+
+    @Test
+    void shouldReturnError_whenEventTypeNotFound() {
+        LmsEventRequestDto request = createRequest();
+
+        when(pointsService.awardPoints(request))
+                .thenThrow(new EventTypeNotFoundException(typeCode));
+
+        assertThatThrownBy(() -> eventManagementService.process(request))
+                .isInstanceOf(EventTypeNotFoundException.class)
+                .hasMessageContaining(typeCode);
+
+        verify(pointsService).awardPoints(request);
+        verifyNoInteractions(eventTypeService);
+    }
+
+    @Test
+    void shouldReturnError_whenUnexpectedException() {
+        LmsEventRequestDto request = createRequest();
+
+        RuntimeException dbError = new RuntimeException("DB error");
+        when(pointsService.awardPoints(request)).thenThrow(dbError);
+
+        assertThatThrownBy(() -> eventManagementService.process(request))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("DB error");
+
+        verify(pointsService).awardPoints(request);
+        verifyNoInteractions(eventTypeService);
+    }
+
+    private LmsEventRequestDto createRequest() {
+        return LmsEventRequestDto.builder()
+                .userId(userId)
+                .eventId(eventId)
+                .eventType(typeCode)
                 .build();
-
-        when(eventTypeService.getActiveByCode("quiz")).thenReturn(testEventType);
-        when(eventTypeService.canAwardPoints(anyString(), anyString(), anyInt(), any(LocalDate.class)))
-                .thenReturn(true);
-        when(userService.createIfNotExists(anyString())).thenReturn(testUser);
-
-        doThrow(new DuplicateEventException("evt-dup"))
-                .when(transactionService).saveIfNotExists(any());
-
-        LmsEventResponsetDto response = service.process(request);
-
-        assertThat(response.isDuplicate()).isTrue();
-        assertThat(response.getEventId()).isEqualTo("evt-dup");
-        assertThat(response.getMessage()).contains("уже обработано");
-
-        verify(userService, never()).update(any());
-    }
-
-    @Test
-    void process_dailyLimitExceeded_returnsErrorWithoutTransaction() {
-        LmsEventRequestDto request = LmsEventRequestDto.builder()
-                .userId("test-user-123")
-                .eventId("evt-limit")
-                .eventType("quiz")
-                .build();
-
-        when(eventTypeService.getActiveByCode("quiz")).thenReturn(testEventType);
-        when(eventTypeService.canAwardPoints("test-user-123", "quiz", 80, LocalDate.now()))
-                .thenReturn(false);
-
-        LmsEventResponsetDto response = service.process(request);
-
-        assertThat(response.isError()).isTrue();
-        assertThat(response.getMessage()).contains("дневной лимит");
-
-        verifyNoInteractions(transactionService);
-        verify(userService, never()).update(any(User.class));
-    }
-
-    @Test
-    void process_unknownEventType_returnsError() {
-        LmsEventRequestDto request = LmsEventRequestDto.builder()
-                .userId("test-user-123")
-                .eventId("evt-unknown")
-                .eventType("unknown-type")
-                .build();
-
-        when(eventTypeService.getActiveByCode("unknown-type"))
-                .thenThrow(new EntityNotFoundException("Не найден"));
-
-        LmsEventResponsetDto response = service.process(request);
-
-        assertThat(response.isError()).isTrue();
-        assertThat(response.getMessage()).contains("Неизвестный или отключённый тип события");
-
-        verifyNoInteractions(transactionService, userService);
-    }
-
-    @Test
-    void process_nullRequest_returnsError() {
-        LmsEventResponsetDto response = service.process(null);
-
-        assertThat(response.isError()).isTrue();
-        assertThat(response.getMessage()).contains("не может быть null");
-
-        verifyNoInteractions(eventTypeService, transactionService, userService);
-    }
-
-    @Test
-    void process_blankUserId_returnsError() {
-        LmsEventRequestDto request = LmsEventRequestDto.builder()
-                .userId("   ")
-                .eventId("evt-001")
-                .eventType("quiz")
-                .build();
-
-        LmsEventResponsetDto response = service.process(request);
-
-        assertThat(response.isError()).isTrue();
-        assertThat(response.getMessage()).contains("Идентификатор пользователя обязателен");
-
-        verifyNoInteractions(eventTypeService, transactionService, userService);
-    }
-
-    @Test
-    void process_blankEventId_returnsError() {
-        LmsEventRequestDto request = LmsEventRequestDto.builder()
-                .userId("test-user")
-                .eventId("")
-                .eventType("quiz")
-                .build();
-
-        LmsEventResponsetDto response = service.process(request);
-
-        assertThat(response.isError()).isTrue();
-        assertThat(response.getMessage()).contains("Идентификатор события обязателен");
-
-        verifyNoInteractions(eventTypeService, transactionService, userService);
-    }
-
-    @Test
-    void process_blankEventType_returnsError() {
-        LmsEventRequestDto request = LmsEventRequestDto.builder()
-                .userId("test-user")
-                .eventId("evt-001")
-                .eventType("  ")
-                .build();
-
-        LmsEventResponsetDto response = service.process(request);
-
-        assertThat(response.isError()).isTrue();
-        assertThat(response.getMessage()).contains("Тип события (eventType) обязателен");
-
-        verifyNoInteractions(eventTypeService, transactionService, userService);
-    }
-
-    @Test
-    void process_unexpectedSaveError_returnsError() {
-        LmsEventRequestDto request = LmsEventRequestDto.builder()
-                .userId("test-user-123")
-                .eventId("evt-error")
-                .eventType("quiz")
-                .build();
-
-        when(eventTypeService.getActiveByCode("quiz")).thenReturn(testEventType);
-        when(eventTypeService.canAwardPoints(anyString(), anyString(), anyInt(), any(LocalDate.class)))
-                .thenReturn(true);
-        when(userService.createIfNotExists(anyString())).thenReturn(testUser);
-
-        RuntimeException ex = new RuntimeException("DB down");
-        doThrow(ex).when(transactionService).saveIfNotExists(any());
-
-        LmsEventResponsetDto response = service.process(request);
-
-        assertThat(response.isError()).isTrue();
-        assertThat(response.getMessage()).contains("Внутренняя ошибка сервера");
-
-        verify(userService, never()).update(any());
     }
 }

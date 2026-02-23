@@ -6,7 +6,7 @@ import ru.misis.gamification.model.admin.EventType;
 import java.time.LocalDate;
 
 /**
- * Сервис для работы с типами событий {@link EventType}
+ * Сервис управления типами событий {@link EventType}
  * Отвечает за поиск, проверку лимитов и получение эффективного количества очков
  */
 public interface EventTypeService {

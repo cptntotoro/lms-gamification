@@ -10,6 +10,8 @@ import ru.misis.gamification.exception.DuplicateEventException;
 import ru.misis.gamification.model.admin.Transaction;
 import ru.misis.gamification.repository.TransactionRepository;
 
+import java.time.LocalDate;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -21,7 +23,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
 
     @Override
-    public boolean isEventTransactionExists(String eventId) {
+    public boolean isExistsByEventId(String eventId) {
         return transactionRepository.existsByEventId(eventId);
     }
 
@@ -59,5 +61,11 @@ public class TransactionServiceImpl implements TransactionService {
 
         log.debug("Найдено транзакций: count={}, total={}", page.getNumberOfElements(), page.getTotalElements());
         return page;
+    }
+
+    @Override
+    public long sumPointsByUserIdAndEventTypeAndDate(String userId, String typeCode, LocalDate date) {
+        return transactionRepository.sumPointsByUserIdAndEventTypeAndDate(
+                userId, typeCode, date);
     }
 }

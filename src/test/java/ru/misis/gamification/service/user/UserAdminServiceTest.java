@@ -32,9 +32,6 @@ import static org.mockito.Mockito.when;
 class UserAdminServiceTest {
 
     @Mock
-    private UserService userService;
-
-    @Mock
     private UserRepository userRepository;
 
     @Mock
@@ -70,6 +67,7 @@ class UserAdminServiceTest {
     @Test
     void findByUserId_existingUser_shouldReturnUserAdminDto() {
         String userId = "lms-user-12345";
+
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(testUser));
         when(userMapper.userToUserAdminDto(testUser)).thenReturn(testUserAdminDto);
 
@@ -82,12 +80,13 @@ class UserAdminServiceTest {
 
         verify(userRepository).findByUserId(userId);
         verify(userMapper).userToUserAdminDto(testUser);
-        verifyNoMoreInteractions(userRepository, userMapper, userService);
+        verifyNoMoreInteractions(userRepository, userMapper);
     }
 
     @Test
     void findByUserId_nonExistingUser_shouldThrowUserNotFoundException() {
         String userId = "unknown-user";
+
         when(userRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userAdminService.findByUserId(userId))
@@ -95,20 +94,20 @@ class UserAdminServiceTest {
                 .hasMessageContaining("Пользователь с ID " + userId + " не найден");
 
         verify(userRepository).findByUserId(userId);
-        verifyNoInteractions(userMapper, userService);
+        verifyNoInteractions(userMapper);
     }
 
     @Test
     void findByUserId_blankUserId_shouldThrowIllegalArgumentException() {
-        assertThatThrownBy(() -> userAdminService.findByUserId("   "))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("userId не может быть пустым");
-
         assertThatThrownBy(() -> userAdminService.findByUserId(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("userId не может быть пустым");
 
-        verifyNoInteractions(userRepository, userMapper, userService);
+        assertThatThrownBy(() -> userAdminService.findByUserId("   "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("userId не может быть пустым");
+
+        verifyNoInteractions(userRepository, userMapper);
     }
 
     @Test
@@ -128,6 +127,5 @@ class UserAdminServiceTest {
         verify(userRepository).findAll(pageable);
         verify(userMapper).userToUserAdminDto(testUser);
         verifyNoMoreInteractions(userRepository, userMapper);
-        verifyNoInteractions(userService);
     }
 }

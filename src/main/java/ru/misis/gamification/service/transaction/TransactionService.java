@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import ru.misis.gamification.exception.DuplicateEventException;
 import ru.misis.gamification.model.admin.Transaction;
 
+import java.time.LocalDate;
+
 /**
  * Сервис управления транзакциями
  * Основная задача — гарантировать уникальность eventId
@@ -18,7 +20,7 @@ public interface TransactionService {
      * @param eventId Идентификатор события из LMS
      * @return Да / Нет
      */
-    boolean isEventTransactionExists(String eventId);
+    boolean isExistsByEventId(String eventId);
 
     /**
      * Сохранить транзакцию, если событие с таким {@link Transaction#getEventId()} ещё не обрабатывалось
@@ -38,4 +40,6 @@ public interface TransactionService {
      * @return Страница транзакций
      */
     Page<Transaction> getTransactionsByUserId(String userId, Pageable pageable);
+
+    long sumPointsByUserIdAndEventTypeAndDate(String userId, String typeCode, LocalDate date);
 }

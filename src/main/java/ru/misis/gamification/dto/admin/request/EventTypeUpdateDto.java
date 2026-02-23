@@ -3,6 +3,7 @@ package ru.misis.gamification.dto.admin.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -43,7 +44,7 @@ public class EventTypeUpdateDto {
     /**
      * Флаг активности
      */
-    @Schema(description = "Флаг активности типа события (true = активен, false = отключён)",
-            example = "false", required = false)
+    @NotNull(message = "Флаг активности обязателен")
+    @Schema(description = "Флаг активности типа события (true = активен, false = отключён)", example = "false")
     private Boolean active;
 }

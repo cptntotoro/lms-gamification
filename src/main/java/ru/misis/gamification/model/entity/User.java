@@ -77,11 +77,4 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    /**
-     * Пересчет уровня по формуле: level = floor(totalPoints / 100) + 1
-     */
-    public void recalculateLevel() {
-        this.level = (this.totalPoints / 100) + 1;
-    }
 }
