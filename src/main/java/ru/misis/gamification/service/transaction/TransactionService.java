@@ -10,7 +10,6 @@ import java.time.LocalDate;
 
 /**
  * Сервис управления транзакциями
- * Основная задача — гарантировать уникальность eventId
  */
 public interface TransactionService {
 

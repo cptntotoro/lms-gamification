@@ -1,25 +1,12 @@
-package ru.misis.gamification.dto.result;
+package ru.misis.gamification.service.point.result;
 
 import lombok.Builder;
 import lombok.Getter;
-import ru.misis.gamification.service.point.PointsService;
 
 import java.util.UUID;
 
 /**
- * Результат операции начисления очков за событие.
- * <p>
- * Класс является иммутабельным (все поля final) и используется для возврата результата из метода
- * {@link PointsService#awardPoints(LmsEventRequestDto)}.
- * </p>
- * <p>
- * Возможные статусы:
- * <ul>
- *     <li>{@link AwardStatus#SUCCESS} — очки успешно начислены</li>
- *     <li>{@link AwardStatus#DUPLICATE} — событие уже было обработано ранее (дубликат)</li>
- *     <li>{@link AwardStatus#REJECTED} — начисление отклонено (например, превышен лимит)</li>
- * </ul>
- * </p>
+ * Внутренний результат операции начисления очков
  */
 @Getter
 @Builder
@@ -43,7 +30,7 @@ public class AwardResult {
     /**
      * Уровень пользователя после начисления (при успехе)
      */
-    private final Integer levelAfter;
+    private final Integer newLevel;
 
     /**
      * Флаг переходd на новый уровень
@@ -66,25 +53,34 @@ public class AwardResult {
     private final Long pointsToNextLevel;
 
     /**
-     * Создаёт успешный результат начисления очков.
+     * Процент прогресса уровня
+     */
+    private final Double progressPercent;
+
+    /**
+     * Создаёт успешный результат начисления очков
      *
-     * @param pointsEarned Начисленные очки
-     * @param totalAfter   Итоговое количество очков
-     * @param levelAfter   Уровень после начисления
-     * @param levelUp      Был ли level up
-     * @param txId         Идентификатор транзакции
-     * @param pointsToNext Очки до следующего уровня
+     * @param pointsEarned    Начисленные очки
+     * @param totalAfter      Итоговое количество очков
+     * @param levelAfter      Уровень после начисления
+     * @param levelUp         Был ли level up
+     * @param txId            Идентификатор транзакции
+     * @param pointsToNext    Очки до следующего уровня
+     * @param progressPercent Процент прогресса уровня
      * @return Успешный AwardResult
      */
-    public static AwardResult success(int pointsEarned, int totalAfter, int levelAfter, boolean levelUp, UUID txId, long pointsToNext) {
+    public static AwardResult success(
+            int pointsEarned, int totalAfter, int levelAfter,
+            boolean levelUp, UUID txId, long pointsToNext, double progressPercent) {
         return AwardResult.builder()
                 .status(AwardStatus.SUCCESS)
                 .pointsEarned(pointsEarned)
                 .totalPointsAfter(totalAfter)
-                .levelAfter(levelAfter)
+                .newLevel(levelAfter)
                 .levelUp(levelUp)
                 .transactionId(txId)
                 .pointsToNextLevel(pointsToNext)
+                .progressPercent(progressPercent)
                 .build();
     }
 

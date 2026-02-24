@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ru.misis.gamification.dto.admin.response.EventTypeDto;
 import ru.misis.gamification.mapper.EventTypeMapper;
-import ru.misis.gamification.service.event.admin.EventTypeAdminService;
+import ru.misis.gamification.service.event.EventTypeAdminService;
 
 @Tag(name = "Admin - Типы событий (страницы)", description = "HTML-страницы управления типами событий")
 @Controller

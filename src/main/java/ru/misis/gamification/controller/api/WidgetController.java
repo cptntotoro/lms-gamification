@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.web.response.UserDto;
-import ru.misis.gamification.mapper.UserMapper;
-import ru.misis.gamification.model.entity.User;
-import ru.misis.gamification.service.user.UserService;
+import ru.misis.gamification.service.progress.UserProgressService;
 
 /**
  * Контроллер для получения данных пользователями (виджеты).
@@ -28,14 +26,9 @@ import ru.misis.gamification.service.user.UserService;
 public class WidgetController {
 
     /**
-     * Сервис управления пользователями
+     * Сервис подготовки данных прогресса пользователя для виджета
      */
-    private final UserService userService;
-
-    /**
-     * Маппер пользователей
-     */
-    private final UserMapper userMapper;
+    private final UserProgressService userProgressService;
 
     /**
      * Получить прогресс пользователя для виджета
@@ -48,14 +41,10 @@ public class WidgetController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Прогресс пользователя успешно получен",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
-            @ApiResponse(responseCode = "400", description = "Некорректный userId")
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
     public ResponseEntity<UserDto> getUserProgress(@Parameter(description = "Внешний ID пользователя из LMS",
             required = true, example = "alex123") @PathVariable String userId) {
-        User user = userService.get(userId);
-        UserDto userDto = userMapper.userToUserDto(user);
-        return ResponseEntity.ok(userDto);
-
+        return ResponseEntity.ok(userProgressService.getProgress(userId));
     }
 }

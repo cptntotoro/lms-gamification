@@ -29,7 +29,6 @@ public interface UserService {
      */
     User createIfNotExists(String userId);
 
-
     /**
      * Получить пользователя по идентификатору из LMS с пессимистической блокировкой на запись
      * <p>
@@ -62,5 +61,4 @@ public interface UserService {
      * @return Страница пользователей
      */
     Page<User> findAll(Pageable pageable);
-
 }

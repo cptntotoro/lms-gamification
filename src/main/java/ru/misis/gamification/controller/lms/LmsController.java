@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
-import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;
-import ru.misis.gamification.service.event.EventManagementService;
+import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
+import ru.misis.gamification.service.event.processor.LmsEventProcessor;
 
 /**
  * Контроллер для приема событий от LMS
@@ -31,7 +31,7 @@ public class LmsController {
     /**
      * Сервис обработки событий от LMS
      */
-    private final EventManagementService eventManagementService;
+    private final LmsEventProcessor lmsEventProcessor;
 
     @PostMapping
     @Operation(
@@ -40,16 +40,16 @@ public class LmsController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Событие успешно обработано",
-                    content = @Content(schema = @Schema(implementation = LmsEventResponsetDto.class))),
+                    content = @Content(schema = @Schema(implementation = LmsEventResponseDto.class))),
             @ApiResponse(responseCode = "400", description = "Некорректные данные события"),
             @ApiResponse(responseCode = "409", description = "Событие уже было обработано (дубликат)"),
             @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     })
-    public ResponseEntity<LmsEventResponsetDto> processUserEvent(@RequestBody @Valid LmsEventRequestDto lmsEventRequestDto) {
+    public ResponseEntity<LmsEventResponseDto> processUserEvent(@RequestBody @Valid LmsEventRequestDto lmsEventRequestDto) {
         log.info("Получен запрос от LMS: userId={}, eventId={}, eventType={}",
                 lmsEventRequestDto.getUserId(), lmsEventRequestDto.getEventId(), lmsEventRequestDto.getEventType());
 
-        LmsEventResponsetDto response = eventManagementService.process(lmsEventRequestDto);
+        LmsEventResponseDto response = lmsEventProcessor.process(lmsEventRequestDto);
 
         log.debug("Ответ для LMS сформирован: status={}", response.getStatus());
         return ResponseEntity.ok(response);

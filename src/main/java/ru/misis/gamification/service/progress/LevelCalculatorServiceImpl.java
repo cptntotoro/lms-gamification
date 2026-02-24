@@ -1,4 +1,4 @@
-package ru.misis.gamification.service.level;
+package ru.misis.gamification.service.progress;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -36,7 +36,7 @@ public class LevelCalculatorServiceImpl implements LevelCalculatorService {
             case "TRIANGULAR" -> calculateTriangular(totalPoints);
             case "QUADRATIC" -> calculateQuadratic(totalPoints);
             case "LINEAR" -> calculateLinear(totalPoints);
-            default -> 1 + (totalPoints / 1000); // fallback
+            default -> 1 + (totalPoints / 1000);
         };
     }
 

@@ -1,4 +1,4 @@
-package ru.misis.gamification.service;
+package ru.misis.gamification.service.event.processor;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -6,13 +6,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
-import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;
-import ru.misis.gamification.dto.result.AwardResult;
+import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
 import ru.misis.gamification.model.admin.EventType;
-import ru.misis.gamification.service.event.EventManagementServiceImpl;
 import ru.misis.gamification.service.event.EventTypeService;
 import ru.misis.gamification.service.point.PointsService;
+import ru.misis.gamification.service.point.result.AwardResult;
 
 import java.util.UUID;
 
@@ -24,7 +23,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class EventManagementServiceTest {
+class LmsEventProcessorTest {
 
     @Mock
     private PointsService pointsService;
@@ -33,7 +32,7 @@ class EventManagementServiceTest {
     private EventTypeService eventTypeService;
 
     @InjectMocks
-    private EventManagementServiceImpl eventManagementService;
+    private LmsEventProcessorImpl lmsEventProcessor;
 
     private final String userId = "user-123";
     private final String eventId = "evt-999";
@@ -50,13 +49,19 @@ class EventManagementServiceTest {
                 .build();
 
         AwardResult awardResult = AwardResult.success(
-                80, 1250, 12, true, transactionId, 750L
+                80,
+                1250,
+                12,
+                true,
+                transactionId,
+                750L,
+                62.5
         );
 
         when(pointsService.awardPoints(request)).thenReturn(awardResult);
         when(eventTypeService.getActiveByCode(typeCode)).thenReturn(eventType);
 
-        LmsEventResponsetDto response = eventManagementService.process(request);
+        LmsEventResponseDto response = lmsEventProcessor.process(request);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo("success");
@@ -65,9 +70,10 @@ class EventManagementServiceTest {
         assertThat(response.getDisplayName()).isEqualTo("Квиз / Тест");
         assertThat(response.getPointsEarned()).isEqualTo(80);
         assertThat(response.getTotalPoints()).isEqualTo(1250);
-        assertThat(response.getPointsToNextLevel()).isEqualTo(750L);
-        assertThat(response.getTransactionId()).isEqualTo(transactionId);
         assertThat(response.getLevelUp()).isTrue();
+        assertThat(response.getPointsToNextLevel()).isEqualTo(750L);
+        assertThat(response.getProgressPercent()).isEqualTo(62.5);
+        assertThat(response.getTransactionId()).isEqualTo(transactionId);
         assertThat(response.getProcessedAt()).isNotNull();
 
         verify(pointsService).awardPoints(request);
@@ -81,7 +87,7 @@ class EventManagementServiceTest {
 
         when(pointsService.awardPoints(request)).thenReturn(AwardResult.duplicate());
 
-        LmsEventResponsetDto response = eventManagementService.process(request);
+        LmsEventResponseDto response = lmsEventProcessor.process(request);
 
         assertThat(response.getStatus()).isEqualTo("duplicate");
         assertThat(response.getEventId()).isEqualTo(eventId);
@@ -99,7 +105,7 @@ class EventManagementServiceTest {
                 AwardResult.rejected("Превышен дневной лимит")
         );
 
-        LmsEventResponsetDto response = eventManagementService.process(request);
+        LmsEventResponseDto response = lmsEventProcessor.process(request);
 
         assertThat(response.getStatus()).isEqualTo("error");
         assertThat(response.getMessage()).isEqualTo("Превышен дневной лимит");
@@ -109,30 +115,34 @@ class EventManagementServiceTest {
     }
 
     @Test
-    void shouldReturnError_whenEventTypeNotFound() {
+    void shouldThrowException_whenEventTypeNotFoundDuringSuccess() {
         LmsEventRequestDto request = createRequest();
 
-        when(pointsService.awardPoints(request))
+        AwardResult successResult = AwardResult.success(
+                80, 1250, 12, true, transactionId, 750L, 62.5
+        );
+
+        when(pointsService.awardPoints(request)).thenReturn(successResult);
+        when(eventTypeService.getActiveByCode(typeCode))
                 .thenThrow(new EventTypeNotFoundException(typeCode));
 
-        assertThatThrownBy(() -> eventManagementService.process(request))
+        assertThatThrownBy(() -> lmsEventProcessor.process(request))
                 .isInstanceOf(EventTypeNotFoundException.class)
                 .hasMessageContaining(typeCode);
 
         verify(pointsService).awardPoints(request);
-        verifyNoInteractions(eventTypeService);
+        verify(eventTypeService).getActiveByCode(typeCode);
     }
 
     @Test
-    void shouldReturnError_whenUnexpectedException() {
+    void shouldPropagateUnexpectedException() {
         LmsEventRequestDto request = createRequest();
 
-        RuntimeException dbError = new RuntimeException("DB error");
+        RuntimeException dbError = new RuntimeException("Database connection failed");
         when(pointsService.awardPoints(request)).thenThrow(dbError);
 
-        assertThatThrownBy(() -> eventManagementService.process(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("DB error");
+        assertThatThrownBy(() -> lmsEventProcessor.process(request))
+                .isSameAs(dbError);
 
         verify(pointsService).awardPoints(request);
         verifyNoInteractions(eventTypeService);

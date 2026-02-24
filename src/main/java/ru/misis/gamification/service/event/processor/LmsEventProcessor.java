@@ -1,12 +1,12 @@
-package ru.misis.gamification.service.event;
+package ru.misis.gamification.service.event.processor;
 
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
-import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;
+import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
 
 /**
  * Сервис обработки событий от LMS
  */
-public interface EventManagementService {
+public interface LmsEventProcessor {
 
     /**
      * Обработать входящее событие от LMS
@@ -23,5 +23,5 @@ public interface EventManagementService {
      * @param lmsEventRequestDto DTO события из LMS
      * @return DTO ответа LMS-системе на обработанное событие
      */
-    LmsEventResponsetDto process(LmsEventRequestDto lmsEventRequestDto);
+    LmsEventResponseDto process(LmsEventRequestDto lmsEventRequestDto);
 }

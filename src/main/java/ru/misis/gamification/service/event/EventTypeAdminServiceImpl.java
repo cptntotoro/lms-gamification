@@ -1,4 +1,4 @@
-package ru.misis.gamification.service.event.admin;
+package ru.misis.gamification.service.event;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

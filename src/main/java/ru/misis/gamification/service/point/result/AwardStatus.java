@@ -1,4 +1,4 @@
-package ru.misis.gamification.dto.result;
+package ru.misis.gamification.service.point.result;
 
 import ru.misis.gamification.model.admin.EventType;
 

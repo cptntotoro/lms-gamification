@@ -18,19 +18,18 @@
             <div class="user-main-info">
                 <h1 th:text="${user.userId}"></h1>
                 <div class="meta-info">
-                    <span class="id-badge" th:text="'UUID: ' + ${user.uuid}"></span>
-                </div>
+                    <span class="id-badge" th:text="'UUID: ' + ${user.uuid}"></span></div>
             </div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-item">
                 <div class="stat-label">Общее количество очков</div>
-                <div class="stat-value" th:text="${user.totalPoints} ?: '0'">1250</div>
+                <div class="stat-value" th:text="${user.totalPoints} ?: '0'">0</div>
             </div>
             <div class="stat-item">
                 <div class="stat-label">Текущий уровень</div>
-                <div class="stat-value" th:text="${user.level} ?: '1'"></div>
+                <div class="stat-value" th:text="${user.level} ?: '1'">1</div>
             </div>
             <div class="stat-item">
                 <div class="stat-label">Дата регистрации</div>
@@ -45,16 +44,16 @@
         <div class="progress-section">
             <div class="progress-header">
                 <span>Прогресс до следующего уровня</span>
-                <span th:text="${user.totalPoints} + ' / ' + ${nextLevelThreshold} + ' XP'"></span>
+                <span th:text="${user.totalPoints} + ' / ' + ${user.pointsToNextLevel} + ' XP'">0 / 0 XP</span>
             </div>
             <div class="progress-bar-container">
                 <div class="progress-bar"
-                     th:style="'width: ' + ${progressPercent} + '%'"
-                     th:attr="data-progress=${progressPercent} + '%'"></div>
+                     th:style="'width: ' + ${user.progressPercent} + '%'"
+                     th:attr="data-progress=${user.progressPercent} + '%'"></div>
             </div>
             <div class="progress-text">
-                Осталось <strong th:text="${pointsToNext} + ' XP'">5750 XP</strong> до уровня
-                <strong th:text="${user.level + 1}">13</strong>
+                Осталось <strong th:text="${user.pointsToNextLevel - user.totalPoints} + ' XP'"></strong>
+                до уровня <strong th:text="${user.level + 1}"></strong>
             </div>
         </div>
     </div>

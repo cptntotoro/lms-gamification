@@ -24,7 +24,7 @@ import ru.misis.gamification.dto.admin.request.EventTypeUpdateDto;
 import ru.misis.gamification.dto.admin.response.EventTypeDto;
 import ru.misis.gamification.mapper.EventTypeMapper;
 import ru.misis.gamification.model.admin.EventType;
-import ru.misis.gamification.service.event.admin.EventTypeAdminService;
+import ru.misis.gamification.service.event.EventTypeAdminService;
 
 import java.util.UUID;
 

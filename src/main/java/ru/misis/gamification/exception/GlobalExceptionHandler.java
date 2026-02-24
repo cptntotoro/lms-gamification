@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;
+import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
 
 /**
  * Глобальный обработчик исключений для всех REST-контроллеров
@@ -16,38 +16,38 @@ import ru.misis.gamification.dto.lms.response.LmsEventResponsetDto;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateEventException.class)
-    public ResponseEntity<LmsEventResponsetDto> handleDuplicateEvent(DuplicateEventException ex) {
+    public ResponseEntity<LmsEventResponseDto> handleDuplicateEvent(DuplicateEventException ex) {
         log.info("Обнаружен дубликат события: {}", ex.getMessage());
-        return ResponseEntity.ok(LmsEventResponsetDto.duplicate(ex.getMessage().replaceAll(".*: ", "")));
+        return ResponseEntity.ok(LmsEventResponseDto.duplicate(ex.getMessage().replaceAll(".*: ", "")));
     }
 
     @ExceptionHandler(DuplicateEventTypeException.class)
-    public ResponseEntity<LmsEventResponsetDto> handleDuplicateEventType(DuplicateEventTypeException ex) {
+    public ResponseEntity<LmsEventResponseDto> handleDuplicateEventType(DuplicateEventTypeException ex) {
         log.info("Обнаружен дубликат типа события: {}", ex.getMessage());
-        return ResponseEntity.ok(LmsEventResponsetDto.duplicate(ex.getMessage().replaceAll(".*: ", "")));
+        return ResponseEntity.ok(LmsEventResponseDto.duplicate(ex.getMessage().replaceAll(".*: ", "")));
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<LmsEventResponsetDto> handleUserNotFound(UserNotFoundException ex) {
+    public ResponseEntity<LmsEventResponseDto> handleUserNotFound(UserNotFoundException ex) {
         log.warn("Ошибка: {}", ex.getMessage());
-        return ResponseEntity.ok(LmsEventResponsetDto.error(ex.getMessage()));
+        return ResponseEntity.ok(LmsEventResponseDto.error(ex.getMessage()));
     }
 
     @ExceptionHandler(EventTypeNotFoundException.class)
-    public ResponseEntity<LmsEventResponsetDto> handleUserNotFound(EventTypeNotFoundException ex) {
+    public ResponseEntity<LmsEventResponseDto> handleUserNotFound(EventTypeNotFoundException ex) {
         log.warn("Ошибка: {}", ex.getMessage());
-        return ResponseEntity.ok(LmsEventResponsetDto.error(ex.getMessage()));
+        return ResponseEntity.ok(LmsEventResponseDto.error(ex.getMessage()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<LmsEventResponsetDto> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+    public ResponseEntity<LmsEventResponseDto> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.warn("Нарушение целостности данных: {}", ex.getMostSpecificCause().getMessage());
-        return ResponseEntity.ok(LmsEventResponsetDto.duplicate("Событие уже обработано (обнаружено на уровне БД)"));
+        return ResponseEntity.ok(LmsEventResponseDto.duplicate("Событие уже обработано (обнаружено на уровне БД)"));
     }
 
     // Ошибки валидации @Valid
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<LmsEventResponsetDto> handleValidationErrors(MethodArgumentNotValidException ex) {
+    public ResponseEntity<LmsEventResponseDto> handleValidationErrors(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
@@ -55,13 +55,13 @@ public class GlobalExceptionHandler {
                 .orElse("Ошибка валидации запроса");
 
         log.warn("Ошибка валидации входящего запроса: {}", message);
-        return ResponseEntity.badRequest().body(LmsEventResponsetDto.error(message));
+        return ResponseEntity.badRequest().body(LmsEventResponseDto.error(message));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<LmsEventResponsetDto> handleGenericException(Exception ex) {
+    public ResponseEntity<LmsEventResponseDto> handleGenericException(Exception ex) {
         log.error("Необработанная ошибка при обработке запроса", ex);
         return ResponseEntity.internalServerError()
-                .body(LmsEventResponsetDto.error("Внутренняя ошибка сервера геймификации"));
+                .body(LmsEventResponseDto.error("Внутренняя ошибка сервера геймификации"));
     }
 }

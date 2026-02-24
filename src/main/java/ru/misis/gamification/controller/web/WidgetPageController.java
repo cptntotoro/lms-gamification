@@ -4,29 +4,24 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import ru.misis.gamification.dto.web.response.UserDto;
-import ru.misis.gamification.mapper.UserMapper;
-import ru.misis.gamification.model.entity.User;
-import ru.misis.gamification.service.user.UserService;
+import ru.misis.gamification.service.progress.UserProgressService;
 
 @Tag(name = "Web Pages", description = "Простые HTML-страницы приложения")
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class WidgetPageController {
 
     /**
-     * Сервис управления пользователями
+     * Сервис подготовки данных прогресса пользователя для виджета
      */
-    private final UserService userService;
-
-    /**
-     * Маппер пользователей
-     */
-    private final UserMapper userMapper;
+    private final UserProgressService userProgressService;
 
     @Operation(
             summary = "Главная страница",
@@ -35,9 +30,18 @@ public class WidgetPageController {
     @GetMapping("/{userId}/widget")
     public String getUserWidget(@Parameter(description = "Внешний ID пользователя из LMS",
             required = true, example = "alex123") @PathVariable String userId, Model model) {
-        User user = userService.get(userId);
-        UserDto userDto = userMapper.userToUserDto(user);
-        model.addAttribute("user", userDto);
-        return "widget";
+        log.debug("Открыт демо-виджет для пользователя: userId={}", userId);
+
+        try {
+            UserDto userDto = userProgressService.getProgress(userId);
+
+            model.addAttribute("user", userDto);
+            return "widget";
+        } catch (Exception e) {
+            log.warn("Ошибка при загрузке демо-виджета для userId={}: {}", userId, e.getMessage());
+            model.addAttribute("error", "Данные пользователя недоступны");
+            model.addAttribute("user", null);
+            return "widget";
+        }
     }
 }
