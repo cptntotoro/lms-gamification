@@ -8,10 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
-import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.mapper.UserMapper;
 import ru.misis.gamification.model.entity.User;
-import ru.misis.gamification.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +20,6 @@ public class UserAdminServiceImpl implements UserAdminService {
      * Сервис управления пользователями
      */
     private final UserService userService;
-
-    /**
-     * Репозиторий пользователей
-     */
-    private final UserRepository userRepository;
 
     /**
      * Маппер пользователей
@@ -40,8 +33,7 @@ public class UserAdminServiceImpl implements UserAdminService {
             throw new IllegalArgumentException("userId не может быть пустым");
         }
 
-        User user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с ID " + userId + " не найден"));
+        User user = userService.get(userId);
 
         log.debug("Админ запросил информацию о пользователе: userId={}", userId);
 
@@ -49,8 +41,12 @@ public class UserAdminServiceImpl implements UserAdminService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UserAdminDto> findAll(Pageable pageable) {
-        return userRepository.findAll(pageable)
+        log.debug("Админ запросил список всех пользователей: page={}, size={}, sort={}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+
+        return userService.findAll(pageable)
                 .map(userMapper::userToUserAdminDto);
     }
 

@@ -1,6 +1,7 @@
 package ru.misis.gamification.service.user;
 
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.model.entity.User;
 
@@ -28,7 +29,18 @@ public interface UserService {
      */
     User createIfNotExists(String userId);
 
-    @Transactional
+
+    /**
+     * Получить пользователя по идентификатору из LMS с пессимистической блокировкой на запись
+     * <p>
+     * Если пользователь существует — возвращает его с наложенной блокировкой {@code PESSIMISTIC_WRITE}
+     * (FOR UPDATE), что позволяет безопасно обновлять сущность в рамках текущей транзакции без риска
+     * race condition.
+     * </p>
+     *
+     * @param userId Идентификатор пользователя из LMS
+     * @return Пользователь (существующий с блокировкой или только что созданный)
+     */
     User getOrCreateLocked(String userId);
 
     /**
@@ -39,4 +51,16 @@ public interface UserService {
      * @throws IllegalArgumentException если у пользователя нет UUID
      */
     User update(User user);
+
+    /**
+     * Получить страницу всех пользователей с поддержкой пагинации и сортировки
+     * <p>
+     * Метод предназначен в основном для административных целей.
+     * </p>
+     *
+     * @param pageable Параметры пагинации и сортировки
+     * @return Страница пользователей
+     */
+    Page<User> findAll(Pageable pageable);
+
 }

@@ -6,10 +6,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.model.entity.User;
 import ru.misis.gamification.repository.UserRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -193,5 +200,89 @@ class UserServiceTest {
     void update_nullUser_shouldThrowNullPointerException() {
         assertThatThrownBy(() -> userService.update(null))
                 .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void findAll_withData_shouldReturnPageOfUsers() {
+        Pageable pageable = PageRequest.of(0, 5);
+        List<User> users = List.of(
+                User.builder().uuid(UUID.randomUUID()).userId("user-1").totalPoints(100).level(2).build(),
+                User.builder().uuid(UUID.randomUUID()).userId("user-2").totalPoints(500).level(5).build()
+        );
+        Page<User> userPage = new PageImpl<>(users, pageable, 2);
+
+        when(userRepository.findAll(pageable)).thenReturn(userPage);
+
+        Page<User> result = userService.findAll(pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent().get(0).getUserId()).isEqualTo("user-1");
+        assertThat(result.getContent().get(1).getUserId()).isEqualTo("user-2");
+
+        verify(userRepository).findAll(pageable);
+        verifyNoMoreInteractions(userRepository);
+    }
+
+    @Test
+    void findAll_emptyRepository_shouldReturnEmptyPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(userRepository.findAll(pageable)).thenReturn(emptyPage);
+
+        Page<User> result = userService.findAll(pageable);
+
+        assertThat(result.getTotalElements()).isZero();
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalPages()).isZero();
+
+        verify(userRepository).findAll(pageable);
+        verifyNoMoreInteractions(userRepository);
+    }
+
+    @Test
+    void findAll_secondPage_shouldReturnCorrectPage() {
+        Pageable pageable = PageRequest.of(1, 5);
+        List<User> usersOnPage2 = List.of(
+                User.builder().uuid(UUID.randomUUID()).userId("user-6").totalPoints(300).level(4).build()
+        );
+        Page<User> page2 = new PageImpl<>(usersOnPage2, pageable, 6);
+
+        when(userRepository.findAll(pageable)).thenReturn(page2);
+
+        Page<User> result = userService.findAll(pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(6);
+        assertThat(result.getNumber()).isEqualTo(1);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getUserId()).isEqualTo("user-6");
+
+        verify(userRepository).findAll(pageable);
+        verifyNoMoreInteractions(userRepository);
+    }
+
+    @Test
+    void findAll_withSorting_shouldPassSortingToRepository() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("totalPoints").descending());
+        Page<User> userPage = new PageImpl<>(List.of(existingUser), pageable, 1);
+
+        when(userRepository.findAll(pageable)).thenReturn(userPage);
+
+        Page<User> result = userService.findAll(pageable);
+
+        assertThat(result.getContent().getFirst().getTotalPoints()).isEqualTo(150);
+
+        verify(userRepository).findAll(pageable);
+        verifyNoMoreInteractions(userRepository);
+    }
+
+    @Test
+    void findAll_nullPageable_shouldThrowNullPointerException() {
+        assertThatThrownBy(() -> userService.findAll(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("pageable");
+
+        verifyNoInteractions(userRepository);
     }
 }

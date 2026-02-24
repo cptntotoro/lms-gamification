@@ -1,7 +1,7 @@
 package ru.misis.gamification.service.point;
 
-import ru.misis.gamification.dto.AwardResult;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
+import ru.misis.gamification.dto.result.AwardResult;
 
 /**
  * Сервис начисления очков
