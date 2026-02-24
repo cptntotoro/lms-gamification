@@ -2,6 +2,8 @@ package ru.misis.gamification.service.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.exception.UserNotFoundException;
@@ -73,5 +75,14 @@ public class UserServiceImpl implements UserService {
         log.debug("Пользователь обновлён: userId={}, totalPoints={}, level={}",
                 updated.getUserId(), updated.getTotalPoints(), updated.getLevel());
         return updated;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<User> findAll(Pageable pageable) {
+        log.debug("Запрос списка всех пользователей: page={}, size={}, sort={}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+
+        return userRepository.findAll(pageable);
     }
 }

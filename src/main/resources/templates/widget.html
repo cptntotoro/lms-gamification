@@ -13,12 +13,12 @@
     <div th:if="${user}" class="gamification-widget">
         <div class="widget-header">
             <div class="avatar">
-                <span th:text="${user.userId?.substring(0,1)?.toUpperCase()} ?: 'A'">A</span>
+                <span th:text="${user.userId?.substring(0,1)?.toUpperCase()}"></span>
             </div>
             <div class="user-info">
-                <h2 th:text="${user.userId} ?: 'Alex Johnson'">Alex Johnson</h2>
+                <h2 th:text="${user.userId}"></h2>
                 <div class="level-info">
-                    Уровень <span th:text="${user.level} ?: '12'">12</span> Scholar
+                    Уровень <span th:text="${user.level}"></span>
                 </div>
             </div>
         </div>
@@ -26,7 +26,7 @@
         <div class="progress-section">
             <div class="progress-header">
                 <span>Текущий прогресс</span>
-                <span th:text="${user.totalPoints} + ' / 2000 XP'">1,250 / 2,000 XP</span>
+                <span th:text="${user.totalPoints} + ' / 2000 XP'"></span>
             </div>
             <div class="progress-bar-container">
                 <div class="progress-bar"
@@ -34,8 +34,8 @@
                      th:attr="data-progress=${user.totalPoints != null ? (user.totalPoints / 2000.0 * 100) : 0} + '%'"></div>
             </div>
             <div class="progress-text">
-                Осталось всего <strong th:text="${user.totalPoints != null ? (2000 - user.totalPoints) + ' XP' : '???'}">750 XP</strong>,
-                чтобы достичь <strong>уровня <span th:text="${user.level != null ? user.level + 1 : '13'}">13</span></strong>!
+                <strong th:text="${user.totalPoints != null ? (2000 - user.totalPoints) + ' очков' : '???'}"></strong>
+                до следующего уровня
             </div>
         </div>
     </div>
