@@ -26,15 +26,15 @@
         <div class="progress-section">
             <div class="progress-header">
                 <span>Текущий прогресс</span>
-                <span th:text="${user.totalPoints} + ' / 2000 XP'"></span>
+                <span th:text="${user.totalPoints} + ' / ' + ${user.pointsToNextLevel} + ' XP'"></span>
             </div>
             <div class="progress-bar-container">
                 <div class="progress-bar"
-                     th:style="'width: ' + ${user.totalPoints != null ? (user.totalPoints / 2000.0 * 100) : 0} + '%'"
-                     th:attr="data-progress=${user.totalPoints != null ? (user.totalPoints / 2000.0 * 100) : 0} + '%'"></div>
+                     th:style="'width: ' + ${user.progressPercent} + '%'"
+                     th:attr="data-progress=${user.progressPercent} + '%'"></div>
             </div>
             <div class="progress-text">
-                <strong th:text="${user.totalPoints != null ? (2000 - user.totalPoints) + ' очков' : '???'}"></strong>
+                <strong th:text="${user.pointsToNextLevel - user.totalPoints} + ' очков'"></strong>
                 до следующего уровня
             </div>
         </div>
@@ -42,7 +42,7 @@
 
     <!-- Если данных нет -->
     <div th:unless="${user}" class="error-message">
-        Данные пользователя пока недоступны
+        <p th:if="${error}" th:text="${error}">Данные пользователя пока недоступны</p>
     </div>
 </div>
 

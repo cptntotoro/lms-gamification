@@ -25,17 +25,7 @@ public class UserServiceImpl implements UserService {
         log.debug("Проверка/создание пользователя: userId={}", userId);
 
         return userRepository.findByUserIdWithLock(userId)
-                .orElseGet(() -> {
-                    User newUser = User.builder()
-                            .userId(userId)
-                            .totalPoints(0)
-                            .level(1)
-                            .build();
-
-                    User saved = userRepository.save(newUser);
-                    log.info("Создан новый пользователь: userId={}, uuid={}", userId, saved.getUuid());
-                    return saved;
-                });
+                .orElseGet(() -> createNewUser(userId));
     }
 
     @Override
@@ -53,15 +43,7 @@ public class UserServiceImpl implements UserService {
         log.debug("Получение пользователя с блокировкой: userId={}", userId);
 
         return userRepository.findByUserIdWithLock(userId)
-                .orElseGet(() -> {
-                    log.info("Создаём нового пользователя: {}", userId);
-                    User newUser = User.builder()
-                            .userId(userId)
-                            .totalPoints(0)
-                            .level(1)
-                            .build();
-                    return userRepository.save(newUser);
-                });
+                .orElseGet(() -> createNewUser(userId));
     }
 
     @Override
@@ -84,5 +66,17 @@ public class UserServiceImpl implements UserService {
                 pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
         return userRepository.findAll(pageable);
+    }
+
+    private User createNewUser(String userId) {
+        User newUser = User.builder()
+                .userId(userId)
+                .totalPoints(0)
+                .level(1)
+                .build();
+
+        User saved = userRepository.save(newUser);
+        log.info("Создан новый пользователь: userId={}, uuid={}", userId, saved.getUuid());
+        return saved;
     }
 }

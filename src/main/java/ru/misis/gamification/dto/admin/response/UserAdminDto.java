@@ -45,6 +45,18 @@ public class UserAdminDto {
     private Integer level;
 
     /**
+     * Количество очков до следующего уровня
+     */
+    @Schema(description = "Количество очков до следующего уровня", example = "750")
+    private Long pointsToNextLevel;
+
+    /**
+     * Процент прогресса до следующего уровня (0-100)
+     */
+    @Schema(description = "Процент прогресса до следующего уровня (0-100)", example = "62.5")
+    private Double progressPercent;
+
+    /**
      * Дата создания записи
      */
     @JsonFormat(pattern = "dd.MM.yyyy HH:mm")

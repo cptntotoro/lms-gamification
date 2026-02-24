@@ -18,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Ответ LMS-системе после обработки события")
-public class LmsEventResponsetDto {
+public class LmsEventResponseDto {
 
     /**
      * Идентификатор пользователя из LMS
@@ -56,11 +56,11 @@ public class LmsEventResponsetDto {
     /**
      * Количество начисленных очков
      */
-    @Schema(description = "Количество начисленных очков за это событие", example = "80", nullable = true)
+    @Schema(description = "Количество начисленных очков", example = "80", nullable = true)
     private Integer pointsEarned;
 
     /**
-     * Сумма очков
+     * Текущее количество очков пользователя
      */
     @Schema(description = "Общее количество очков пользователя после начисления", example = "1250", nullable = true)
     private Integer totalPoints;
@@ -74,7 +74,7 @@ public class LmsEventResponsetDto {
     /**
      * Флаг повышения уровня
      */
-    @Schema(description = "Флаг повышения уровня в этом событии", example = "true", nullable = true)
+    @Schema(description = "Флаг повышения уровня", example = "true", nullable = true)
     private Boolean levelUp;
 
     /**
@@ -84,41 +84,53 @@ public class LmsEventResponsetDto {
     private Long pointsToNextLevel;
 
     /**
+     * Процент прогресса уровня
+     */
+    @Schema(description = "Процент прогресса уровня", example = "47", nullable = true)
+    private Double progressPercent;
+
+    /**
      * Идентификатор транзакции
      */
     @Schema(description = "UUID созданной транзакции", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890", nullable = true)
     private UUID transactionId;
 
     /**
-     * Дата и время транзакции
+     * Дата и время обработки события
      */
     @Schema(description = "Дата и время обработки события", example = "2026-02-19T16:30:00")
     private LocalDateTime processedAt;
 
-    public static LmsEventResponsetDto success(
+    public static LmsEventResponseDto success(
             String userId,
             Integer pointsEarned,
             Integer totalPoints,
+            Boolean levelUp,
+            Integer newLevel,
             Long pointsToNextLevel,
+            Double progressPercent,
             String eventId,
             UUID transactionId,
             String displayName
     ) {
-        return LmsEventResponsetDto.builder()
+        return LmsEventResponseDto.builder()
                 .status("success")
                 .userId(userId)
                 .eventId(eventId)
                 .displayName(displayName)
                 .pointsEarned(pointsEarned)
                 .totalPoints(totalPoints)
+                .levelUp(levelUp)
+                .newLevel(newLevel)
                 .pointsToNextLevel(pointsToNextLevel)
+                .progressPercent(progressPercent)
                 .transactionId(transactionId)
                 .processedAt(LocalDateTime.now())
                 .build();
     }
 
-    public static LmsEventResponsetDto duplicate(String eventId) {
-        return LmsEventResponsetDto.builder()
+    public static LmsEventResponseDto duplicate(String eventId) {
+        return LmsEventResponseDto.builder()
                 .status("duplicate")
                 .eventId(eventId)
                 .message("Событие с ID " + eventId + " уже обработано ранее")
@@ -126,8 +138,8 @@ public class LmsEventResponsetDto {
                 .build();
     }
 
-    public static LmsEventResponsetDto error(String message) {
-        return LmsEventResponsetDto.builder()
+    public static LmsEventResponseDto error(String message) {
+        return LmsEventResponseDto.builder()
                 .status("error")
                 .message(message != null ? message : "Внутренняя ошибка обработки события")
                 .processedAt(LocalDateTime.now())

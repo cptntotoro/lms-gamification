@@ -1,10 +1,11 @@
 package ru.misis.gamification.service.point;
 
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
-import ru.misis.gamification.dto.result.AwardResult;
+import ru.misis.gamification.service.point.result.AwardResult;
 
 /**
  * Сервис начисления очков
+ * Вся сложная бизнес-логика делегируется в PointsAwardingDomainService
  */
 public interface PointsService {
 

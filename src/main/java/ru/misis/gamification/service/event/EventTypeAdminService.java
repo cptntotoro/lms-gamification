@@ -1,4 +1,4 @@
-package ru.misis.gamification.service.event.admin;
+package ru.misis.gamification.service.event;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

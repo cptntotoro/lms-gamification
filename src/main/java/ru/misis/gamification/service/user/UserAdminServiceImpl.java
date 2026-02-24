@@ -35,8 +35,8 @@ public class UserAdminServiceImpl implements UserAdminService {
 
         User user = userService.get(userId);
 
-        log.debug("Админ запросил информацию о пользователе: userId={}", userId);
-
+        log.debug("Админ успешно получил информацию о пользователе: userId={}", userId);
+        
         return userMapper.userToUserAdminDto(user);
     }
 

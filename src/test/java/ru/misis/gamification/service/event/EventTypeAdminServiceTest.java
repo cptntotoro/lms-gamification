@@ -1,6 +1,5 @@
-package ru.misis.gamification.service.event.admin;
+package ru.misis.gamification.service.event;
 
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
