@@ -1,6 +1,7 @@
 package ru.misis.gamification.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.dto.web.response.UserDto;
 import ru.misis.gamification.model.entity.User;
@@ -17,6 +18,8 @@ public interface UserMapper {
      * @param user Пользователь
      * @return DTO пользователя для администратора
      */
+    @Mapping(target = "pointsToNextLevel", ignore = true)
+    @Mapping(target = "progressPercent", ignore = true)
     UserAdminDto userToUserAdminDto(User user);
 
     /**
@@ -25,5 +28,7 @@ public interface UserMapper {
      * @param user Пользователь
      * @return DTO пользователя для виджета
      */
+    @Mapping(target = "pointsToNextLevel", ignore = true)
+    @Mapping(target = "progressPercent", ignore = true)
     UserDto userToUserDto(User user);
 }
