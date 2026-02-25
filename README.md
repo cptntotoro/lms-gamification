@@ -237,15 +237,43 @@ L = 1 + ⌊ totalPoints / 1000 ⌋
 
 ## Запуск проекта
 
-### Требования
+### Требования к окружению
 
-- JDK 21+
-- PostgreSQL 17+
-- Maven 3.9+
+- **JDK**: 21+
+- **Maven**: 3.9+
+- **PostgreSQL**: 17+ (или Docker)
+- **Docker** + **Docker Compose** (рекомендуется для быстрого старта)
 
-### Локальный запуск
+### Вариант 1: Запуск с Docker (рекомендуется)
 
-1. Создайте базу данных:
+1. Убедитесь, что Docker и Docker Compose установлены и запущены.
+2. В корне проекта находится `docker-compose.yml` и `Dockerfile`.
+3. Выполните команду:
+
+```bash
+docker-compose up --build
+```
+
+- Приложение запустится на порту 8080
+- PostgreSQL будет доступен на порту 5433 (чтобы не конфликтовать с локальным Postgres)
+- База данных gamification создастся автоматически
+
+#### Доступные адреса:
+
+- Приложение: http://localhost:8080
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+- Health-check: http://localhost:8080/actuator/health
+
+#### Остановка:
+
+```
+docker-compose down
+```
+
+### Вариант 2: Локальный запуск без Docker
+
+1. Установите PostgreSQL 17+ и создайте базу данных:
 
 ```sql
 CREATE DATABASE gamification;
@@ -254,19 +282,24 @@ CREATE DATABASE gamification;
 2. Настройте application.yml или используйте переменные окружения
 
 ```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gamification-db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
 leveling:
   formula: TRIANGULAR
   base: 500
   increment: 200
 ```
 
-3. Запуск:
+3. Запуск без выполнения тестов:
 
 ```shell
-mvn spring-boot:run
+mvn spring-boot:run -DSkipTests
 ```
-
-Или через IDE: запустить класс GamificationApplication
 
 ### Основные эндпоинты API (февраль 2026)
 
