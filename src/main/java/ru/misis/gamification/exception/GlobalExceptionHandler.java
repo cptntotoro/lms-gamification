@@ -27,6 +27,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.ok(LmsEventResponseDto.duplicate(ex.getMessage().replaceAll(".*: ", "")));
     }
 
+    @ExceptionHandler(UserNotEnrolledInCourseException.class)
+    public ResponseEntity<LmsEventResponseDto> handleUserNotEnrolled(UserNotEnrolledInCourseException ex) {
+        log.warn("Ошибка зачисления: {}", ex.getMessage());
+        return ResponseEntity.ok(LmsEventResponseDto.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(CourseNotFoundException.class)
+    public ResponseEntity<LmsEventResponseDto> handleCourseNotFound(CourseNotFoundException ex) {
+        log.warn("Ошибка: {}", ex.getMessage());
+        return ResponseEntity.ok(LmsEventResponseDto.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(GroupNotFoundException.class)
+    public ResponseEntity<LmsEventResponseDto> handleGroupNotFound(GroupNotFoundException ex) {
+        log.warn("Ошибка: {}", ex.getMessage());
+        return ResponseEntity.ok(LmsEventResponseDto.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<LmsEventResponseDto> handleUserNotFound(UserNotFoundException ex) {
         log.warn("Ошибка: {}", ex.getMessage());

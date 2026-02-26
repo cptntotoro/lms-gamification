@@ -187,6 +187,28 @@ L = 1 + ⌊ totalPoints / 1000 ⌋
 - Добавлена возможность деактивации типов событий без удаления истории начислений
 - Логирование ключевых операций (начисление, дубли, ошибки) с eventId и userId
 
+### 6. Поддержка курсов и групп студентов (новое, февраль 2026)
+
+- Реализована гибридная модель: курсы и группы **опциональны** (управляется настройкой
+  `gamification.features.courses.enabled`)
+- Добавлены сущности: `Course`, `Group`, `UserCourseEnrollment`
+- Пользователь может быть зачислен на несколько курсов одновременно
+- Очки начисляются **дважды**:
+  - глобально (`users.total_points`)
+  - по конкретному курсу (`user_course_enrollments.total_points_in_course`)
+- Реализована защита от дублирования зачислений (`unique_user_course`)
+- Кастомные исключения:
+  - `CourseNotFoundException`
+  - `GroupNotFoundException`
+  - `UserNotEnrolledInCourseException`
+- Глобальный обработчик исключений возвращает понятные сообщения в `LmsEventResponseDto` (HTTP 200 для бизнес-ошибок)
+
+Это позволяет:
+
+- формировать лидерборды по курсу и группе
+- анализировать эффективность геймификации по дисциплинам отдельно
+- проводить сравнение групп/потоков внутри одного курса
+
 ### Итоговая оценка прогресса
 
 - Серверная часть готова к интеграции с LMS (webhook `/api/events`)
@@ -207,8 +229,10 @@ L = 1 + ⌊ totalPoints / 1000 ⌋
     ↓
 [Service Layer]  ← основные бизнес-сервисы
     ├── UserService                 (поиск/создание/обновление пользователей по userId)
+    ├── UserCourseService           (зачисление на курсы, начисление очков по курсу)
     ├── UserAdminService            (админ-доступ: поиск, список, блокировка пользователей)
-    ├── PointsService               (основная логика начисления очков, проверка лимитов, создание транзакций)
+    ├── PointsService               (начисление очков)
+    ├── PointsService               (бизнес-логика начисления очков за событие из LMS)
     ├── LevelCalculatorService      (расчёт уровня и очков до следующего уровня — TRIANGULAR/QUADRATIC/LINEAR)
     ├── TransactionService          (сохранение транзакций, проверка дублей по eventId, сумма по дате/типу)
     ├── EventManagementService      (оркестрация: вызов PointsService → получение типа события → формирование ответа LMS)
@@ -218,9 +242,12 @@ L = 1 + ⌊ totalPoints / 1000 ⌋
 [Repository Layer]  ← Spring Data JPA
     ↓
 [PostgreSQL]
-    ├── users                       (uuid, userId, totalPoints, level, createdAt, updatedAt)
-    ├── transactions                (uuid, userId, eventId, eventTypeCode → FK → event_types.type_code, pointsEarned, createdAt)
-    └── event_types                 (uuid, typeCode UNIQUE, displayName, points, maxDailyPoints, active)
+    ├── users                       (uuid, user_id, total_points, level, created_at, updated_at)
+    ├── courses                     (uuid, course_id, display_name, short_name, description, active)
+    ├── groups                      (uuid, group_id, display_name, course_id, active)
+    ├── user_course_enrollments     (uuid, user_id, course_id, group_id, total_points_in_course, enrolled_at)
+    ├── transactions                (uuid, user_id, event_id, event_type_code, points_earned, created_at)
+    └── event_types                 (uuid, type_code, display_name, points, max_daily_points, active)
 ```
 
 Основные защитные механизмы:
@@ -228,6 +255,7 @@ L = 1 + ⌊ totalPoints / 1000 ⌋
 - Гибкие формулы расчёта уровня (TRIANGULAR, QUADRATIC, LINEAR + fallback)
 - Уникальность event_id в transactions → защита от повторного начисления
 - Внешний ключ event_type_code → event_types.type_code → целостность данных
+- Уникальность зачисления: unique_user_course в user_course_enrollments
 - Транзакционность всех операций (@Transactional)
 - Валидация входящих данных (@Valid + Bean Validation)
 - Проверка дневных лимитов по типу события (EventType.maxDailyPoints)
@@ -289,10 +317,16 @@ spring:
     password: postgres
     driver-class-name: org.postgresql.Driver
 
-leveling:
-  formula: TRIANGULAR
-  base: 500
-  increment: 200
+gamification:
+  features:
+    courses:
+      enabled: true                     # включить поддержку курсов и групп
+      requireCourseOnFirstEvent: false  # требовать courseId при первом событии
+    leveling:
+      formula:
+        type: TRIANGULAR
+        base: 500
+        increment: 200
 ```
 
 3. Запуск без выполнения тестов:

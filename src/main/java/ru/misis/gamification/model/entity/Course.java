@@ -17,15 +17,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Пользователь
+ * Курс (дисциплина)
+ * Один курс может иметь несколько групп (потоков)
  */
 @Entity
-@Table(name = "users")
+@Table(name = "courses")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Course {
 
     /**
      * Идентификатор записи в таблице
@@ -36,24 +37,35 @@ public class User {
     private UUID uuid;
 
     /**
-     * Идентификатор пользователя из LMS
+     * Внешний идентификатор курса из LMS
      */
-    @Column(name = "user_id", nullable = false, unique = true, length = 100)
-    private String userId;
+    @Column(name = "course_id", nullable = false, unique = true, length = 100)
+    private String courseId;
 
     /**
-     * Общее количество очков
+     * Название
      */
-    @Builder.Default
-    @Column(name = "total_points", nullable = false)
-    private Integer totalPoints = 0;
+    @Column(name = "display_name", nullable = false)
+    private String displayName;
 
     /**
-     * Текущий уровень
+     * Короткое название
+     */
+    @Column(name = "short_name", length = 50)
+    private String shortName;
+
+    /**
+     * Описание
+     */
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    /**
+     * Флаг активности
      */
     @Builder.Default
-    @Column(name = "level", nullable = false)
-    private Integer level = 1;
+    @Column(nullable = false)
+    private boolean active = true;
 
     /**
      * Дата создания записи

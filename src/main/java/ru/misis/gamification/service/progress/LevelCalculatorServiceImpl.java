@@ -1,34 +1,31 @@
 package ru.misis.gamification.service.progress;
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-@ConfigurationProperties(prefix = "leveling")
-@Data
 public class LevelCalculatorServiceImpl implements LevelCalculatorService {
 
     /**
      * Тип формулы расчёта уровня.
      * <p>Возможные значения: {@code TRIANGULAR}, {@code QUADRATIC}, {@code LINEAR} (регистр не важен).</p>
-     * <p>По умолчанию: {@code TRIANGULAR}.</p>
      */
-    private String formula = "TRIANGULAR";
+    @Value("${gamification.features.leveling.formula.type:TRIANGULAR}")
+    private String formula;
 
     /**
      * Базовый множитель для расчёта очков.
      * <p>Используется во всех моделях как стартовая единица.</p>
-     * <p>По умолчанию: 500.</p>
      */
-    private int base = 500;
+    @Value("${gamification.features.leveling.formula.base:500}")
+    private int base;
 
     /**
      * Прирост очков между уровнями для линейной модели.
      * <p>Используется только в модели {@code LINEAR}.</p>
-     * <p>По умолчанию: 200.</p>
      */
-    private int increment = 200;
+    @Value("${gamification.features.leveling.formula.increment:200}")
+    private int increment;
 
     @Override
     public int calculateLevel(int totalPoints) {
