@@ -1,21 +1,20 @@
 package ru.misis.gamification.service.progress;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(MockitoExtension.class)
 class LevelCalculatorServiceTest {
 
+    @InjectMocks
     private LevelCalculatorServiceImpl service;
-
-    @BeforeEach
-    void setUp() {
-        service = new LevelCalculatorServiceImpl();
-    }
 
     @ParameterizedTest(name = "TRIANGULAR: {0} очков → уровень {1}")
     @CsvSource({
@@ -27,12 +26,12 @@ class LevelCalculatorServiceTest {
             "1500,  3",
             "2999,  3",
             "3000,  4",
-            // Крупные значения
             "124750,  22",
             "127500,  23"
     })
     void calculateLevel_triangular_returnsCorrectLevel(int totalPoints, int expectedLevel) {
-        service.setFormula("TRIANGULAR");
+        ReflectionTestUtils.setField(service, "formula", "TRIANGULAR");
+        ReflectionTestUtils.setField(service, "base", 500);
         assertThat(service.calculateLevel(totalPoints)).isEqualTo(expectedLevel);
     }
 
@@ -45,12 +44,12 @@ class LevelCalculatorServiceTest {
             "2000,  3",
             "4499,  3",
             "4500,  4",
-            // Крупные значения
             "1247500,  50",
             "1322500,  52"
     })
     void calculateLevel_quadratic_returnsCorrectLevel(int totalPoints, int expectedLevel) {
-        service.setFormula("QUADRATIC");
+        ReflectionTestUtils.setField(service, "formula", "QUADRATIC");
+        ReflectionTestUtils.setField(service, "base", 500);
         assertThat(service.calculateLevel(totalPoints)).isEqualTo(expectedLevel);
     }
 
@@ -63,76 +62,141 @@ class LevelCalculatorServiceTest {
             "1200,  3",
             "2099,  3",
             "2100,  4",
-            // Крупные значения
             "124750,  34",
             "127500,  34"
     })
-    @DisplayName("LINEAR формула: корректный расчёт уровня")
     void calculateLevel_linear_returnsCorrectLevel(int totalPoints, int expectedLevel) {
-        service.setFormula("LINEAR");
-        service.setBase(500);
-        service.setIncrement(200);
+        ReflectionTestUtils.setField(service, "formula", "LINEAR");
+        ReflectionTestUtils.setField(service, "base", 500);
+        ReflectionTestUtils.setField(service, "increment", 200);
         assertThat(service.calculateLevel(totalPoints)).isEqualTo(expectedLevel);
     }
 
     @Test
-    void pointsToNextLevel_triangular() {
-        service.setFormula("TRIANGULAR");
-        service.setBase(500);
+    void calculateLevel_triangular_zeroOrNegative_returns1() {
+        ReflectionTestUtils.setField(service, "formula", "TRIANGULAR");
+        ReflectionTestUtils.setField(service, "base", 500);
+        assertThat(service.calculateLevel(0)).isEqualTo(1);
+        assertThat(service.calculateLevel(-1)).isEqualTo(1);
+        assertThat(service.calculateLevel(-500)).isEqualTo(1);
+    }
 
-        assertThat(service.pointsToNextLevel(1)).isEqualTo(1000L);   // 1→2: 1000
-        assertThat(service.pointsToNextLevel(2)).isEqualTo(1500L);   // 2→3: 1500
-        assertThat(service.pointsToNextLevel(3)).isEqualTo(2000L);   // 3→4: 2000
-        assertThat(service.pointsToNextLevel(50)).isEqualTo(25500L); // 50→51
+    @Test
+    void calculateLevel_quadratic_zeroOrNegative_returns1() {
+        ReflectionTestUtils.setField(service, "formula", "QUADRATIC");
+        ReflectionTestUtils.setField(service, "base", 500);
+        assertThat(service.calculateLevel(0)).isEqualTo(1);
+        assertThat(service.calculateLevel(-1)).isEqualTo(1);
+        assertThat(service.calculateLevel(-500)).isEqualTo(1);
+    }
+
+    @Test
+    void calculateLevel_linear_zeroOrNegative_returns1() {
+        ReflectionTestUtils.setField(service, "formula", "LINEAR");
+        ReflectionTestUtils.setField(service, "base", 500);
+        ReflectionTestUtils.setField(service, "increment", 200);
+        assertThat(service.calculateLevel(0)).isEqualTo(1);
+        assertThat(service.calculateLevel(-1)).isEqualTo(1);
+        assertThat(service.calculateLevel(-500)).isEqualTo(1);
+    }
+
+    @Test
+    void pointsToNextLevel_triangular() {
+        ReflectionTestUtils.setField(service, "formula", "TRIANGULAR");
+        ReflectionTestUtils.setField(service, "base", 500);
+
+        assertThat(service.pointsToNextLevel(1)).isEqualTo(1000L);
+        assertThat(service.pointsToNextLevel(2)).isEqualTo(1500L);
+        assertThat(service.pointsToNextLevel(3)).isEqualTo(2000L);
+        assertThat(service.pointsToNextLevel(50)).isEqualTo(25500L);
     }
 
     @Test
     void pointsToNextLevel_quadratic() {
-        service.setFormula("QUADRATIC");
-        service.setBase(500);
+        ReflectionTestUtils.setField(service, "formula", "QUADRATIC");
+        ReflectionTestUtils.setField(service, "base", 500);
 
-        assertThat(service.pointsToNextLevel(1)).isEqualTo(1500L);   // 1→2: 500*(4-1)
-        assertThat(service.pointsToNextLevel(2)).isEqualTo(2500L);   // 2→3: 500*(9-4)
-        assertThat(service.pointsToNextLevel(3)).isEqualTo(3500L);   // 3→4
-        assertThat(service.pointsToNextLevel(50)).isEqualTo(50500L); // 50→51
+        assertThat(service.pointsToNextLevel(1)).isEqualTo(1500L);
+        assertThat(service.pointsToNextLevel(2)).isEqualTo(2500L);
+        assertThat(service.pointsToNextLevel(3)).isEqualTo(3500L);
+        assertThat(service.pointsToNextLevel(50)).isEqualTo(50500L);
     }
 
     @Test
     void pointsToNextLevel_linear() {
-        service.setFormula("LINEAR");
-        service.setBase(500);
-        service.setIncrement(200);
+        ReflectionTestUtils.setField(service, "formula", "LINEAR");
+        ReflectionTestUtils.setField(service, "base", 500);
+        ReflectionTestUtils.setField(service, "increment", 200);
 
-        assertThat(service.pointsToNextLevel(1)).isEqualTo(700L);    // 500 + 200*1
-        assertThat(service.pointsToNextLevel(2)).isEqualTo(900L);    // 500 + 200*2
+        assertThat(service.pointsToNextLevel(1)).isEqualTo(700L);
+        assertThat(service.pointsToNextLevel(2)).isEqualTo(900L);
         assertThat(service.pointsToNextLevel(3)).isEqualTo(1100L);
-        assertThat(service.pointsToNextLevel(50)).isEqualTo(10500L); // 500 + 200*50
+        assertThat(service.pointsToNextLevel(50)).isEqualTo(10500L);
     }
 
     @Test
     void calculateLevel_negativePoints_returnsLevel1() {
-        service.setFormula("TRIANGULAR");
+        ReflectionTestUtils.setField(service, "formula", "TRIANGULAR");
+        ReflectionTestUtils.setField(service, "base", 500);
         assertThat(service.calculateLevel(-100)).isEqualTo(1);
     }
 
     @Test
     void calculateLevel_unknownFormula_usesFallback() {
-        service.setFormula("UNKNOWN");
+        ReflectionTestUtils.setField(service, "formula", "UNKNOWN");
+        ReflectionTestUtils.setField(service, "base", 500);
         assertThat(service.calculateLevel(0)).isEqualTo(1);
         assertThat(service.calculateLevel(999)).isEqualTo(1);
         assertThat(service.calculateLevel(1000)).isEqualTo(2);
         assertThat(service.calculateLevel(5000)).isEqualTo(6);
+        assertThat(service.calculateLevel(999999)).isEqualTo(1000);
+    }
+
+    @Test
+    void calculateLevel_triangular_largeValue_noOverflow() {
+        ReflectionTestUtils.setField(service, "formula", "TRIANGULAR");
+        ReflectionTestUtils.setField(service, "base", 500);
+        assertThat(service.calculateLevel(Integer.MAX_VALUE)).isGreaterThan(0);
+    }
+
+    @Test
+    void calculateLevel_quadratic_largeValue_noOverflow() {
+        ReflectionTestUtils.setField(service, "formula", "QUADRATIC");
+        ReflectionTestUtils.setField(service, "base", 500);
+        assertThat(service.calculateLevel(Integer.MAX_VALUE)).isGreaterThan(0);
+    }
+
+    @Test
+    void pointsToNextLevel_triangular_largeLevel() {
+        ReflectionTestUtils.setField(service, "formula", "TRIANGULAR");
+        ReflectionTestUtils.setField(service, "base", 500);
+        assertThat(service.pointsToNextLevel(1000)).isEqualTo(500500L);
+    }
+
+    @Test
+    void pointsToNextLevel_quadratic_largeLevel() {
+        ReflectionTestUtils.setField(service, "formula", "QUADRATIC");
+        ReflectionTestUtils.setField(service, "base", 500);
+        assertThat(service.pointsToNextLevel(1000)).isEqualTo(1000500L);
+    }
+
+    @Test
+    void pointsToNextLevel_linear_largeLevel() {
+        ReflectionTestUtils.setField(service, "formula", "LINEAR");
+        ReflectionTestUtils.setField(service, "base", 500);
+        ReflectionTestUtils.setField(service, "increment", 200);
+        assertThat(service.pointsToNextLevel(1000)).isEqualTo(200500L);
     }
 
     @Test
     void configurationProperties_areApplied() {
-        service.setFormula("LINEAR");
-        service.setBase(100);
-        service.setIncrement(50);
+        ReflectionTestUtils.setField(service, "formula", "LINEAR");
+        ReflectionTestUtils.setField(service, "base", 100);
+        ReflectionTestUtils.setField(service, "increment", 50);
 
         assertThat(service.calculateLevel(0)).isEqualTo(1);
         assertThat(service.calculateLevel(99)).isEqualTo(1);
         assertThat(service.calculateLevel(100)).isEqualTo(2);
-        assertThat(service.pointsToNextLevel(1)).isEqualTo(150L); // 100 + 50*1
+        assertThat(service.pointsToNextLevel(1)).isEqualTo(150L);
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.model.entity.User;
 import ru.misis.gamification.repository.UserRepository;
+import ru.misis.gamification.service.course.UserCourseService;
 
 @Service
 @RequiredArgsConstructor
@@ -20,12 +21,23 @@ public class UserServiceImpl implements UserService {
      */
     private final UserRepository userRepository;
 
+    /**
+     * Сервис управления курсами пользователей
+     */
+    private final UserCourseService userCourseService;
+
     @Override
     public User createIfNotExists(String userId) {
-        log.debug("Проверка/создание пользователя: userId={}", userId);
+        return createIfNotExists(userId, null, null);
+    }
+
+    @Override
+    public User createIfNotExists(String userId, String courseId, String groupId) {
+        log.debug("Проверка/создание пользователя: userId={}, course={}, group={}",
+                userId, courseId, groupId);
 
         return userRepository.findByUserIdWithLock(userId)
-                .orElseGet(() -> createNewUser(userId));
+                .orElseGet(() -> createNewUser(userId, courseId, groupId));
     }
 
     @Override
@@ -43,7 +55,7 @@ public class UserServiceImpl implements UserService {
         log.debug("Получение пользователя с блокировкой: userId={}", userId);
 
         return userRepository.findByUserIdWithLock(userId)
-                .orElseGet(() -> createNewUser(userId));
+                .orElseGet(() -> createNewUser(userId, null, null));
     }
 
     @Override
@@ -68,15 +80,17 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll(pageable);
     }
 
-    private User createNewUser(String userId) {
+    private User createNewUser(String userId, String courseId, String groupId) {
         User newUser = User.builder()
                 .userId(userId)
                 .totalPoints(0)
                 .level(1)
                 .build();
 
-        User saved = userRepository.save(newUser);
-        log.info("Создан новый пользователь: userId={}, uuid={}", userId, saved.getUuid());
-        return saved;
+        User savedUser = userRepository.save(newUser);
+        userCourseService.enrollIfNeeded(savedUser, courseId, groupId);
+
+        log.info("Создан новый пользователь: userId={}, uuid={}", userId, savedUser.getUuid());
+        return savedUser;
     }
 }

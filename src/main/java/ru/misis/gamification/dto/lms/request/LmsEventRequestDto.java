@@ -39,4 +39,16 @@ public class LmsEventRequestDto {
     @NotBlank(message = "eventType обязателен")
     @Schema(description = "Код типа события (должен существовать в системе)", example = "quiz")
     private String eventType;
+
+    /**
+     * Уникальный идентификатор курса из LMS
+     */
+    @Schema(description = "Внешний идентификатор курса из LMS", example = "MATH101")
+    private String courseId;
+
+    /**
+     * Уникальный идентификатор группы/потока из LMS
+     */
+    @Schema(description = "Внешний идентификатор группы/потока из LMS", example = "1-A")
+    private String groupId;
 }

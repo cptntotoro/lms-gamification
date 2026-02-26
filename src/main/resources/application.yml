@@ -53,8 +53,19 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
-leveling:
-  formula:
-    type: TRIANGULAR  # TRIANGULAR, QUADRATIC, LINEAR
-    base: 500         # базовый множитель
-    increment: 200    # только для LINEAR
+gamification:
+  features:
+    courses:
+      # Включить поддержку курсов и групп
+      enabled: true
+
+      # Если true — при первом событии от LMS обязательно должен прийти courseId
+      # Если false — пользователь создаётся даже без курса (как было раньше)
+      requireCourseOnFirstEvent: false
+
+    # Настройки расчёта уровней
+    leveling:
+      formula:
+        type: TRIANGULAR     # TRIANGULAR, QUADRATIC, LINEAR
+        base: 500            # базовый множитель
+        increment: 200       # только для LINEAR

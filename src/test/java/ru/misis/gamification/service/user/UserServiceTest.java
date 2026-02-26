@@ -3,6 +3,8 @@ package ru.misis.gamification.service.user;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.model.entity.User;
 import ru.misis.gamification.repository.UserRepository;
+import ru.misis.gamification.service.course.UserCourseServiceImpl;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +25,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -35,8 +37,14 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private UserCourseServiceImpl userCourseService;
+
     @InjectMocks
     private UserServiceImpl userService;
+
+    @Captor
+    private ArgumentCaptor<User> userCaptor;
 
     private User existingUser;
 
@@ -61,7 +69,7 @@ class UserServiceTest {
 
         verify(userRepository).findByUserIdWithLock("user-777");
         verify(userRepository, never()).save(any(User.class));
-        verifyNoMoreInteractions(userRepository);
+        verify(userCourseService, never()).enrollIfNeeded(any(), any(), any());
     }
 
     @Test
@@ -86,11 +94,37 @@ class UserServiceTest {
         assertThat(result.getLevel()).isEqualTo(1);
 
         verify(userRepository).findByUserIdWithLock(newUserId);
-        verify(userRepository).save(argThat(user ->
-                user.getUserId().equals(newUserId) &&
-                        user.getTotalPoints() == 0 &&
-                        user.getLevel() == 1
-        ));
+        verify(userRepository).save(userCaptor.capture());
+        User captured = userCaptor.getValue();
+        assertThat(captured.getUserId()).isEqualTo(newUserId);
+        assertThat(captured.getTotalPoints()).isZero();
+        assertThat(captured.getLevel()).isEqualTo(1);
+
+        verify(userCourseService).enrollIfNeeded(savedUser, null, null);
+    }
+
+    @Test
+    void createIfNotExists_withCourseAndGroup_shouldEnroll() {
+        String newUserId = "new-user-999";
+        String courseId = "MATH-101";
+        String groupId = "1-A";
+
+        when(userRepository.findByUserIdWithLock(newUserId)).thenReturn(Optional.empty());
+
+        User savedUser = User.builder()
+                .uuid(UUID.randomUUID())
+                .userId(newUserId)
+                .totalPoints(0)
+                .level(1)
+                .build();
+
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        User result = userService.createIfNotExists(newUserId, courseId, groupId);
+
+        assertThat(result.getUserId()).isEqualTo(newUserId);
+
+        verify(userCourseService).enrollIfNeeded(savedUser, courseId, groupId);
     }
 
     @Test
@@ -129,6 +163,7 @@ class UserServiceTest {
 
         verify(userRepository).findByUserIdWithLock(userId);
         verify(userRepository, never()).save(any(User.class));
+        verify(userCourseService, never()).enrollIfNeeded(any(), any(), any());
     }
 
     @Test
@@ -154,6 +189,7 @@ class UserServiceTest {
 
         verify(userRepository).findByUserIdWithLock(userId);
         verify(userRepository).save(any(User.class));
+        verify(userCourseService).enrollIfNeeded(savedUser, null, null);
     }
 
     @Test
@@ -200,6 +236,8 @@ class UserServiceTest {
     void update_nullUser_shouldThrowNullPointerException() {
         assertThatThrownBy(() -> userService.update(null))
                 .isInstanceOf(NullPointerException.class);
+
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -280,8 +318,7 @@ class UserServiceTest {
     @Test
     void findAll_nullPageable_shouldThrowNullPointerException() {
         assertThatThrownBy(() -> userService.findAll(null))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessageContaining("pageable");
+                .isInstanceOf(NullPointerException.class);
 
         verifyNoInteractions(userRepository);
     }

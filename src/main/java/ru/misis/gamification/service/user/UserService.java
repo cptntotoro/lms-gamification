@@ -11,6 +11,25 @@ import ru.misis.gamification.model.entity.User;
 public interface UserService {
 
     /**
+     * Создать пользователя, если он не существует, иначе возвращает существующего.
+     * Используется при первом взаимодействии с пользователем.
+     *
+     * @param userId Идентификатор пользователя из LMS
+     * @return Пользователь (существующий или только что созданный)
+     */
+    User createIfNotExists(String userId);
+
+    /**
+     * Создать пользователя с поддержкой курса и группы, если он не существует, иначе возвращает существующего
+     *
+     * @param userId   Идентификатор пользователя из LMS
+     * @param courseId Идентификатор курса из LMS
+     * @param groupId  Идентификатор группы из LMS
+     * @return Пользователь (существующий или только что созданный)
+     */
+    User createIfNotExists(String userId, String courseId, String groupId);
+
+    /**
      * Получить пользователя по идентификатору из LMS
      * Если пользователь не найден — бросает исключение
      *
@@ -19,15 +38,6 @@ public interface UserService {
      * @throws UserNotFoundException если пользователь не существует
      */
     User get(String userId) throws UserNotFoundException;
-
-    /**
-     * Создать пользователя, если он не существует, иначе возвращает существующего.
-     * Используется при первом взаимодействии с пользователем.
-     *
-     * @param userId Идентификатор пользователя из LMS
-     * @return Пользователь (существующий или только что созданный)
-     */
-    User createIfNotExists(String userId);
 
     /**
      * Получить пользователя по идентификатору из LMS с пессимистической блокировкой на запись
