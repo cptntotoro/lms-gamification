@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.admin.request.EventTypeCreateDto;
 import ru.misis.gamification.dto.admin.request.EventTypeUpdateDto;
 import ru.misis.gamification.dto.admin.response.EventTypeDto;
+import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.mapper.EventTypeMapper;
-import ru.misis.gamification.model.admin.EventType;
 import ru.misis.gamification.service.event.EventTypeAdminService;
 
 import java.util.UUID;

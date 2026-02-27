@@ -7,7 +7,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import ru.misis.gamification.dto.admin.response.TransactionItemDto;
 import ru.misis.gamification.dto.admin.response.TransactionPageDto;
-import ru.misis.gamification.model.admin.Transaction;
+import ru.misis.gamification.entity.Transaction;
 
 import java.time.LocalDateTime;
 import java.util.List;

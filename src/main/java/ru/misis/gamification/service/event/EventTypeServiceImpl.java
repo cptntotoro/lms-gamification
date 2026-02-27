@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
-import ru.misis.gamification.model.admin.EventType;
 import ru.misis.gamification.repository.EventTypeRepository;
 
 import java.time.LocalDate;

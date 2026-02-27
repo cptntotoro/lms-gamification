@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
-import ru.misis.gamification.model.entity.User;
+import ru.misis.gamification.entity.User;
 import ru.misis.gamification.service.point.result.AwardResult;
 import ru.misis.gamification.service.progress.calculator.ProgressCalculator;
 import ru.misis.gamification.service.user.UserService;

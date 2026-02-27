@@ -1,4 +1,4 @@
-package ru.misis.gamification.model.admin;
+package ru.misis.gamification.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -2,8 +2,8 @@ package ru.misis.gamification.service.user;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.UserNotFoundException;
-import ru.misis.gamification.model.entity.User;
 
 /**
  * Сервис управления пользователями

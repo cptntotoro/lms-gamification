@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.dto.web.response.UserDto;
-import ru.misis.gamification.model.entity.User;
+import ru.misis.gamification.entity.User;
 import ru.misis.gamification.service.progress.calculator.ProgressCalculator;
 import ru.misis.gamification.service.progress.result.ProgressMetrics;
 import ru.misis.gamification.service.user.UserService;

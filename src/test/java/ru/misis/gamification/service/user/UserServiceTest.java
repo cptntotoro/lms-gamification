@@ -13,8 +13,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.UserNotFoundException;
-import ru.misis.gamification.model.entity.User;
 import ru.misis.gamification.repository.UserRepository;
 import ru.misis.gamification.service.course.UserCourseServiceImpl;
 

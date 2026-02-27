@@ -136,3 +136,5 @@ COMMENT ON COLUMN user_course_enrollments.total_points_in_course IS 'Сумма 
 
 CREATE INDEX idx_enrollments_user_course ON user_course_enrollments (user_id, course_id);
 CREATE INDEX idx_enrollments_course_id ON user_course_enrollments (course_id);
+CREATE INDEX idx_enrollments_course_group_points
+    ON user_course_enrollments (course_id, group_id, total_points_in_course DESC);

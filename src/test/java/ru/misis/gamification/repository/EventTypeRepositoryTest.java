@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
-import ru.misis.gamification.model.admin.EventType;
-import ru.misis.gamification.model.admin.Transaction;
+import ru.misis.gamification.entity.EventType;
+import ru.misis.gamification.entity.Transaction;
 
 import java.time.LocalDate;
 import java.util.List;

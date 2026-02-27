@@ -8,8 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
+import ru.misis.gamification.entity.User;
 import ru.misis.gamification.mapper.UserMapper;
-import ru.misis.gamification.model.entity.User;
 
 @Service
 @RequiredArgsConstructor

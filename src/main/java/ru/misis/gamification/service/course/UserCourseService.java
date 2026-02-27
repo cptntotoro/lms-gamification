@@ -1,6 +1,6 @@
 package ru.misis.gamification.service.course;
 
-import ru.misis.gamification.model.entity.User;
+import ru.misis.gamification.entity.User;
 
 /**
  * Сервис управления курсами пользователей

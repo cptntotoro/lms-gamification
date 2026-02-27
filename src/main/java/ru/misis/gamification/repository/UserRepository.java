@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import ru.misis.gamification.model.entity.User;
+import ru.misis.gamification.entity.User;
 
 import java.util.Optional;
 import java.util.UUID;

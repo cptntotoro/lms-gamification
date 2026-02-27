@@ -1,13 +1,10 @@
-package ru.misis.gamification.model.entity;
+package ru.misis.gamification.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -20,15 +17,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Группа / поток внутри курса
+ * Пользователь
  */
 @Entity
-@Table(name = "groups")
+@Table(name = "users")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Group {
+public class User {
 
     /**
      * Идентификатор записи в таблице
@@ -39,30 +36,24 @@ public class Group {
     private UUID uuid;
 
     /**
-     * Внешний идентификатор группы из LMS
+     * Идентификатор пользователя из LMS
      */
-    @Column(name = "group_id", nullable = false, length = 100)
-    private String groupId;
+    @Column(name = "user_id", nullable = false, unique = true, length = 100)
+    private String userId;
 
     /**
-     * Название
-     */
-    @Column(name = "display_name", nullable = false)
-    private String displayName;
-
-    /**
-     * Курс
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
-
-    /**
-     * Флаг активности
+     * Общее количество очков
      */
     @Builder.Default
-    @Column(nullable = false)
-    private boolean active = true;
+    @Column(name = "total_points", nullable = false)
+    private Integer totalPoints = 0;
+
+    /**
+     * Текущий уровень
+     */
+    @Builder.Default
+    @Column(name = "level", nullable = false)
+    private Integer level = 1;
 
     /**
      * Дата создания записи

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
-import ru.misis.gamification.model.admin.EventType;
+import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.service.event.EventTypeService;
 import ru.misis.gamification.service.point.PointsService;
 import ru.misis.gamification.service.point.result.AwardResult;

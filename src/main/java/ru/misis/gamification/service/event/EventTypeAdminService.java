@@ -2,9 +2,9 @@ package ru.misis.gamification.service.event;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.exception.DuplicateEventTypeException;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
-import ru.misis.gamification.model.admin.EventType;
 
 import java.util.UUID;
 

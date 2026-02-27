@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.misis.gamification.model.admin.EventType;
+import ru.misis.gamification.entity.EventType;
 
 /**
  * DTO события из LMS

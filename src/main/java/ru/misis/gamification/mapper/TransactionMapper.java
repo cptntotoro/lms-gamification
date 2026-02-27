@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.springframework.data.domain.Page;
 import ru.misis.gamification.dto.admin.response.TransactionItemDto;
 import ru.misis.gamification.dto.admin.response.TransactionPageDto;
-import ru.misis.gamification.model.admin.Transaction;
+import ru.misis.gamification.entity.Transaction;
 
 import java.util.List;
 import java.util.stream.Collectors;

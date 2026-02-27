@@ -6,9 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.exception.DuplicateEventTypeException;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
-import ru.misis.gamification.model.admin.EventType;
 import ru.misis.gamification.repository.EventTypeRepository;
 
 import java.util.UUID;
