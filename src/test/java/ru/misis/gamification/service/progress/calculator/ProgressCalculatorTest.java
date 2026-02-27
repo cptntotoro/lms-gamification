@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.misis.gamification.model.entity.User;
+import ru.misis.gamification.entity.User;
 import ru.misis.gamification.service.progress.LevelCalculatorService;
 import ru.misis.gamification.service.progress.result.ProgressMetrics;
 

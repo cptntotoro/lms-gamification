@@ -5,7 +5,7 @@ import org.mapstruct.Mapping;
 import ru.misis.gamification.dto.admin.request.EventTypeCreateDto;
 import ru.misis.gamification.dto.admin.request.EventTypeUpdateDto;
 import ru.misis.gamification.dto.admin.response.EventTypeDto;
-import ru.misis.gamification.model.admin.EventType;
+import ru.misis.gamification.entity.EventType;
 
 /**
  * Маппер событий

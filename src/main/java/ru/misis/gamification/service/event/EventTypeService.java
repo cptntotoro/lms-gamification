@@ -1,7 +1,7 @@
 package ru.misis.gamification.service.event;
 
+import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
-import ru.misis.gamification.model.admin.EventType;
 
 import java.time.LocalDate;
 

@@ -1,6 +1,6 @@
 package ru.misis.gamification.service.point.result;
 
-import ru.misis.gamification.model.admin.EventType;
+import ru.misis.gamification.entity.EventType;
 
 /**
  * Перечисление возможных статусов результата операции начисления очков

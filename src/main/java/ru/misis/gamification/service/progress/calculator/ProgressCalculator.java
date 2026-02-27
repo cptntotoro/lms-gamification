@@ -3,7 +3,7 @@ package ru.misis.gamification.service.progress.calculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.misis.gamification.model.entity.User;
+import ru.misis.gamification.entity.User;
 import ru.misis.gamification.service.progress.LevelCalculatorService;
 import ru.misis.gamification.service.progress.result.ProgressMetrics;
 

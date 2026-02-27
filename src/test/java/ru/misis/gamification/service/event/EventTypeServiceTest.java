@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
-import ru.misis.gamification.model.admin.EventType;
 import ru.misis.gamification.repository.EventTypeRepository;
 
 import java.time.LocalDate;

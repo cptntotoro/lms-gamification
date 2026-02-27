@@ -3,7 +3,7 @@ package ru.misis.gamification.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import ru.misis.gamification.model.admin.EventType;
+import ru.misis.gamification.entity.EventType;
 
 import java.time.LocalDate;
 import java.util.Optional;

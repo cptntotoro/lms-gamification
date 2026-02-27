@@ -9,8 +9,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
-import ru.misis.gamification.model.admin.EventType;
-import ru.misis.gamification.model.admin.Transaction;
+import ru.misis.gamification.entity.EventType;
+import ru.misis.gamification.entity.Transaction;
 
 import java.time.LocalDateTime;
 import java.util.List;

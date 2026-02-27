@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.admin.response.TransactionPageDto;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
+import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.mapper.TransactionMapper;
-import ru.misis.gamification.model.admin.Transaction;
 import ru.misis.gamification.service.transaction.TransactionService;
 import ru.misis.gamification.service.user.UserAdminService;
 

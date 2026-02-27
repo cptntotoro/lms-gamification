@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.dto.web.response.UserDto;
-import ru.misis.gamification.model.entity.User;
+import ru.misis.gamification.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

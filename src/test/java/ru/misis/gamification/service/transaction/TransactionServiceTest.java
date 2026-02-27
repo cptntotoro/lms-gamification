@@ -11,8 +11,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.exception.DuplicateEventException;
-import ru.misis.gamification.model.admin.Transaction;
 import ru.misis.gamification.repository.TransactionRepository;
 
 import java.time.LocalDate;

@@ -3,8 +3,8 @@ package ru.misis.gamification.service.transaction;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.exception.DuplicateEventException;
-import ru.misis.gamification.model.admin.Transaction;
 
 import java.time.LocalDate;
 
