@@ -69,8 +69,8 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
                 )
                 FROM UserCourseEnrollment uce
                 JOIN uce.user u
-                WHERE uce.course.uuid = :courseId
-                  AND uce.group.uuid = :groupId
+                WHERE uce.course.courseId = :courseId
+                  AND uce.group.groupId = :groupId
             """)
     Page<LeaderboardEntryDto> findLeaderboardByCourseAndGroup(@Param("courseId") String courseId, @Param("groupId") String groupId, Pageable pageable);
 }

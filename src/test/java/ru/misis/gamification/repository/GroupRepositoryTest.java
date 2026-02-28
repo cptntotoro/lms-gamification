@@ -25,54 +25,55 @@ class GroupRepositoryTest {
     private GroupRepository groupRepository;
 
     @Test
-    void findByGroupIdAndCourse_existing_returnsGroup() {
-        Course course = Course.builder()
+    void findByGroupIdAndCourse_existingGroup_returnsGroup() {
+        Course mathCourse = Course.builder()
                 .courseId("MATH-101")
                 .displayName("Математика")
                 .build();
-        em.persistAndFlush(course);
+        em.persistAndFlush(mathCourse);
 
         Group group = Group.builder()
-                .groupId("1-A")
-                .displayName("Группа 1-А")
-                .course(course)
+                .groupId("PM-21-1")
+                .displayName("Поток ПМ-21-1")
+                .course(mathCourse)
                 .build();
         em.persistAndFlush(group);
 
-        Optional<Group> found = groupRepository.findByGroupIdAndCourse("1-A", course);
+        Optional<Group> found = groupRepository.findByGroupIdAndCourse("PM-21-1", mathCourse);
 
         assertThat(found).isPresent();
-        assertThat(found.get().getGroupId()).isEqualTo("1-A");
-        assertThat(found.get().getCourse().getCourseId()).isEqualTo("MATH-101");
+        assertThat(found.get().getGroupId()).isEqualTo("PM-21-1");
+        assertThat(found.get().getCourse().getUuid()).isEqualTo(mathCourse.getUuid());
+        assertThat(found.get().getDisplayName()).isEqualTo("Поток ПМ-21-1");
     }
 
     @Test
     void findByGroupIdAndCourse_wrongCourse_returnsEmpty() {
-        Course courseA = Course.builder()
+        Course mathCourse = Course.builder()
                 .courseId("MATH-101")
                 .displayName("Математика")
                 .build();
-        Course courseB = Course.builder()
+        Course physicsCourse = Course.builder()
                 .courseId("PHYS-202")
                 .displayName("Физика")
                 .build();
-        em.persistAndFlush(courseA);
-        em.persistAndFlush(courseB);
+        em.persistAndFlush(mathCourse);
+        em.persistAndFlush(physicsCourse);
 
         Group group = Group.builder()
-                .groupId("1-A")
-                .displayName("Группа 1-А")
-                .course(courseA)
+                .groupId("PM-21-1")
+                .displayName("Поток ПМ-21-1")
+                .course(mathCourse)
                 .build();
         em.persistAndFlush(group);
 
-        Optional<Group> found = groupRepository.findByGroupIdAndCourse("1-A", courseB);
+        Optional<Group> found = groupRepository.findByGroupIdAndCourse("PM-21-1", physicsCourse);
 
         assertThat(found).isEmpty();
     }
 
     @Test
-    void findByGroupIdAndCourse_notExisting_returnsEmpty() {
+    void findByGroupIdAndCourse_nonExistentGroupId_returnsEmpty() {
         Course course = Course.builder()
                 .courseId("MATH-101")
                 .displayName("Математика")
@@ -82,5 +83,111 @@ class GroupRepositoryTest {
         Optional<Group> found = groupRepository.findByGroupIdAndCourse("NON-EXIST", course);
 
         assertThat(found).isEmpty();
+    }
+
+    @Test
+    void findByGroupIdAndCourse_nullCourse_returnsEmpty() {
+        Course course = Course.builder()
+                .courseId("MATH-101")
+                .displayName("Математика")
+                .build();
+        em.persistAndFlush(course);
+
+        Group group = Group.builder()
+                .groupId("PM-21-1")
+                .displayName("Поток ПМ-21-1")
+                .course(course)
+                .build();
+        em.persistAndFlush(group);
+
+        Optional<Group> found = groupRepository.findByGroupIdAndCourse("PM-21-1", null);
+
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    void existsByGroupIdAndCourseCourseId_existing_returnsTrue() {
+        Course course = Course.builder()
+                .courseId("MATH-101")
+                .displayName("Математика")
+                .build();
+        em.persistAndFlush(course);
+
+        Group group = Group.builder()
+                .groupId("PM-21-1")
+                .displayName("Поток ПМ-21-1")
+                .course(course)
+                .build();
+        em.persistAndFlush(group);
+
+        boolean exists = groupRepository.existsByGroupIdAndCourseCourseId("PM-21-1", "MATH-101");
+
+        assertThat(exists).isTrue();
+    }
+
+    @Test
+    void existsByGroupIdAndCourseCourseId_wrongCourseId_returnsFalse() {
+        Course course = Course.builder()
+                .courseId("MATH-101")
+                .displayName("Математика")
+                .build();
+        em.persistAndFlush(course);
+
+        Group group = Group.builder()
+                .groupId("PM-21-1")
+                .displayName("Поток ПМ-21-1")
+                .course(course)
+                .build();
+        em.persistAndFlush(group);
+
+        boolean exists = groupRepository.existsByGroupIdAndCourseCourseId("PM-21-1", "PHYS-202");
+
+        assertThat(exists).isFalse();
+    }
+
+    @Test
+    void existsByGroupIdAndCourseCourseId_nonExistentGroupId_returnsFalse() {
+        Course course = Course.builder()
+                .courseId("MATH-101")
+                .displayName("Математика")
+                .build();
+        em.persistAndFlush(course);
+
+        boolean exists = groupRepository.existsByGroupIdAndCourseCourseId("NON-EXIST", "MATH-101");
+
+        assertThat(exists).isFalse();
+    }
+
+    @Test
+    void existsByGroupIdAndCourseCourseId_nullCourseId_returnsFalse() {
+        Course course = Course.builder()
+                .courseId("MATH-101")
+                .displayName("Математика")
+                .build();
+        em.persistAndFlush(course);
+
+        Group group = Group.builder()
+                .groupId("PM-21-1")
+                .displayName("Поток ПМ-21-1")
+                .course(course)
+                .build();
+        em.persistAndFlush(group);
+
+        boolean exists = groupRepository.existsByGroupIdAndCourseCourseId("PM-21-1", null);
+
+        assertThat(exists).isFalse();
+    }
+
+    @Test
+    void existsByGroupIdAndCourseCourseId_nullGroupId_returnsFalse() {
+        Course course = Course.builder()
+                .courseId("MATH-101")
+                .displayName("Математика")
+                .build();
+        em.persistAndFlush(course);
+
+        boolean exists = groupRepository.existsByGroupIdAndCourseCourseId(null, "MATH-101");
+
+        assertThat(exists).isFalse();
     }
 }
