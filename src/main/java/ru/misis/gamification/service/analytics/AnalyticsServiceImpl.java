@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.dto.analytics.GroupLeaderboardPageDto;
@@ -63,7 +64,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             throw new GroupNotFoundException(groupId, courseId);
         }
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "totalPointsInCourse"));
 
         Page<LeaderboardEntryDto> pageResult = enrollmentRepository
                 .findLeaderboardByCourseAndGroup(courseId, groupId, pageable);

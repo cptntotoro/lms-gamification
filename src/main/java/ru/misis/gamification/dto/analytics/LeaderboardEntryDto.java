@@ -42,5 +42,13 @@ public class LeaderboardEntryDto {
      * Позиция в лидерборде группы (1 = лидер)
      */
     @Schema(description = "Позиция в лидерборде группы (1 = лидер)")
-    private Integer rank;
+    private Long rank;
+
+    public LeaderboardEntryDto(UUID userUuid, String userId, Integer pointsInCourse, Integer globalLevel, Long rank) {
+        this.userUuid = userUuid;
+        this.userId = userId;
+        this.pointsInCourse = pointsInCourse;
+        this.globalLevel = globalLevel;
+        this.rank = rank;
+    }
 }
