@@ -77,7 +77,7 @@ public class UserAdminController {
         Pageable pageable = PageRequest.of(page, Math.min(size, 100), sort);
 
         Page<Transaction> transactionPage = transactionService.getTransactionsByUserId(userId, pageable);
-        TransactionPageDto response = transactionMapper.toPageDto(transactionPage);
+        TransactionPageDto response = transactionMapper.transactionPagetoTransactionPageDto(transactionPage);
 
         return ResponseEntity.ok(response);
     }

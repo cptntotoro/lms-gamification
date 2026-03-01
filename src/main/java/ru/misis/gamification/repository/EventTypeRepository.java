@@ -34,21 +34,15 @@ public interface EventTypeRepository extends JpaRepository<EventType, UUID> {
     /**
      * Сумма очков, начисленных пользователю по конкретному типу события за указанный день
      *
-     * @param userId     Идентификатор пользователя из LMS
-     * @param typeCode   Уникальный код типа события
-     * @param date       Дата (день), за который считаем
+     * @param userUuid      UUID пользователя
+     * @param eventTypeUuid UUID типа события
+     * @param date          Дата (день), за который считаем
      * @return Сумма очков или 0, если записей нет
      */
-    @Query("""
-        SELECT COALESCE(SUM(t.pointsEarned), 0)
-        FROM Transaction t
-        WHERE t.userId = :userId
-          AND t.eventTypeCode = :typeCode
-          AND DATE(t.createdAt) = :date
-    """)
-    long sumPointsByUserIdAndEventTypeAndDate(
-            String userId,
-            String typeCode,
-            LocalDate date
-    );
+    @Query("SELECT COALESCE(SUM(t.points), 0) " +
+            "FROM Transaction t " +
+            "WHERE t.user.uuid = :userUuid " +
+            "  AND t.eventType.uuid = :eventTypeUuid " +
+            "  AND DATE(t.createdAt) = :date")
+    long calculateDailyPointsSumForUserAndType(UUID userUuid, UUID eventTypeUuid, LocalDate date);
 }

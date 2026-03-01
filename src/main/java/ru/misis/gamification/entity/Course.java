@@ -18,7 +18,7 @@ import java.util.UUID;
 
 /**
  * Курс (дисциплина)
- * Один курс может иметь несколько групп (потоков)
+ * Один курс может иметь несколько групп (потоков) {@link Group}
  */
 @Entity
 @Table(name = "courses")
@@ -45,7 +45,7 @@ public class Course {
     /**
      * Название
      */
-    @Column(name = "display_name", nullable = false)
+    @Column(name = "display_name")
     private String displayName;
 
     /**

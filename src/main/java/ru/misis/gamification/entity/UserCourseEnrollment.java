@@ -19,8 +19,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Связь пользователь — курс
- * Один пользователь может быть на нескольких курсах
+ * Зачисление на курс (связь пользователь — курс)
  */
 @Entity
 @Table(name = "user_course_enrollments")
@@ -42,21 +41,21 @@ public class UserCourseEnrollment {
      * Пользователь
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_uuid", nullable = false)
     private User user;
 
     /**
      * Курс (дисциплина)
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
+    @JoinColumn(name = "course_uuid", nullable = false)
     private Course course;
 
     /**
      * Группа / поток внутри курса (опционально)
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
+    @JoinColumn(name = "group_uuid")
     private Group group;
 
     /**

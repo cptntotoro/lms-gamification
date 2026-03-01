@@ -201,7 +201,7 @@
                         <exclude>**/exception/**</exclude>
                         <exclude>**/config/**</exclude>
                         <exclude>**/dto/**</exclude>
-                        <exclude>**/model/**</exclude>
+                        <exclude>**/entity/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>

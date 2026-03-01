@@ -1,9 +1,11 @@
 package ru.misis.gamification.service.event.processor;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
 import ru.misis.gamification.entity.EventType;
@@ -15,6 +17,7 @@ import ru.misis.gamification.service.point.result.AwardStatus;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Validated
 public class LmsEventProcessorImpl implements LmsEventProcessor {
 
     /**
@@ -29,7 +32,7 @@ public class LmsEventProcessorImpl implements LmsEventProcessor {
 
     @Override
     @Transactional
-    public LmsEventResponseDto process(LmsEventRequestDto request) {
+    public LmsEventResponseDto process(@NotNull(message = "{request.required}") LmsEventRequestDto request) {
         log.debug("Обработка события от LMS: userId={}, eventId={}, type={}",
                 request.getUserId(), request.getEventId(), request.getEventType());
 

@@ -1,5 +1,7 @@
 package ru.misis.gamification.service.event.processor;
 
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotNull;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
 
@@ -22,6 +24,7 @@ public interface LmsEventProcessor {
      *
      * @param lmsEventRequestDto DTO события из LMS
      * @return DTO ответа LMS-системе на обработанное событие
+     * @throws ConstraintViolationException если lmsEventRequestDto == null
      */
-    LmsEventResponseDto process(LmsEventRequestDto lmsEventRequestDto);
+    LmsEventResponseDto process(@NotNull(message = "{request.required}") LmsEventRequestDto lmsEventRequestDto);
 }

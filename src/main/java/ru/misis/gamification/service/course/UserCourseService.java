@@ -1,6 +1,10 @@
 package ru.misis.gamification.service.course;
 
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotNull;
 import ru.misis.gamification.entity.User;
+
+import java.util.UUID;
 
 /**
  * Сервис управления курсами пользователей
@@ -14,15 +18,19 @@ public interface UserCourseService {
      * @param user     Пользователь
      * @param courseId Идентификатор курса из LMS
      * @param groupId  Идентификатор группы из LMS
+     * @throws ConstraintViolationException если user == null
      */
-    void enrollIfNeeded(User user, String courseId, String groupId);
+    void enrollIfNeeded(@NotNull(message = "{user.required}") User user, String courseId, String groupId);
 
     /**
      * Начислить очки пользователю по конкретному курсу
      *
-     * @param user     Пользователь
-     * @param courseId Идентификатор курса из LMS
-     * @param points   Количество очков
+     * @param user       Пользователь
+     * @param courseUuid UUID курса
+     * @param points     Количество очков
+     * @throws ConstraintViolationException если user == null или courseUuid == null
      */
-    void addPointsToCourse(User user, String courseId, int points);
+    void addPointsToCourse(@NotNull(message = "{user.required}") User user,
+                           @NotNull(message = "{course.uuid.required}") UUID courseUuid,
+                           int points);
 }

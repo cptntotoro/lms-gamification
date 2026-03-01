@@ -1,5 +1,9 @@
 package ru.misis.gamification.service.analytics;
 
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import ru.misis.gamification.dto.analytics.GroupLeaderboardPageDto;
 
 /**
@@ -10,18 +14,28 @@ public interface AnalyticsService {
     /**
      * Получить лидерборд пользователей внутри конкретной группы на курсе с пагинацией
      * <p>
-     * Пользователи сортируются по убыванию очков, заработанных именно на данном курсе
-     * <p>
-     * Если группа или курс не существуют — возвращается пустая страница.
-     * Если в группе нет студентов — возвращается страница с totalElements = 0.
+     * Лидерборд формируется по убыванию количества очков, заработанных именно на данном курсе
+     * (поле {@code totalPointsInCourse} в сущности {@code UserCourseEnrollment}).
+     * </p>
+     * Если группа или курс не существуют — возвращается пустая страница (totalElements = 0).
+     * Если в группе нет студентов — также возвращается страница (totalElements = 0).
      * </p>
      *
-     * @param courseId Идентификатор курса из LMS (обязательный)
-     * @param groupId  Идентификатор группы из LMS (обязательный)
+     * @param courseId Идентификатор курса из LMS
+     * @param groupId  Идентификатор группы из LMS
      * @param page     Номер страницы (0-based, по умолчанию 0)
      * @param size     Размер страницы
-     * @return страница лидерборда с метаданными пагинации
-     * @throws IllegalArgumentException если courseId или groupId == null
+     * @return Страница лидерборда с метаданными пагинации {@link GroupLeaderboardPageDto}
+     * @throws ConstraintViolationException если:
+     *                                      <ul>
+     *                                       <li>courseId == null или пустая строка</li>
+     *                                       <li>groupId == null или пустая строка</li>
+     *                                       <li>page < 0</li>
+     *                                       <li>size < 1 или size > 100</li>
+     *                                      </ul>
      */
-    GroupLeaderboardPageDto getGroupLeaderboard(String courseId, String groupId, int page, int size);
+    GroupLeaderboardPageDto getGroupLeaderboard(@NotBlank(message = "{course.id.required}") String courseId,
+                                                @NotBlank(message = "{group.id.required}") String groupId,
+                                                @Min(value = 0, message = "{page.non-negative}") int page,
+                                                @Min(value = 1, message = "{size.positive}") @Max(value = 100, message = "{size.too-large}") int size);
 }

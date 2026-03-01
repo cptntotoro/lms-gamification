@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import ru.misis.gamification.entity.Transaction;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 /**
  * Репозиторий транзакций
@@ -27,15 +28,31 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     /**
      * Получить страницу транзакций по идентификатору пользователя из LMS
      *
-     * @param userId   Идентификатор пользователя из LMS
+     * @param userUuid UUID пользователя
      * @param pageable Параметры пагинации и сортировки
      * @return Страница транзакций
      */
-    Page<Transaction> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
+    Page<Transaction> findByUserUuidOrderByCreatedAtDesc(UUID userUuid, Pageable pageable);
 
-    @Query("SELECT COALESCE(SUM(t.pointsEarned), 0) FROM Transaction t " +
-            "WHERE t.userId = :userId AND t.eventTypeCode = :typeCode AND DATE(t.createdAt) = :date")
-    long sumPointsByUserIdAndEventTypeAndDate(@Param("userId") String userId,
-                                              @Param("typeCode") String typeCode,
-                                              @Param("date") LocalDate date);
+    /**
+     * Получить сумму очков, начисленных пользователю по конкретному типу события за указанный день
+     * <p>
+     * Учитываются только транзакции, созданные в этот день (по дате без времени).
+     * Если записей нет — возвращается 0.
+     * </p>
+     *
+     * @param userUuid      UUID пользователя
+     * @param eventTypeUuid UUID типа события
+     * @param date          Дата (день), за который считается сумма
+     * @return Сумма начисленных очков за день по этому типу события
+     */
+    @Query("SELECT COALESCE(SUM(t.points), 0) " +
+            "FROM Transaction t " +
+            "WHERE t.user.uuid = :userUuid " +
+            "  AND t.eventType.uuid = :eventTypeUuid " +
+            "  AND DATE(t.createdAt) = :date")
+    long sumPointsByUserUuidAndEventTypeUuidAndDate(
+            @Param("userUuid") UUID userUuid,
+            @Param("eventTypeUuid") UUID eventTypeUuid,
+            @Param("date") LocalDate date);
 }

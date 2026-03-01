@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UserProgressServiceTest {
+class UserProgressServiceUnitTest {
 
     @Mock
     private UserService userService;
@@ -32,7 +32,7 @@ class UserProgressServiceTest {
     private ProgressCalculator progressCalculator;
 
     @InjectMocks
-    private UserProgressServiceImpl userProgressService;
+    private UserProgressServiceImpl service;
 
     private User user;
     private ProgressMetrics metrics;
@@ -53,10 +53,10 @@ class UserProgressServiceTest {
 
     @Test
     void getProgress_returnsCorrectUserDto() {
-        when(userService.get("test-user-001")).thenReturn(user);
+        when(userService.getUserByExternalId("test-user-001")).thenReturn(user);
         when(progressCalculator.calculate(user)).thenReturn(metrics);
 
-        UserDto dto = userProgressService.getProgress("test-user-001");
+        UserDto dto = service.getProgress("test-user-001");
 
         assertThat(dto.getUserId()).isEqualTo("test-user-001");
         assertThat(dto.getTotalPoints()).isEqualTo(1250);
@@ -64,24 +64,26 @@ class UserProgressServiceTest {
         assertThat(dto.getPointsToNextLevel()).isEqualTo(1750L);
         assertThat(dto.getProgressPercent()).isEqualTo(71.42857142857143);
 
-        verify(userService).get("test-user-001");
+        verify(userService).getUserByExternalId("test-user-001");
         verify(progressCalculator).calculate(user);
     }
 
     @Test
-    void getProgress_whenUserNotFound_throwsUserNotFoundException() {
-        when(userService.get("unknown")).thenThrow(new UserNotFoundException("unknown"));
+    void getProgress_userNotFound_throwsUserNotFoundException() {
+        when(userService.getUserByExternalId("unknown"))
+                .thenThrow(new UserNotFoundException("unknown"));
 
-        assertThatThrownBy(() -> userProgressService.getProgress("unknown"))
-                .isInstanceOf(UserNotFoundException.class);
+        assertThatThrownBy(() -> service.getProgress("unknown"))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("unknown");
     }
 
     @Test
     void getAdminProgress_returnsCorrectUserAdminDto() {
-        when(userService.get("test-user-001")).thenReturn(user);
+        when(userService.getUserByExternalId("test-user-001")).thenReturn(user);
         when(progressCalculator.calculate(user)).thenReturn(metrics);
 
-        UserAdminDto dto = userProgressService.getAdminProgress("test-user-001");
+        UserAdminDto dto = service.getAdminProgress("test-user-001");
 
         assertThat(dto.getUuid()).isEqualTo(user.getUuid());
         assertThat(dto.getUserId()).isEqualTo("test-user-001");
@@ -92,15 +94,17 @@ class UserProgressServiceTest {
         assertThat(dto.getPointsToNextLevel()).isEqualTo(1750L);
         assertThat(dto.getProgressPercent()).isEqualTo(71.42857142857143);
 
-        verify(userService).get("test-user-001");
+        verify(userService).getUserByExternalId("test-user-001");
         verify(progressCalculator).calculate(user);
     }
 
     @Test
-    void getAdminProgress_whenUserNotFound_throwsUserNotFoundException() {
-        when(userService.get("unknown")).thenThrow(new UserNotFoundException("unknown"));
+    void getAdminProgress_userNotFound_throwsUserNotFoundException() {
+        when(userService.getUserByExternalId("unknown"))
+                .thenThrow(new UserNotFoundException("unknown"));
 
-        assertThatThrownBy(() -> userProgressService.getAdminProgress("unknown"))
-                .isInstanceOf(UserNotFoundException.class);
+        assertThatThrownBy(() -> service.getAdminProgress("unknown"))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("unknown");
     }
 }

@@ -115,5 +115,23 @@ public class AwardResult {
     public boolean isSuccess() {
         return status == AwardStatus.SUCCESS;
     }
+
+    /**
+     * Проверяет, было ли начисление отклонено
+     *
+     * @return true если статус = REJECTED, иначе false
+     */
+    public boolean isRejected() {
+        return status == AwardStatus.REJECTED;
+    }
+
+    /**
+     * Проверяет, был дубликат события
+     *
+     * @return true если статус = DUPLICATE, иначе false
+     */
+    public boolean isDuplicate() {
+        return status == AwardStatus.DUPLICATE;
+    }
 }
 

@@ -1,5 +1,7 @@
 package ru.misis.gamification.service.point;
 
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotNull;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.service.point.result.AwardResult;
 
@@ -22,8 +24,8 @@ public interface PointsAwardingService {
      * Выполняет начисление очков за событие из LMS
      *
      * @param request DTO события из LMS
-     * @return Внутренний результат операции начисления очков (никогда null)
-     * @throws IllegalArgumentException если request null или содержит пустые обязательные поля
+     * @return Внутренний результат операции начисления очков
+     * @throws ConstraintViolationException если lmsEventRequestDto == null
      */
-    AwardResult awardPoints(LmsEventRequestDto request);
+    AwardResult awardPoints(@NotNull(message = "{request.required}") LmsEventRequestDto request);
 }
