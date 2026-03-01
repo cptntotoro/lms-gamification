@@ -1,6 +1,7 @@
 package ru.misis.gamification.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
 import ru.misis.gamification.dto.admin.response.TransactionItemDto;
 import ru.misis.gamification.dto.admin.response.TransactionPageDto;
@@ -21,7 +22,13 @@ public interface TransactionMapper {
      * @param transaction Транзакция
      * @return DTO транзакции для администратора
      */
-    TransactionItemDto toDto(Transaction transaction);
+    @Mapping(target = "userId", source = "user.userId")
+    @Mapping(target = "eventId", source = "eventId")
+    @Mapping(target = "points", source = "points")
+    @Mapping(target = "description", source = "description")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "uuid", source = "uuid")
+    TransactionItemDto transactionToTransactionItemDto(Transaction transaction);
 
     /**
      * Смаппить страницу транзакций в DTO страницы транзакций для администратора
@@ -29,7 +36,7 @@ public interface TransactionMapper {
      * @param page Страница транзакций
      * @return DTO страницы транзакций для администратора
      */
-    default TransactionPageDto toPageDto(Page<Transaction> page) {
+    default TransactionPageDto transactionPagetoTransactionPageDto(Page<Transaction> page) {
         if (page == null) {
             return TransactionPageDto.builder()
                     .content(List.of())
@@ -42,10 +49,12 @@ public interface TransactionMapper {
                     .build();
         }
 
+        List<TransactionItemDto> content = page.getContent().stream()
+                .map(this::transactionToTransactionItemDto)
+                .collect(Collectors.toList());
+
         return TransactionPageDto.builder()
-                .content(page.getContent().stream()
-                        .map(this::toDto)
-                        .collect(Collectors.toList()))
+                .content(content)
                 .pageNumber(page.getNumber())
                 .pageSize(page.getSize())
                 .totalElements(page.getTotalElements())

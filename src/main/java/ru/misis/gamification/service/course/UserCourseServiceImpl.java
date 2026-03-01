@@ -1,41 +1,41 @@
 package ru.misis.gamification.service.course;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
-import ru.misis.gamification.exception.CourseNotFoundException;
-import ru.misis.gamification.exception.GroupNotFoundException;
-import ru.misis.gamification.exception.UserNotEnrolledInCourseException;
-import ru.misis.gamification.repository.CourseRepository;
-import ru.misis.gamification.repository.GroupRepository;
-import ru.misis.gamification.repository.UserCourseEnrollmentRepository;
+import ru.misis.gamification.service.group.GroupService;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
+@Validated
 public class UserCourseServiceImpl implements UserCourseService {
 
     /**
-     * Репозиторий курсов
+     * Сервис управления курсами
      */
-    private final CourseRepository courseRepository;
+    private final CourseService courseService;
 
     /**
-     * Репозиторий групп
+     * Сервис управления группами/потоками
      */
-    private final GroupRepository groupRepository;
+    private final GroupService groupService;
 
     /**
-     * Репозиторий связей студент — курс
+     * Сервис зачислений на курс (связь пользователь — курс)
      */
-    private final UserCourseEnrollmentRepository enrollmentRepository;
+    private final UserCourseEnrollmentService enrollmentService;
 
     /**
      * Флаг поддержки курсов и групп
@@ -44,50 +44,44 @@ public class UserCourseServiceImpl implements UserCourseService {
     private boolean coursesEnabled;
 
     @Override
-    public void enrollIfNeeded(User user, String courseId, String groupId) {
-        if (!coursesEnabled || courseId == null) {
+    public void enrollIfNeeded(@NotNull(message = "{user.required}") User user, String courseId, String groupId) {
+        if (!coursesEnabled || courseId == null || courseId.trim().isEmpty()) {
             return;
         }
 
-        Course course = courseRepository.findByCourseId(courseId)
-                .orElseThrow(() -> new CourseNotFoundException(courseId));
+        Course course = courseService.findByCourseId(courseId);
 
         Group group = null;
-        if (groupId != null) {
-            group = groupRepository.findByGroupIdAndCourse(groupId, course)
-                    .orElseThrow(() -> new GroupNotFoundException(groupId, courseId));
+        if (groupId != null && !groupId.trim().isEmpty()) {
+            UUID groupUuid = groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId);
+            group = groupService.findById(groupUuid);
         }
 
-        if (enrollmentRepository.existsByUserAndCourse(user, course)) {
+        if (enrollmentService.isUserEnrolledInCourse(user, course)) {
+            log.debug("Пользователь {} уже зачислен на курс {}", user.getUserId(), courseId);
             return;
         }
 
-        UserCourseEnrollment enrollment = UserCourseEnrollment.builder()
-                .user(user)
-                .course(course)
-                .group(group)
-                .totalPointsInCourse(0)
-                .build();
+        UserCourseEnrollment enrollment = UserCourseEnrollment.builder().user(user).course(course).group(group).totalPointsInCourse(0).build();
+        enrollmentService.save(enrollment);
 
-        enrollmentRepository.save(enrollment);
-        log.info("Пользователь {} зачислен на курс {} (группа: {})",
-                user.getUserId(), courseId, groupId);
+        log.info("Пользователь {} зачислен на курс {} (группа: {})", user.getUserId(), course.getCourseId(), group != null ? group.getGroupId() : "без группы");
     }
 
     @Override
-    public void addPointsToCourse(User user, String courseId, int points) {
-        if (!coursesEnabled || courseId == null || points <= 0) {
+    public void addPointsToCourse(@NotNull(message = "{user.required}") User user,
+                                  @NotNull(message = "{course.uuid.required}") UUID courseUuid,
+                                  int points) {
+        if (!coursesEnabled || points <= 0) {
             return;
         }
 
-        UserCourseEnrollment enrollment = enrollmentRepository
-                .findByUserAndCourseCourseId(user, courseId)
-                .orElseThrow(() -> new UserNotEnrolledInCourseException(user.getUserId(), courseId));
+        Course course = courseService.findById(courseUuid);
+        UserCourseEnrollment enrollment = enrollmentService.findByUserAndCourse(user, course);
 
         enrollment.setTotalPointsInCourse(enrollment.getTotalPointsInCourse() + points);
-        enrollmentRepository.save(enrollment);
+        enrollmentService.save(enrollment);
 
-        log.debug("Начислено {} очков по курсу {} пользователю {}",
-                points, courseId, user.getUserId());
+        log.debug("Начислено {} очков по курсу {} (UUID: {}) пользователю {}", points, course.getCourseId(), courseUuid, user.getUserId());
     }
 }

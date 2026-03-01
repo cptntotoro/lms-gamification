@@ -1,43 +1,83 @@
--- Очистка (на случай перезапуска с sql.init.mode=always)
-DELETE FROM transactions;
-DELETE FROM event_types;
-DELETE FROM users;
-
--- 1. Типы событий (EventType) — разные сценарии начисления
+-- 1. Типы событий
 INSERT INTO event_types (uuid, type_code, display_name, points, max_daily_points, active, created_at, updated_at)
-VALUES (gen_random_uuid(), 'quiz', 'Квиз / Тест', 80, 400, true, NOW(), NOW()),
-       (gen_random_uuid(), 'lab', 'Лабораторная работа', 150, 600, true, NOW(), NOW()),
-       (gen_random_uuid(), 'homework', 'Домашняя работа', 60, 300, true, NOW(), NOW()),
+VALUES (gen_random_uuid(), 'quiz', 'Квиз / Тест', 50, 150, true, NOW(), NOW()),
+       (gen_random_uuid(), 'homework', 'Домашняя работа', 100, 300, true, NOW(), NOW()),
        (gen_random_uuid(), 'attendance', 'Посещение занятия', 20, 100, true, NOW(), NOW()),
-       (gen_random_uuid(), 'project', 'Проект / Курсовая', 500, 1000, true, NOW(), NOW());
+       (gen_random_uuid(), 'project', 'Проект / Курсовая', 300, NULL, true, NOW(), NOW()),
+       (gen_random_uuid(), 'bonus', 'Бонус / Дополнительно', 80, 200, true, NOW(), NOW());
 
--- 2. Пользователи (users) — несколько тестовых аккаунтов
+-- 2. Курсы
+INSERT INTO courses (uuid, course_id, display_name, short_name, description, active, created_at, updated_at)
+VALUES (gen_random_uuid(), 'MATH-101', 'Математический анализ', 'Матан', 'Классический курс по математическому анализу',
+        true, NOW(), NOW()),
+       (gen_random_uuid(), 'PROG-202', 'Программирование на Java', 'Java', 'Объектно-ориентированное программирование',
+        true, NOW(), NOW()),
+       (gen_random_uuid(), 'HIST-303', 'История России XX века', 'История', 'Ключевые события и личности', true, NOW(),
+        NOW());
+
+-- 3. Группы
+INSERT INTO groups (uuid, group_id, display_name, course_id, active, created_at, updated_at)
+VALUES (gen_random_uuid(), 'M-21-1', 'М-21-1 (утро)', (SELECT uuid FROM courses WHERE course_id = 'MATH-101'), true,
+        NOW(), NOW()),
+       (gen_random_uuid(), 'M-21-2', 'М-21-2 (вечер)', (SELECT uuid FROM courses WHERE course_id = 'MATH-101'), true,
+        NOW(), NOW()),
+       (gen_random_uuid(), 'P-22-1', 'П-22-1 (основная)', (SELECT uuid FROM courses WHERE course_id = 'PROG-202'), true,
+        NOW(), NOW()),
+       (gen_random_uuid(), 'P-22-2', 'П-22-2 (интенсив)', (SELECT uuid FROM courses WHERE course_id = 'PROG-202'), true,
+        NOW(), NOW()),
+       (gen_random_uuid(), 'H-23-1', 'И-23-1', (SELECT uuid FROM courses WHERE course_id = 'HIST-303'), true, NOW(),
+        NOW());
+
+-- 4. Пользователи — 12 студентов
 INSERT INTO users (uuid, user_id, total_points, level, created_at, updated_at)
-VALUES (gen_random_uuid(), 'alex123', 1250, 12, '2026-01-10 09:30:00', '2026-02-19 14:45:00'),
-       (gen_random_uuid(), 'maria_edu', 3200, 18, '2026-01-05 11:15:00', '2026-02-18 16:20:00'),
-       (gen_random_uuid(), 'ivan_student', 480, 6, '2026-02-01 08:00:00', '2026-02-19 10:10:00'),
-       (gen_random_uuid(), 'test_user', 0, 1, NOW(), NOW());
+VALUES (gen_random_uuid(), 'student001', 850, 5, NOW(), NOW()),
+       (gen_random_uuid(), 'student002', 720, 4, NOW(), NOW()),
+       (gen_random_uuid(), 'student003', 610, 4, NOW(), NOW()),
+       (gen_random_uuid(), 'student004', 980, 6, NOW(), NOW()),
+       (gen_random_uuid(), 'student005', 450, 3, NOW(), NOW()),
+       (gen_random_uuid(), 'student006', 320, 3, NOW(), NOW()),
+       (gen_random_uuid(), 'student007', 1150, 7, NOW(), NOW()),
+       (gen_random_uuid(), 'student008', 890, 5, NOW(), NOW()),
+       (gen_random_uuid(), 'student009', 540, 4, NOW(), NOW()),
+       (gen_random_uuid(), 'student010', 670, 4, NOW(), NOW()),
+       (gen_random_uuid(), 'student011', 280, 2, NOW(), NOW()),
+       (gen_random_uuid(), 'student012', 410, 3, NOW(), NOW());
 
--- 3. Транзакции (transactions) — история начислений для alex123 и других
-INSERT INTO transactions (uuid, user_id, event_id, event_type_code, points, description, created_at)
-VALUES
-    -- alex123 — 1250 XP (накоплено разными действиями)
-    (gen_random_uuid(), 'alex123', 'evt-quiz-001', 'quiz', 80, 'Пройден квиз по теме "История"', '2026-02-19 09:15:00'),
-    (gen_random_uuid(), 'alex123', 'evt-lab-002', 'lab', 150, 'Сдана лабораторная работа №5', '2026-02-18 14:30:00'),
-    (gen_random_uuid(), 'alex123', 'evt-home-003', 'homework', 60, 'Домашнее задание №8', '2026-02-17 10:45:00'),
-    (gen_random_uuid(), 'alex123', 'evt-quiz-004', 'quiz', 120, 'Квиз повышенной сложности', '2026-02-16 11:20:00'),
-    (gen_random_uuid(), 'alex123', 'evt-project-005', 'project', 500, 'Курсовая работа по дисциплине',
-     '2026-02-10 15:00:00'),
-    (gen_random_uuid(), 'alex123', 'evt-att-006', 'attendance', 20, 'Посещение лекции 15.02', '2026-02-15 08:00:00'),
-    (gen_random_uuid(), 'alex123', 'evt-att-007', 'attendance', 20, 'Посещение семинара 18.02', '2026-02-18 08:00:00'),
-    (gen_random_uuid(), 'alex123', 'evt-quiz-008', 'quiz', 80, 'Ежедневный квиз', '2026-02-19 08:30:00'),
-    (gen_random_uuid(), 'alex123', 'evt-home-009', 'homework', 60, 'Задание №9', '2026-02-19 12:00:00'),
-    (gen_random_uuid(), 'alex123', 'evt-quiz-010', 'quiz', 160, 'Супер-квиз (×2 очков)', '2026-02-19 14:00:00'),
+-- 5. Зачисления
+INSERT INTO user_course_enrollments (uuid, user_uuid, course_uuid, group_uuid, total_points_in_course, enrolled_at)
+SELECT gen_random_uuid(),
+       u.uuid,
+       c.uuid,
+       g.uuid,
+       floor(random() * 800 + 100)::int,
+       NOW() - interval '1 month' * floor(random() * 6 + 1)
+FROM users u
+         CROSS JOIN courses c
+         JOIN groups g ON g.course_id = c.uuid
+WHERE (u.user_id ~ '^student00[1-4]' AND c.course_id = 'MATH-101' AND g.group_id = 'M-21-1')
+   OR (u.user_id ~ '^student00[5-8]' AND c.course_id = 'MATH-101' AND g.group_id = 'M-21-2')
+   OR (u.user_id ~ '^student009' AND c.course_id = 'PROG-202' AND g.group_id = 'P-22-1')
+   OR (u.user_id ~ '^student01[0-2]' AND c.course_id = 'PROG-202' AND g.group_id = 'P-22-2')
+   OR (u.user_id ~ '^student(011|012)' AND c.course_id = 'HIST-303' AND g.group_id = 'H-23-1');
 
-    -- maria_edu — высокий уровень для теста админки
-    (gen_random_uuid(), 'maria_edu', 'evt-project-101', 'project', 1000, 'Дипломная работа', '2026-02-01 10:00:00'),
-    (gen_random_uuid(), 'maria_edu', 'evt-lab-102', 'lab', 600, 'Серия лабораторных', '2026-02-05 13:30:00'),
-
-    -- ivan_student — низкий уровень
-    (gen_random_uuid(), 'ivan_student', 'evt-quiz-201', 'quiz', 80, 'Первый квиз', '2026-02-10 09:00:00'),
-    (gen_random_uuid(), 'ivan_student', 'evt-att-202', 'attendance', 20, 'Первая лекция', '2026-02-11 08:00:00');
+-- 6. Транзакции — points всегда > 0
+INSERT INTO transactions (uuid, user_uuid, course_uuid, event_id, event_type_uuid, points, description, created_at)
+SELECT gen_random_uuid(),
+       u.uuid,
+       c.uuid,
+       'demo-event-' || md5(random()::text || clock_timestamp()::text),
+       et.uuid,
+       GREATEST(10, et.points + floor(random() * 100 - 30)::int)::int,
+       et.display_name || ' — ' ||
+       CASE
+           WHEN random() < 0.3 THEN 'отлично'
+           WHEN random() < 0.6 THEN 'хорошо'
+           ELSE 'удовлетворительно'
+           END,
+       NOW() - interval '1 day' * floor(random() * 90 + 1)
+FROM users u
+         JOIN user_course_enrollments uce ON uce.user_uuid = u.uuid
+         JOIN courses c ON c.uuid = uce.course_uuid
+         JOIN event_types et ON true
+WHERE random() < 0.65
+LIMIT 100;

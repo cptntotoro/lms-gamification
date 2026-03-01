@@ -1,5 +1,6 @@
 package ru.misis.gamification.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.ok(LmsEventResponseDto.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(UserCourseEnrollmentNotFoundException.class)
+    public ResponseEntity<LmsEventResponseDto> handleCourseEnrollmentNotFound(UserCourseEnrollmentNotFoundException ex) {
+        log.warn("Ошибка: {}", ex.getMessage());
+        return ResponseEntity.ok(LmsEventResponseDto.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(CourseNotFoundException.class)
     public ResponseEntity<LmsEventResponseDto> handleCourseNotFound(CourseNotFoundException ex) {
         log.warn("Ошибка: {}", ex.getMessage());
@@ -52,7 +59,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(EventTypeNotFoundException.class)
-    public ResponseEntity<LmsEventResponseDto> handleUserNotFound(EventTypeNotFoundException ex) {
+    public ResponseEntity<LmsEventResponseDto> handleTypeNotFound(EventTypeNotFoundException ex) {
         log.warn("Ошибка: {}", ex.getMessage());
         return ResponseEntity.ok(LmsEventResponseDto.error(ex.getMessage()));
     }
@@ -73,6 +80,17 @@ public class GlobalExceptionHandler {
                 .orElse("Ошибка валидации запроса");
 
         log.warn("Ошибка валидации входящего запроса: {}", message);
+        return ResponseEntity.badRequest().body(LmsEventResponseDto.error(message));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<LmsEventResponseDto> handleConstraintViolation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .findFirst()
+                .orElse("Ошибка валидации параметров");
+
+        log.warn("Нарушение валидации параметров: {}", message);
         return ResponseEntity.badRequest().body(LmsEventResponseDto.error(message));
     }
 

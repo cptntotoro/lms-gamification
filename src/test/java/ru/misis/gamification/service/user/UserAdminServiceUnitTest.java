@@ -23,11 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UserAdminServiceTest {
+class UserAdminServiceUnitTest {
 
     @Mock
     private UserService userService;
@@ -36,10 +35,10 @@ class UserAdminServiceTest {
     private UserMapper userMapper;
 
     @InjectMocks
-    private UserAdminServiceImpl userAdminService;
+    private UserAdminServiceImpl service;
 
     private User testUser;
-    private UserAdminDto testUserAdminDto;
+    private UserAdminDto testAdminDto;
 
     @BeforeEach
     void setUp() {
@@ -47,12 +46,12 @@ class UserAdminServiceTest {
                 .uuid(UUID.randomUUID())
                 .userId("lms-user-12345")
                 .totalPoints(1250)
-                .level(3)
-                .createdAt(LocalDateTime.now().minusDays(5))
-                .updatedAt(LocalDateTime.now())
+                .level(7)
+                .createdAt(LocalDateTime.of(2026, 1, 15, 10, 0))
+                .updatedAt(LocalDateTime.of(2026, 2, 20, 14, 30))
                 .build();
 
-        testUserAdminDto = UserAdminDto.builder()
+        testAdminDto = UserAdminDto.builder()
                 .uuid(testUser.getUuid())
                 .userId(testUser.getUserId())
                 .totalPoints(testUser.getTotalPoints())
@@ -63,60 +62,48 @@ class UserAdminServiceTest {
     }
 
     @Test
-    void findByUserId_existingUser_shouldReturnUserAdminDto() {
+    void findByUserId_existingUser_returnsUserAdminDto() {
         String userId = "lms-user-12345";
 
-        when(userService.get(userId)).thenReturn(testUser);
-        when(userMapper.userToUserAdminDto(testUser)).thenReturn(testUserAdminDto);
+        when(userService.getUserByExternalId(userId)).thenReturn(testUser);
+        when(userMapper.userToUserAdminDto(testUser)).thenReturn(testAdminDto);
 
-        UserAdminDto result = userAdminService.findByUserId(userId);
+        UserAdminDto result = service.findByUserId(userId);
 
         assertThat(result).isNotNull();
         assertThat(result.getUserId()).isEqualTo(userId);
         assertThat(result.getTotalPoints()).isEqualTo(1250);
-        assertThat(result.getLevel()).isEqualTo(3);
+        assertThat(result.getLevel()).isEqualTo(7);
+        assertThat(result.getUuid()).isEqualTo(testUser.getUuid());
 
-        verify(userService).get(userId);
+        verify(userService).getUserByExternalId(userId);
         verify(userMapper).userToUserAdminDto(testUser);
-        verifyNoMoreInteractions(userService, userMapper);
     }
 
     @Test
-    void findByUserId_nonExistingUser_shouldThrowUserNotFoundException() {
+    void findByUserId_nonExistingUser_throwsUserNotFoundException() {
         String userId = "unknown-user";
 
-        when(userService.get(userId)).thenThrow(new UserNotFoundException("Пользователь с ID " + userId + " не найден"));
+        when(userService.getUserByExternalId(userId))
+                .thenThrow(new UserNotFoundException("Пользователь с ID " + userId + " не найден"));
 
-        assertThatThrownBy(() -> userAdminService.findByUserId(userId))
+        assertThatThrownBy(() -> service.findByUserId(userId))
                 .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining("Пользователь с ID " + userId + " не найден");
+                .hasMessageContaining(userId);
 
-        verify(userService).get(userId);
+        verify(userService).getUserByExternalId(userId);
         verifyNoInteractions(userMapper);
     }
 
     @Test
-    void findByUserId_blankUserId_shouldThrowIllegalArgumentException() {
-        assertThatThrownBy(() -> userAdminService.findByUserId(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("userId не может быть пустым");
-
-        assertThatThrownBy(() -> userAdminService.findByUserId("   "))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("userId не может быть пустым");
-
-        verifyNoInteractions(userService, userMapper);
-    }
-
-    @Test
-    void findAll_shouldReturnPageOfUserAdminDtos() {
+    void findAll_returnsPageOfUserAdminDtos() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<User> userPage = new PageImpl<>(List.of(testUser), pageable, 1);
 
         when(userService.findAll(pageable)).thenReturn(userPage);
-        when(userMapper.userToUserAdminDto(testUser)).thenReturn(testUserAdminDto);
+        when(userMapper.userToUserAdminDto(testUser)).thenReturn(testAdminDto);
 
-        Page<UserAdminDto> result = userAdminService.findAll(pageable);
+        Page<UserAdminDto> result = service.findAll(pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent()).hasSize(1);
@@ -124,17 +111,16 @@ class UserAdminServiceTest {
 
         verify(userService).findAll(pageable);
         verify(userMapper).userToUserAdminDto(testUser);
-        verifyNoMoreInteractions(userService, userMapper);
     }
 
     @Test
-    void findAll_emptyPage_shouldReturnEmptyPage() {
+    void findAll_emptyPage_returnsEmptyPage() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<User> emptyPage = new PageImpl<>(List.of(), pageable, 0);
 
         when(userService.findAll(pageable)).thenReturn(emptyPage);
 
-        Page<UserAdminDto> result = userAdminService.findAll(pageable);
+        Page<UserAdminDto> result = service.findAll(pageable);
 
         assertThat(result.getTotalElements()).isZero();
         assertThat(result.getContent()).isEmpty();

@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class EventTypeAdminServiceTest {
+class EventTypeAdminServiceUnitTest {
 
     @Mock
     private EventTypeRepository repository;
@@ -64,16 +64,16 @@ class EventTypeAdminServiceTest {
         assertThat(result).isEqualTo(testType);
         verify(repository).existsByTypeCode("quiz");
         verify(repository).save(eventTypeCaptor.capture());
-        assertThat(eventTypeCaptor.getValue().getTypeCode()).isEqualTo("quiz");
+        assertThat(eventTypeCaptor.getValue()).isEqualTo(testType);
     }
 
     @Test
-    void create_duplicateCode_throwsIllegalArgument() {
+    void create_duplicateCode_throwsDuplicateEventTypeException() {
         when(repository.existsByTypeCode("quiz")).thenReturn(true);
 
         assertThatThrownBy(() -> service.create(testType))
                 .isInstanceOf(DuplicateEventTypeException.class)
-                .hasMessageContaining("уже существует");
+                .hasMessageContaining("quiz");
 
         verify(repository).existsByTypeCode("quiz");
         verify(repository, never()).save(any());
@@ -91,12 +91,15 @@ class EventTypeAdminServiceTest {
     }
 
     @Test
-    void getById_nonExisting_throwsEntityNotFound() {
+    void getById_nonExisting_throwsEventTypeNotFoundException() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getById(id))
-                .isInstanceOf(EventTypeNotFoundException.class);
+                .isInstanceOf(EventTypeNotFoundException.class)
+                .hasMessageContaining(id.toString());
+
+        verify(repository).findById(id);
     }
 
     @Test
@@ -118,14 +121,30 @@ class EventTypeAdminServiceTest {
         assertThat(result.getPoints()).isEqualTo(120);
         assertThat(result.isActive()).isFalse();
         assertThat(result.getTypeCode()).isEqualTo("quiz"); // не изменился
-        assertThat(result.getMaxDailyPoints()).isEqualTo(300); // не передан → сохранён старый
+        assertThat(result.getMaxDailyPoints()).isEqualTo(300); // не передан
 
+        verify(repository).findById(id);
         verify(repository).save(eventTypeCaptor.capture());
-        assertThat(eventTypeCaptor.getValue().isActive()).isFalse();
+        EventType captured = eventTypeCaptor.getValue();
+        assertThat(captured.getDisplayName()).isEqualTo("Новый квиз");
+        assertThat(captured.getPoints()).isEqualTo(120);
+        assertThat(captured.isActive()).isFalse();
     }
 
     @Test
-    void deactivate_existing_setsActiveFalse() {
+    void update_nonExisting_throwsEventTypeNotFoundException() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.update(id, testType))
+                .isInstanceOf(EventTypeNotFoundException.class);
+
+        verify(repository).findById(id);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void deactivate_existing_setsActiveFalseAndSaves() {
         UUID id = testType.getUuid();
         when(repository.findById(id)).thenReturn(Optional.of(testType));
 
@@ -133,17 +152,21 @@ class EventTypeAdminServiceTest {
 
         service.deactivate(id);
 
+        verify(repository).findById(id);
         verify(repository).save(eventTypeCaptor.capture());
         assertThat(eventTypeCaptor.getValue().isActive()).isFalse();
     }
 
     @Test
-    void deactivate_nonExisting_throwsEntityNotFound() {
+    void deactivate_nonExisting_throwsEventTypeNotFoundException() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.deactivate(id))
                 .isInstanceOf(EventTypeNotFoundException.class);
+
+        verify(repository).findById(id);
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -157,6 +180,7 @@ class EventTypeAdminServiceTest {
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().getFirst()).isEqualTo(testType);
+        assertThat(result.getTotalElements()).isEqualTo(1);
         verify(repository).findAll(pageable);
     }
 }

@@ -1,5 +1,8 @@
 package ru.misis.gamification.service.analytics;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -8,18 +11,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.dto.analytics.GroupLeaderboardPageDto;
 import ru.misis.gamification.dto.analytics.LeaderboardEntryDto;
-import ru.misis.gamification.exception.CourseNotFoundException;
-import ru.misis.gamification.exception.GroupNotFoundException;
 import ru.misis.gamification.repository.UserCourseEnrollmentRepository;
 import ru.misis.gamification.service.course.CourseService;
 import ru.misis.gamification.service.group.GroupService;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
+@Validated
 public class AnalyticsServiceImpl implements AnalyticsService {
 
     /**
@@ -39,44 +44,19 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public GroupLeaderboardPageDto getGroupLeaderboard(
-            String courseId,
-            String groupId,
-            int page,
-            int size
+            @NotBlank(message = "{course.id.required}") String courseId,
+            @NotBlank(message = "{group.id.required}") String groupId,
+            @Min(value = 0, message = "{page.non-negative}") int page,
+            @Min(value = 1, message = "{size.positive}") @Max(value = 100, message = "{size.too-large}") int size
     ) {
-        if (courseId == null || courseId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Идентификатор курса не может быть пустым или null");
-        }
-        if (groupId == null || groupId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Идентификатор группы не может быть пустым или null");
-        }
+        log.debug("Запрос лидерборда: courseId={}, groupId={}, page={}, size={}", courseId, groupId, page, size);
 
-        log.debug("Запрос лидерборда: courseId={}, groupId={}, page={}, size={}",
-                courseId, groupId, page, size);
-
-        if (!courseService.existsByCourseId(courseId)) {
-            log.warn("Курс не найден: {}", courseId);
-            throw new CourseNotFoundException(courseId);
-        }
-
-        if (!groupService.existsByGroupIdAndCourseId(groupId, courseId)) {
-            log.warn("Группа не найдена: groupId={}, courseId={}", groupId, courseId);
-            throw new GroupNotFoundException(groupId, courseId);
-        }
+        UUID courseUuid = courseService.getCourseUuidByExternalId(courseId);
+        UUID groupUuid = groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "totalPointsInCourse"));
+        Page<LeaderboardEntryDto> pageResult = enrollmentRepository.findLeaderboardByCourseAndGroup(courseUuid, groupUuid, pageable);
 
-        Page<LeaderboardEntryDto> pageResult = enrollmentRepository
-                .findLeaderboardByCourseAndGroup(courseId, groupId, pageable);
-
-        return GroupLeaderboardPageDto.builder()
-                .content(pageResult.getContent())
-                .pageNumber(pageResult.getNumber())
-                .pageSize(pageResult.getSize())
-                .totalElements(pageResult.getTotalElements())
-                .totalPages(pageResult.getTotalPages())
-                .hasNext(pageResult.hasNext())
-                .hasPrevious(pageResult.hasPrevious())
-                .build();
+        return GroupLeaderboardPageDto.builder().content(pageResult.getContent()).pageNumber(pageResult.getNumber()).pageSize(pageResult.getSize()).totalElements(pageResult.getTotalElements()).totalPages(pageResult.getTotalPages()).hasNext(pageResult.hasNext()).hasPrevious(pageResult.hasPrevious()).build();
     }
 }

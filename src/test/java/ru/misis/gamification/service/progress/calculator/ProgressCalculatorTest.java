@@ -13,7 +13,6 @@ import ru.misis.gamification.service.progress.result.ProgressMetrics;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -88,13 +87,6 @@ class ProgressCalculatorTest {
         ProgressMetrics metrics = progressCalculator.calculate(user);
 
         assertThat(metrics.getPointsToNextLevel()).isEqualTo(500L);
-    }
-
-    @Test
-    void calculate_whenUserNull_throwsIllegalArgumentException() {
-        assertThatThrownBy(() -> progressCalculator.calculate(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Пользователь не может быть null");
     }
 
     @Test

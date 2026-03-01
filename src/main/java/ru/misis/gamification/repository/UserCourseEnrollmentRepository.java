@@ -30,33 +30,15 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
     boolean existsByUserAndCourse(User user, Course course);
 
     /**
-     * Получить связь пользователя на курсе
-     *
-     * @param user     Пользователь
-     * @param courseId Идентификатор курса из LMS
-     * @return Optional со связью пользователь — курс или пустой, если не найден
-     */
-    Optional<UserCourseEnrollment> findByUserAndCourseCourseId(User user, String courseId);
-
-    /**
      * Получить страницу лидерборда студентов группы на курсе, отсортированную
      * по убыванию очков на курсе
-     * <p>
-     * Использует оконную функцию {@code ROW_NUMBER()} для расчёта глобальной позиции
-     * (rank) по убыванию очков на курсе. Ранг считается по всей выборке, а не только
-     * по текущей странице.
-     * </p>
-     * <p>
-     * Выполняет жадную загрузку (JOIN FETCH) сущности {@code User}, чтобы избежать
-     * N+1 запросов при работе с данными студента.
-     * </p>
      * <p>
      * Если курс или группа не существуют — возвращается пустая страница.
      * </p>
      *
-     * @param courseId Идентификатор курса из LMS
-     * @param groupId  Идентификатор группы из LMS
-     * @param pageable Параметры пагинации и сортировки
+     * @param courseUuid UUID курса
+     * @param groupUuid  UUID группы
+     * @param pageable   Параметры пагинации и сортировки
      * @return Страница {@link UserCourseEnrollment} с загруженными пользователями
      */
     @Query("""
@@ -69,8 +51,21 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
                 )
                 FROM UserCourseEnrollment uce
                 JOIN uce.user u
-                WHERE uce.course.courseId = :courseId
-                  AND uce.group.groupId = :groupId
+                WHERE uce.course.uuid = :courseUuid
+                  AND uce.group.uuid = :groupUuid
             """)
-    Page<LeaderboardEntryDto> findLeaderboardByCourseAndGroup(@Param("courseId") String courseId, @Param("groupId") String groupId, Pageable pageable);
+    Page<LeaderboardEntryDto> findLeaderboardByCourseAndGroup(
+            @Param("courseUuid") UUID courseUuid,
+            @Param("groupUuid") UUID groupUuid,
+            Pageable pageable
+    );
+
+    /**
+     * Получить связь пользователя на курсе
+     *
+     * @param user   Пользователь
+     * @param course Курс (дисциплина)
+     * @return Optional с зачислением на курс (связь пользователь — курс) или пустой, если не найден
+     */
+    Optional<UserCourseEnrollment> findByUserAndCourse(User user, Course course);
 }

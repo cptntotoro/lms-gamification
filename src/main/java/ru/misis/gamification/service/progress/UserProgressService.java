@@ -1,16 +1,18 @@
 package ru.misis.gamification.service.progress;
 
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotBlank;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.dto.web.response.UserDto;
+import ru.misis.gamification.exception.UserNotFoundException;
 
 /**
- * Фасад для получения готовых DTO прогресса пользователя.
- * Используется виджетом, админ-панелью и другими местами.
+ * Фасад для получения готовых DTO прогресса пользователя
  */
 public interface UserProgressService {
 
     /**
-     * Получает DTO с данными прогресса пользователя для виджета или админ-страницы
+     * Получить DTO пользователя для виджета по идентификатору пользователя из LMS
      * <p>
      * Метод:
      * <ul>
@@ -21,21 +23,20 @@ public interface UserProgressService {
      * </ul>
      * </p>
      *
-     * @param userId Идентификатор пользователя из LMS (не может быть null или пустым)
+     * @param userId Идентификатор пользователя из LMS
      * @return DTO пользователя для виджета
-     * @throws IllegalArgumentException если userId null или пустой
-     * @throws UserNotFoundException    если пользователь не найден в системе
-     * @throws IllegalStateException    если уровень пользователя некорректен (например, отрицательный)
+     * @throws ConstraintViolationException если userId == null или пустая строка
+     * @throws UserNotFoundException        если пользователь не найден в системе
      */
-    UserDto getProgress(String userId);
+    UserDto getProgress(@NotBlank(message = "{user.id.required}") String userId);
 
     /**
-     * Получает расширенный DTO для админ-панели с прогрессом.
-     * <p>Включает дополнительные поля (uuid, даты создания/обновления).</p>
+     * Получить DTO пользователя для администратора
      *
-     * @param userId внешний ID пользователя из LMS
-     * @return UserAdminDto с рассчитанным прогрессом
-     * @throws UserNotFoundException если пользователь не найден
+     * @param userId Идентификатор пользователя из LMS
+     * @return DTO пользователя для администратора
+     * @throws ConstraintViolationException если userId == null или пустая строка
+     * @throws UserNotFoundException        если пользователь не найден
      */
-    UserAdminDto getAdminProgress(String userId);
+    UserAdminDto getAdminProgress(@NotBlank(message = "{user.id.required}") String userId);
 }

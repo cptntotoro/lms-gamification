@@ -1,14 +1,18 @@
 package ru.misis.gamification.service.point;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
+import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
+import ru.misis.gamification.service.course.CourseService;
 import ru.misis.gamification.service.course.UserCourseService;
 import ru.misis.gamification.service.event.EventTypeService;
 import ru.misis.gamification.service.point.result.AwardResult;
@@ -19,12 +23,10 @@ import ru.misis.gamification.service.user.UserService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * Сервис бизнес-логики начисления очков
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class PointsAwardingServiceImpl implements PointsAwardingService {
 
     /**
@@ -52,56 +54,75 @@ public class PointsAwardingServiceImpl implements PointsAwardingService {
      */
     private final UserCourseService userCourseService;
 
+    /**
+     * Сервис управления курсами
+     */
+    private final CourseService courseService;
+
     @Transactional
     @Override
-    public AwardResult awardPoints(LmsEventRequestDto request) {
+    public AwardResult awardPoints(@NotNull(message = "{request.required}") LmsEventRequestDto request) {
         String userId = request.getUserId();
         String eventId = request.getEventId();
         String typeCode = request.getEventType();
+        String courseId = request.getCourseId();
+        String groupId = request.getGroupId();
 
-        // 1. Проверка дубля
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("Попытка начисления без userId");
+            return AwardResult.rejected("Отсутствует идентификатор пользователя");
+        }
+
+        // 1. Проверка дубля по eventId
         if (transactionService.isExistsByEventId(eventId)) {
             log.info("Дубликат события: {}", eventId);
             return AwardResult.duplicate();
         }
 
         // 2. Получаем активный тип события
-        EventType type;
+        EventType eventType;
         try {
-            type = eventTypeService.getActiveByCode(typeCode);
+            eventType = eventTypeService.getActiveByCode(typeCode);
         } catch (EventTypeNotFoundException e) {
             log.warn("Не найден активный тип события: {}", typeCode);
             return AwardResult.rejected("Неизвестный или отключённый тип события: " + typeCode);
         }
 
         // 3. Получаем или создаём пользователя
-        User user = userService.createIfNotExists(userId, request.getCourseId(), request.getGroupId());
+        User user = userService.createIfNotExists(userId, courseId, groupId);
 
-        // 4. Проверка дневного лимита
-        long todaySum = transactionService.sumPointsByUserIdAndEventTypeAndDate(
-                userId, typeCode, LocalDate.now());
+        // 4. Проверка дневного лимита по типу события
+        long todaySum = transactionService.sumPointsByUserAndEventTypeAndDate(
+                user.getUuid(), eventType.getUuid(), LocalDate.now());
 
-        int points = type.getPoints();
+        int points = eventType.getPoints();
 
-        if (type.getMaxDailyPoints() != null && todaySum + points > type.getMaxDailyPoints()) {
-            String reason = "Превышен дневной лимит по типу " + type.getDisplayName();
+        if (eventType.getMaxDailyPoints() != null && todaySum + points > eventType.getMaxDailyPoints()) {
+            String reason = "Превышен дневной лимит по типу " + eventType.getDisplayName();
             log.warn(reason);
             return AwardResult.rejected(reason);
         }
 
-        // 5. Создание транзакции
+        // 5. Получаем курс, если указан
+        Course course = null;
+        if (courseId != null && !courseId.trim().isEmpty()) {
+            course = courseService.findByCourseId(courseId);
+        }
+
+        // 6. Создаём транзакцию
         Transaction tx = Transaction.builder()
-                .userId(userId)
+                .user(user)
+                .course(course)  // может быть null
+                .eventType(eventType)
                 .eventId(eventId)
-                .eventTypeCode(typeCode)
-                .pointsEarned(points)
-                .description("Начисление за " + type.getDisplayName())
+                .points(points)
+                .description("Начисление за " + eventType.getDisplayName())
                 .createdAt(LocalDateTime.now())
                 .build();
 
         Transaction savedTx = transactionService.saveIfNotExists(tx);
 
-        // 6. Обновление пользователя
+        // 7. Обновление общего количества очков и уровня пользователя
         int oldLevel = user.getLevel();
         int newTotal = user.getTotalPoints() + points;
         user.setTotalPoints(newTotal);
@@ -110,9 +131,9 @@ public class PointsAwardingServiceImpl implements PointsAwardingService {
 
         boolean levelUp = user.getLevel() > oldLevel;
 
-        // 7. Начисление очков по курсу (если курс указан)
-        if (request.getCourseId() != null) {
-            userCourseService.addPointsToCourse(user, request.getCourseId(), points);
+        // 8. Начисление очков именно по курсу (если курс известен)
+        if (course != null) {
+            userCourseService.addPointsToCourse(user, course.getUuid(), points);
         }
 
         log.info("Начисление успешно: {} очков пользователю {}, новый уровень = {}, levelUp = {}",

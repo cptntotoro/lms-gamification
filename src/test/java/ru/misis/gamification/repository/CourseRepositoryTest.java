@@ -4,13 +4,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 import ru.misis.gamification.entity.Course;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 @ActiveProfiles("test")
 @DataJpaTest
@@ -18,140 +22,163 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CourseRepositoryTest {
 
     @Autowired
-    private TestEntityManager em;
-
-    @Autowired
     private CourseRepository courseRepository;
 
     @Test
-    void findByCourseId_existingCourse_returnsCourse() {
-        String externalId = "MATH-101";
-        Course course = Course.builder()
-                .courseId(externalId)
-                .displayName("Математический анализ")
-                .shortName("Матан")
-                .description("Основы высшей математики")
+    void findByCourseId_existing_returnsCourse() {
+        Course saved = courseRepository.save(Course.builder()
+                .courseId("CS-101")
+                .displayName("Алгоритмы и структуры данных")
+                .shortName("Алгос")
+                .description("Классический курс")
                 .active(true)
-                .build();
-        em.persistAndFlush(course);
+                .build());
 
-        Optional<Course> found = courseRepository.findByCourseId(externalId);
+        Optional<Course> found = courseRepository.findByCourseId("CS-101");
 
         assertThat(found).isPresent();
-        Course result = found.get();
-        assertThat(result.getCourseId()).isEqualTo(externalId);
-        assertThat(result.getDisplayName()).isEqualTo("Математический анализ");
-        assertThat(result.getShortName()).isEqualTo("Матан");
-        assertThat(result.getDescription()).isEqualTo("Основы высшей математики");
-        assertThat(result.isActive()).isTrue();
-        assertThat(result.getUuid()).isNotNull();
-        assertThat(result.getCreatedAt()).isNotNull();
+        assertThat(found.get().getUuid()).isEqualTo(saved.getUuid());
+        assertThat(found.get().getDisplayName()).isEqualTo("Алгоритмы и структуры данных");
+        assertThat(found.get().isActive()).isTrue();
     }
 
     @Test
-    void findByCourseId_nonExistentCourse_returnsEmpty() {
-        Optional<Course> found = courseRepository.findByCourseId("NON-EXISTENT");
-        assertThat(found).isEmpty();
+    void findByCourseId_caseSensitive() {
+        courseRepository.save(Course.builder().courseId("MATH-202").displayName("Математика").build());
+        courseRepository.save(Course.builder().courseId("math-202").displayName("математика").build());
+
+        assertThat(courseRepository.findByCourseId("MATH-202"))
+                .isPresent().hasValueSatisfying(c -> assertThat(c.getDisplayName()).isEqualTo("Математика"));
+        assertThat(courseRepository.findByCourseId("math-202"))
+                .isPresent().hasValueSatisfying(c -> assertThat(c.getDisplayName()).isEqualTo("математика"));
+        assertThat(courseRepository.findByCourseId("Math-202")).isEmpty();
     }
 
     @Test
-    void findByCourseId_caseSensitive_returnsCorrectResult() {
-        Course courseUpper = Course.builder()
-                .courseId("MATH-101")
-                .displayName("Математика верхний регистр")
-                .build();
-        em.persistAndFlush(courseUpper);
-
-        Course courseLower = Course.builder()
-                .courseId("math-101")
-                .displayName("Математика нижний регистр")
-                .build();
-        em.persistAndFlush(courseLower);
-
-        assertThat(courseRepository.findByCourseId("MATH-101")).isPresent();
-        assertThat(courseRepository.findByCourseId("MATH-101").get().getDisplayName())
-                .isEqualTo("Математика верхний регистр");
-
-        assertThat(courseRepository.findByCourseId("math-101")).isPresent();
-        assertThat(courseRepository.findByCourseId("math-101").get().getDisplayName())
-                .isEqualTo("Математика нижний регистр");
-
-        assertThat(courseRepository.findByCourseId("Math-101")).isEmpty();
-    }
-
-    @Test
-    void findByCourseId_emptyString_returnsEmpty() {
-        Optional<Course> found = courseRepository.findByCourseId("");
-        assertThat(found).isEmpty();
+    void findByCourseId_notFound_returnsEmpty() {
+        assertThat(courseRepository.findByCourseId("NON-EXISTENT")).isEmpty();
     }
 
     @Test
     void findByCourseId_null_returnsEmpty() {
-        Optional<Course> found = courseRepository.findByCourseId(null);
-        assertThat(found).isEmpty();
+        assertThat(courseRepository.findByCourseId(null)).isEmpty();
     }
 
     @Test
-    void existsByCourseId_existingCourse_returnsTrue() {
-        Course course = Course.builder()
-                .courseId("PHYS-202")
-                .displayName("Физика")
-                .active(false)
-                .build();
-        em.persistAndFlush(course);
-
-        boolean exists = courseRepository.existsByCourseId("PHYS-202");
-
-        assertThat(exists).isTrue();
+    void findByCourseId_emptyString_returnsEmpty() {
+        assertThat(courseRepository.findByCourseId("")).isEmpty();
     }
 
     @Test
-    void existsByCourseId_nonExistentCourse_returnsFalse() {
-        boolean exists = courseRepository.existsByCourseId("NON-EXISTENT");
-        assertThat(exists).isFalse();
+    void existsByCourseId_existing_returnsTrue() {
+        courseRepository.save(Course.builder().courseId("PHYS-303").build());
+        assertThat(courseRepository.existsByCourseId("PHYS-303")).isTrue();
     }
 
     @Test
     void existsByCourseId_caseSensitive() {
-        Course course = Course.builder()
-                .courseId("HIST-303")
-                .displayName("История")
-                .build();
-        em.persistAndFlush(course);
-
-        assertThat(courseRepository.existsByCourseId("HIST-303")).isTrue();
-        assertThat(courseRepository.existsByCourseId("hist-303")).isFalse();
+        courseRepository.save(Course.builder().courseId("HIST-404").build());
+        assertThat(courseRepository.existsByCourseId("HIST-404")).isTrue();
+        assertThat(courseRepository.existsByCourseId("hist-404")).isFalse();
     }
 
     @Test
-    void existsByCourseId_emptyString_returnsFalse() {
-        boolean exists = courseRepository.existsByCourseId("");
-        assertThat(exists).isFalse();
+    void existsByCourseId_notFound_returnsFalse() {
+        assertThat(courseRepository.existsByCourseId("UNKNOWN")).isFalse();
     }
 
     @Test
     void existsByCourseId_null_returnsFalse() {
-        boolean exists = courseRepository.existsByCourseId(null);
-        assertThat(exists).isFalse();
+        assertThat(courseRepository.existsByCourseId(null)).isFalse();
     }
 
     @Test
-    void existsByCourseId_multipleCoursesWithSameId_shouldBeFalseAfterDeletion() {
-        String externalId = "BIO-404";
+    void existsByCourseId_empty_returnsFalse() {
+        assertThat(courseRepository.existsByCourseId("")).isFalse();
+    }
 
-        Course course1 = Course.builder()
-                .courseId(externalId)
-                .displayName("Биология 1")
+    @Test
+    void findUuidByCourseId_existing_returnsUuid() {
+        Course saved = courseRepository.save(Course.builder()
+                .courseId("PROG-505")
+                .displayName("Python")
+                .build());
+
+        Optional<UUID> uuid = courseRepository.findUuidByCourseId("PROG-505");
+
+        assertThat(uuid).isPresent();
+        assertThat(uuid.get()).isEqualTo(saved.getUuid());
+    }
+
+    @Test
+    void findUuidByCourseId_caseSensitive() {
+        courseRepository.save(Course.builder().courseId("JAVA-606").build());
+        courseRepository.save(Course.builder().courseId("java-606").build());
+
+        assertThat(courseRepository.findUuidByCourseId("JAVA-606")).isPresent();
+        assertThat(courseRepository.findUuidByCourseId("java-606")).isPresent();
+        assertThat(courseRepository.findUuidByCourseId("Java-606")).isEmpty();
+    }
+
+    @Test
+    void findUuidByCourseId_notFound_returnsEmpty() {
+        assertThat(courseRepository.findUuidByCourseId("MISSING")).isEmpty();
+    }
+
+    @Test
+    void findUuidByCourseId_null_returnsEmpty() {
+        assertThat(courseRepository.findUuidByCourseId(null)).isEmpty();
+    }
+
+    @Test
+    void findUuidByCourseId_empty_returnsEmpty() {
+        assertThat(courseRepository.findUuidByCourseId("")).isEmpty();
+    }
+
+    @Test
+    void save_newCourse_generatesUuidAndTimestamps() {
+        Course course = Course.builder()
+                .courseId("CHEM-707")
+                .displayName("Органическая химия")
                 .build();
-        em.persistAndFlush(course1);
 
-        boolean existsBefore = courseRepository.existsByCourseId(externalId);
-        assertThat(existsBefore).isTrue();
+        Course saved = courseRepository.save(course);
 
-        em.remove(course1);
-        em.flush();
+        assertThat(saved.getUuid()).isNotNull();
+        assertThat(saved.getCreatedAt()).isNotNull();
+        assertThat(saved.getUpdatedAt()).isNotNull();
 
-        boolean existsAfter = courseRepository.existsByCourseId(externalId);
-        assertThat(existsAfter).isFalse();
+        assertThat(saved.getCreatedAt())
+                .isCloseTo(saved.getUpdatedAt(), within(1, ChronoUnit.SECONDS));
+    }
+
+    @Test
+    void save_updateCourse_updatesUpdatedAt() {
+        Course course = Course.builder()
+                .courseId("BIO-808")
+                .displayName("Биология")
+                .shortName("Биол")
+                .build();
+
+        Course saved = courseRepository.saveAndFlush(course);
+        LocalDateTime initialUpdatedAt = saved.getUpdatedAt();
+
+        course.setDisplayName("Биология клетки");
+        Course updated = courseRepository.saveAndFlush(course);
+
+        assertThat(updated.getUpdatedAt())
+                .as("updatedAt должен обновиться после изменения сущности")
+                .isAfterOrEqualTo(initialUpdatedAt)
+                .isNotEqualTo(initialUpdatedAt)
+                .isAfterOrEqualTo(saved.getCreatedAt());
+    }
+
+    @Test
+    void save_duplicateCourseId_throwsConstraintViolation() {
+        courseRepository.save(Course.builder().courseId("DUPL-999").build());
+
+        assertThatThrownBy(() ->
+                courseRepository.saveAndFlush(Course.builder().courseId("DUPL-999").build())
+        ).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
 }

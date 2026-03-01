@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class LmsEventProcessorTest {
+class LmsEventProcessorUnitTest {
 
     @Mock
     private PointsService pointsService;
@@ -32,38 +32,39 @@ class LmsEventProcessorTest {
     private EventTypeService eventTypeService;
 
     @InjectMocks
-    private LmsEventProcessorImpl lmsEventProcessor;
+    private LmsEventProcessorImpl processor;
 
     private final String userId = "user-123";
     private final String eventId = "evt-999";
     private final String typeCode = "quiz";
     private final UUID transactionId = UUID.randomUUID();
 
+    private LmsEventRequestDto createRequest() {
+        return LmsEventRequestDto.builder()
+                .userId(userId)
+                .eventId(eventId)
+                .eventType(typeCode)
+                .build();
+    }
+
     @Test
-    void shouldReturnSuccess_whenAwardResultIsSuccess() {
+    void process_successAward_returnsSuccessResponseWithEventTypeName() {
         LmsEventRequestDto request = createRequest();
+
+        AwardResult successResult = AwardResult.success(
+                80, 1250, 12, true, transactionId, 750L, 62.5
+        );
 
         EventType eventType = EventType.builder()
                 .typeCode(typeCode)
                 .displayName("Квиз / Тест")
                 .build();
 
-        AwardResult awardResult = AwardResult.success(
-                80,
-                1250,
-                12,
-                true,
-                transactionId,
-                750L,
-                62.5
-        );
-
-        when(pointsService.awardPoints(request)).thenReturn(awardResult);
+        when(pointsService.awardPoints(request)).thenReturn(successResult);
         when(eventTypeService.getActiveByCode(typeCode)).thenReturn(eventType);
 
-        LmsEventResponseDto response = lmsEventProcessor.process(request);
+        LmsEventResponseDto response = processor.process(request);
 
-        assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo("success");
         assertThat(response.getUserId()).isEqualTo(userId);
         assertThat(response.getEventId()).isEqualTo(eventId);
@@ -82,12 +83,12 @@ class LmsEventProcessorTest {
     }
 
     @Test
-    void shouldReturnDuplicate_whenAwardResultIsDuplicate() {
+    void process_duplicateAward_returnsDuplicateResponse() {
         LmsEventRequestDto request = createRequest();
 
         when(pointsService.awardPoints(request)).thenReturn(AwardResult.duplicate());
 
-        LmsEventResponseDto response = lmsEventProcessor.process(request);
+        LmsEventResponseDto response = processor.process(request);
 
         assertThat(response.getStatus()).isEqualTo("duplicate");
         assertThat(response.getEventId()).isEqualTo(eventId);
@@ -98,14 +99,14 @@ class LmsEventProcessorTest {
     }
 
     @Test
-    void shouldReturnError_whenAwardResultIsRejected() {
+    void process_rejectedAward_returnsErrorResponse() {
         LmsEventRequestDto request = createRequest();
 
         when(pointsService.awardPoints(request)).thenReturn(
                 AwardResult.rejected("Превышен дневной лимит")
         );
 
-        LmsEventResponseDto response = lmsEventProcessor.process(request);
+        LmsEventResponseDto response = processor.process(request);
 
         assertThat(response.getStatus()).isEqualTo("error");
         assertThat(response.getMessage()).isEqualTo("Превышен дневной лимит");
@@ -115,7 +116,7 @@ class LmsEventProcessorTest {
     }
 
     @Test
-    void shouldThrowException_whenEventTypeNotFoundDuringSuccess() {
+    void process_successButEventTypeNotFound_throwsEventTypeNotFoundException() {
         LmsEventRequestDto request = createRequest();
 
         AwardResult successResult = AwardResult.success(
@@ -126,7 +127,7 @@ class LmsEventProcessorTest {
         when(eventTypeService.getActiveByCode(typeCode))
                 .thenThrow(new EventTypeNotFoundException(typeCode));
 
-        assertThatThrownBy(() -> lmsEventProcessor.process(request))
+        assertThatThrownBy(() -> processor.process(request))
                 .isInstanceOf(EventTypeNotFoundException.class)
                 .hasMessageContaining(typeCode);
 
@@ -135,24 +136,16 @@ class LmsEventProcessorTest {
     }
 
     @Test
-    void shouldPropagateUnexpectedException() {
+    void process_unexpectedExceptionFromPointsService_propagatesException() {
         LmsEventRequestDto request = createRequest();
 
         RuntimeException dbError = new RuntimeException("Database connection failed");
         when(pointsService.awardPoints(request)).thenThrow(dbError);
 
-        assertThatThrownBy(() -> lmsEventProcessor.process(request))
+        assertThatThrownBy(() -> processor.process(request))
                 .isSameAs(dbError);
 
         verify(pointsService).awardPoints(request);
         verifyNoInteractions(eventTypeService);
-    }
-
-    private LmsEventRequestDto createRequest() {
-        return LmsEventRequestDto.builder()
-                .userId(userId)
-                .eventId(eventId)
-                .eventType(typeCode)
-                .build();
     }
 }

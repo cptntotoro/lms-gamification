@@ -1,5 +1,7 @@
 package ru.misis.gamification.service.progress.calculator;
 
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -23,15 +25,11 @@ public class ProgressCalculator {
     /**
      * Рассчитывает метрики прогресса на основе текущего состояния пользователя.
      *
-     * @param user пользователь с актуальными totalPoints и level
-     * @return объект с рассчитанными метриками (никогда null)
-     * @throws IllegalArgumentException если user null
+     * @param user Пользователь
+     * @return Метрики прогресса пользователя
+     * @throws ConstraintViolationException если user == null
      */
-    public ProgressMetrics calculate(User user) {
-        if (user == null) {
-            throw new IllegalArgumentException("Пользователь не может быть null");
-        }
-
+    public ProgressMetrics calculate(@NotNull(message = "{user.required}") User user) {
         Integer userLevel = user.getLevel();
         Integer totalPoints = user.getTotalPoints();
 

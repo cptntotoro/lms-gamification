@@ -41,7 +41,7 @@ public class TransactionItemDto {
      * Количество начисленных очков
      */
     @Schema(description = "Количество начисленных очков", example = "80")
-    private Integer pointsEarned;
+    private Integer points;
 
     /**
      * Описание события

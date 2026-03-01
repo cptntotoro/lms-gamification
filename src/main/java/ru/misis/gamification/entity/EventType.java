@@ -43,9 +43,7 @@ public class EventType {
     private UUID uuid;
 
     /**
-     * Уникальный код типа события
-     * Используется LMS для указания типа в запросе {@link LmsEventRequestDto#getEventType()}
-     * Примеры: "quiz", "lab", "homework", "attendance", "project"
+     * Уникальный код типа события из LMS {@link LmsEventRequestDto#getEventType()}
      */
     @NotBlank(message = "Код типа события обязателен")
     @Column(nullable = false, unique = true, length = 50)

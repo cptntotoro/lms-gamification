@@ -1,20 +1,27 @@
 package ru.misis.gamification.service.transaction;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.exception.DuplicateEventException;
 import ru.misis.gamification.repository.TransactionRepository;
+import ru.misis.gamification.service.user.UserService;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class TransactionServiceImpl implements TransactionService {
 
     /**
@@ -22,50 +29,77 @@ public class TransactionServiceImpl implements TransactionService {
      */
     private final TransactionRepository transactionRepository;
 
+    /**
+     * Сервис управления пользователями
+     */
+    private final UserService userService;
+
     @Override
-    public boolean isExistsByEventId(String eventId) {
+    public boolean isExistsByEventId(@NotBlank(message = "{event.id.required}") String eventId) {
         return transactionRepository.existsByEventId(eventId);
     }
 
+    @Transactional
     @Override
-    public Transaction saveIfNotExists(Transaction transaction) throws DuplicateEventException {
+    public Transaction saveIfNotExists(@NotNull(message = "{transaction.required}") Transaction transaction) {
+        validateTransaction(transaction);
+
         String eventId = transaction.getEventId();
 
-        log.debug("Попытка сохранить транзакцию: eventId={}, userId={}, points={}",
-                eventId, transaction.getUserId(), transaction.getPointsEarned());
+        log.debug("Сохранение транзакции: eventId={}, userUuid={}, points={}",
+                eventId, transaction.getUser().getUuid(), transaction.getPoints());
 
         if (transactionRepository.existsByEventId(eventId)) {
-            log.info("Попытка повторной обработки события: eventId={}", eventId);
-            throw new DuplicateEventException(eventId);
+            log.info("Дубликат события: eventId={}", eventId);
+            throw new DuplicateEventException("Событие уже обработано: " + eventId);
         }
 
         try {
             Transaction saved = transactionRepository.save(transaction);
-            log.info("Транзакция успешно сохранена: id={}, eventId={}", saved.getUuid(), eventId);
+            log.info("Транзакция сохранена: id={}, eventId={}", saved.getUuid(), eventId);
             return saved;
         } catch (DataIntegrityViolationException e) {
-            log.info("Обнаружен дубликат события при сохранении: eventId={}", eventId);
-            throw new DuplicateEventException(eventId);
-        } catch (Exception e) {
-            log.error("Неожиданная ошибка при сохранении транзакции: eventId={}", eventId, e);
-            throw e;
+            log.info("Дубликат при сохранении: eventId={}", eventId);
+            throw new DuplicateEventException("Событие уже обработано: " + eventId);
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public Page<Transaction> getTransactionsByUserId(String userId, Pageable pageable) {
-        log.info("Запрос истории транзакций: userId={}, page={}, size={}, sort={}",
+    public Page<Transaction> getTransactionsByUserId(@NotBlank(message = "{user.id.required}") String userId,
+                                                     @NotNull(message = "{pageable.required}") Pageable pageable) {
+        log.info("Запрос транзакций: userId={}, page={}, size={}, sort={}",
                 userId, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
-        Page<Transaction> page = transactionRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        UUID userUuid = userService.getUserUuidByExternalId(userId);
 
-        log.debug("Найдено транзакций: count={}, total={}", page.getNumberOfElements(), page.getTotalElements());
+        Page<Transaction> page = transactionRepository.findByUserUuidOrderByCreatedAtDesc(userUuid, pageable);
+
+        log.debug("Результат: элементов={}, всего={}", page.getNumberOfElements(), page.getTotalElements());
         return page;
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public long sumPointsByUserIdAndEventTypeAndDate(String userId, String typeCode, LocalDate date) {
-        return transactionRepository.sumPointsByUserIdAndEventTypeAndDate(
-                userId, typeCode, date);
+    public long sumPointsByUserAndEventTypeAndDate(@NotNull(message = "{user.uuid.required}") UUID userUuid,
+                                                   @NotNull(message = "{eventType.uuid.required}") UUID eventTypeUuid,
+                                                   @NotNull(message = "{date.required}") LocalDate date) {
+        return transactionRepository.sumPointsByUserUuidAndEventTypeUuidAndDate(
+                userUuid, eventTypeUuid, date);
+    }
+
+    private void validateTransaction(Transaction t) {
+        if (t == null) {
+            throw new IllegalArgumentException("Транзакция не может быть null");
+        }
+        if (t.getEventId() == null || t.getEventId().isBlank()) {
+            throw new IllegalArgumentException("eventId не может быть null или пустым");
+        }
+        if (t.getUser() == null || t.getUser().getUuid() == null) {
+            throw new IllegalArgumentException("Пользователь или его UUID не может быть null");
+        }
+        if (t.getPoints() == null || t.getPoints() < 0) {
+            throw new IllegalArgumentException("Количество очков не может быть null или отрицательным");
+        }
     }
 }

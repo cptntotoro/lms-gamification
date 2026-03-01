@@ -1,5 +1,9 @@
 package ru.misis.gamification.service.event;
 
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
 
@@ -7,26 +11,57 @@ import java.time.LocalDate;
 
 /**
  * Сервис управления типами событий {@link EventType}
- * Отвечает за поиск, проверку лимитов и получение эффективного количества очков
  */
 public interface EventTypeService {
 
     /**
-     * Находит активный тип события по коду
+     * Получить активный тип события по коду
      *
-     * @throws EventTypeNotFoundException если тип не найден или отключён
+     * @param typeCode Уникальный код типа события из LMS
+     * @return Тип события из LMS {@link EventType}
+     * @throws EventTypeNotFoundException   если активный тип с указанным кодом не найден
+     * @throws ConstraintViolationException если typeCode == null или пустая строка
      */
-    EventType getActiveByCode(String typeCode);
+    EventType getActiveByCode(@NotBlank(message = "{eventType.code.required}") String typeCode);
 
     /**
-     * Проверяет, не превышен ли дневной лимит очков по типу для пользователя
+     * Проверить, не превышен ли дневной лимит очков по типу для пользователя
      *
-     * @return true, если можно начислить указанное количество очков
+     * @param userId        Идентификатор пользователя из LMS
+     * @param typeCode      Уникальный код типа события из LMS
+     * @param pointsToAward Количество очков для начисления
+     * @param date          Дата, для которой проверяется лимит
+     * @return Да / Нет
+     * @throws EventTypeNotFoundException   если активный тип события с указанным кодом не найден
+     * @throws ConstraintViolationException если:
+     *                                      <ul>
+     *                                          <li>userId == null или пустая строка</li>
+     *                                          <li>typeCode == null или пустая строка</li>
+     *                                          <li>pointsToAward < 0</li>
+     *                                          <li>date == null</li>
+     *                                      </ul>
      */
-    boolean canAwardPoints(String userId, String typeCode, int pointsToAward, LocalDate date);
+    boolean canAwardPoints(@NotBlank(message = "{user.id.required}") String userId,
+                           @NotBlank(message = "{eventType.code.required}") String typeCode,
+                           @Min(value = 0, message = "{points.positive}") int pointsToAward,
+                           @NotNull(message = "{date.required}") LocalDate date);
 
     /**
-     * Сумма очков, начисленных пользователю по типу события за день
+     * Получить сумму очков, уже начисленных пользователю по указанному типу события за конкретный день.
+     *
+     * @param userId   Идентификатор пользователя из LMS
+     * @param typeCode Уникальный код типа события из LMS
+     * @param date     Дата, за которую считается сумма
+     * @return Сумма начисленных очков
+     * @throws EventTypeNotFoundException   если активный тип события с указанным кодом не найден
+     * @throws ConstraintViolationException если:
+     *                                      <ul>
+     *                                          <li>userId == null или пустая строка</li>
+     *                                          <li>typeCode == null или пустая строка</li>
+     *                                          <li>date == null</li>
+     *                                      </ul>
      */
-    long getDailyPointsSum(String userId, String typeCode, LocalDate date);
+    long getDailyPointsSum(@NotBlank(message = "{user.id.required}") String userId,
+                           @NotBlank(message = "{eventType.code.required}") String typeCode,
+                           @NotNull(message = "{date.required}") LocalDate date);
 }
