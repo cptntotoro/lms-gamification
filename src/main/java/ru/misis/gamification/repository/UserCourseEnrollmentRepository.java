@@ -1,5 +1,6 @@
 package ru.misis.gamification.repository;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -68,4 +69,38 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
      * @return Optional с зачислением на курс (связь пользователь — курс) или пустой, если не найден
      */
     Optional<UserCourseEnrollment> findByUserAndCourse(User user, Course course);
+
+    boolean existsByUserUuidAndCourseUuid(@Nullable UUID currentUserUuid, UUID courseUuid);
+
+    @Query("SELECT uce.totalPointsInCourse FROM UserCourseEnrollment uce " +
+            "WHERE uce.user.uuid = :userUuid AND uce.course.uuid = :courseUuid")
+    Long findTotalPointsInCourseByUserUuidAndCourseUuid(@Param("userUuid") UUID userUuid,
+                                                        @Param("courseUuid") UUID courseUuid);
+
+    @Query(value = """
+                SELECT COUNT(*) + 1 
+                FROM user_course_enrollments uce
+                WHERE uce.course_uuid = :courseUuid
+                  AND (:groupUuid IS NULL OR uce.group_uuid = :groupUuid)
+                  AND uce.total_points_in_course > (
+                      SELECT uce2.total_points_in_course 
+                      FROM user_course_enrollments uce2 
+                      WHERE uce2.user_uuid = :userUuid 
+                        AND uce2.course_uuid = :courseUuid
+                  )
+            """, nativeQuery = true)
+    Long findRankByPointsInCourse(
+            @Param("courseUuid") UUID courseUuid,
+            @Param("groupUuid") UUID groupUuid,
+            @Param("userUuid") UUID userUuid
+    );
+
+    /**
+     * Количество пользователей с очками > заданного (для расчёта ранга)
+     *
+     * @param courseUuid
+     * @param totalPointsInCourse
+     * @return
+     */
+    long countByCourseUuidAndTotalPointsInCourseGreaterThan(UUID courseUuid, Integer totalPointsInCourse);
 }

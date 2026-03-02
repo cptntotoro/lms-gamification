@@ -44,6 +44,9 @@ public class LeaderboardEntryDto {
     @Schema(description = "Позиция в лидерборде группы (1 = лидер)")
     private Long rank;
 
+    @Schema(description = "Это текущий пользователь? (true если запись принадлежит запрашивающему)")
+    private Boolean isCurrentUser;
+
     public LeaderboardEntryDto(UUID userUuid, String userId, Integer pointsInCourse, Integer globalLevel, Long rank) {
         this.userUuid = userUuid;
         this.userId = userId;
