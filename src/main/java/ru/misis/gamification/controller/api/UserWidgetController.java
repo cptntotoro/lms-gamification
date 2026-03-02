@@ -23,7 +23,7 @@ import ru.misis.gamification.service.progress.UserProgressService;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 @Tag(name = "Widget API", description = "API для виджетов и фронтенда пользователей")
-public class WidgetController {
+public class UserWidgetController {
 
     /**
      * Сервис подготовки данных прогресса пользователя для виджета
