@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лидерборд курса</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/event-types.css}"> <!-- там есть таблица и пагинация -->
+    <style>
+        /* Дополнительные стили специально под лидерборд */
+        .leaderboard-rank {
+            font-weight: 700;
+            min-width: 3.2rem;
+            text-align: center;
+            font-size: 1.3rem;
+            color: #475569;
+        }
+
+        .rank-1 {
+            color: #f59e0b;
+        }
+
+        .rank-2 {
+            color: #94a3b8;
+        }
+
+        .rank-3 {
+            color: #cd7f32;
+        }
+
+        .current-user-row {
+            background: #eff6ff !important;
+            font-weight: 600;
+            border-left: 4px solid #6366f1;
+        }
+
+        .my-position-badge {
+            background: #6366f1;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .leaderboard-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-right: 12px;
+        }
+
+        .points-cell {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111827;
+            text-align: center;
+        }
+
+        .level-badge {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1 class="page-title">Лидерборд курса</h1>
+
+    <div class="card" th:if="${leaderboard}">
+
+        <!-- Моя позиция (если есть) -->
+        <div th:if="${leaderboard.currentUserEntry != null}" style="margin-bottom: 32px;">
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <span class="my-position-badge">
+                    Моё место: <strong th:text="${leaderboard.currentUserRank}"></strong>
+                </span>
+                <span style="font-size: 1.2rem; color: #475569;">
+                    Очки: <strong th:text="${leaderboard.currentUserPoints}"></strong>
+                </span>
+            </div>
+        </div>
+
+        <div th:if="${leaderboard.topEntries?.isEmpty()}" class="no-data" style="padding: 60px;">
+            Пока никто не набрал очков на этом курсе
+        </div>
+
+        <!-- Таблица лидерборда -->
+        <div class="table-container" th:unless="${leaderboard.topEntries?.isEmpty()}">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th style="width: 80px;">Место</th>
+                    <th>Участник</th>
+                    <th style="width: 140px; text-align: center;">Уровень</th>
+                    <th style="width: 160px; text-align: center;">Очки в курсе</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entry, iter : ${leaderboard.topEntries}"
+                    th:classappend="${entry.isCurrentUser} ? 'current-user-row'">
+                    <td class="leaderboard-rank"
+                        th:classappend="|
+            ${iter.index == 0} ? rank-1 :
+            ${iter.index == 1} ? rank-2 :
+            ${iter.index == 2} ? rank-3 : '' |
+    ">
+                        <span th:text="${entry.rank}"></span>
+                    <td style="display: flex; align-items: center;">
+                        <div class="leaderboard-avatar">
+                            <span th:text="${#strings.substring(entry.userId ?: '??', 0, 2)?.toUpperCase()}"></span>
+                        </div>
+                        <div>
+                            <div th:text="${entry.userId ?: '—'}"></div>
+                            <div style="font-size: 0.9rem; color: #64748b;" th:if="${entry.globalLevel != null}">
+                                Глобальный уровень • <span th:text="${entry.globalLevel}"></span>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="level-badge" th:text="${entry.globalLevel} ?: '—'"></span>
+                    </td>
+                    <td class="points-cell" th:text="${entry.pointsInCourse}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        <div class="pagination" th:if="${leaderboard.totalPages > 1}">
+            <a th:href="@{/me/leaderboard/course/{courseId}/groups/{groupId}(courseId=${courseId}, groupId=${groupId}, page=${leaderboard.pageNumber - 1}, size=${leaderboard.pageSize})}"
+               th:classappend="${!leaderboard.hasPrevious} ? 'disabled'">« Предыдущая</a>
+
+            <span th:each="i : ${#numbers.sequence(0, leaderboard.totalPages - 1)}">
+                <a th:href="@{/me/leaderboard/course/{courseId}/groups/{groupId}(courseId=${courseId}, groupId=${groupId}, page=${i}, size=${leaderboard.pageSize})}"
+                   th:classappend="${i == leaderboard.pageNumber} ? 'active'">${i + 1}</a>
+            </span>
+
+            <a th:href="@{/me/leaderboard/course/{courseId}/groups/{groupId}(courseId=${courseId}, groupId=${groupId}, page=${leaderboard.pageNumber + 1}, size=${leaderboard.pageSize})}"
+               th:classappend="${!leaderboard.hasNext} ? 'disabled'">Следующая »</a>
+        </div>
+
+    </div>
+
+    <div class="error-message" th:if="${leaderboard == null}">
+        Не удалось загрузить лидерборд
+    </div>
+
+</div>
+
+</body>
+</html>

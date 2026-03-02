@@ -72,9 +72,19 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
 
     boolean existsByUserUuidAndCourseUuid(@Nullable UUID currentUserUuid, UUID courseUuid);
 
+    /**
+     * Возвращает общее количество очков, набранных пользователем на указанном курсе.
+     * <p>
+     * Если пользователь не зачислен на курс — возвращает {@link Optional#empty()}.
+     * </p>
+     *
+     * @param userUuid   UUID пользователя
+     * @param courseUuid UUID курса
+     * @return Optional с количеством очков или пустой Optional
+     */
     @Query("SELECT uce.totalPointsInCourse FROM UserCourseEnrollment uce " +
             "WHERE uce.user.uuid = :userUuid AND uce.course.uuid = :courseUuid")
-    Long findTotalPointsInCourseByUserUuidAndCourseUuid(@Param("userUuid") UUID userUuid,
+    Optional<Integer> findTotalPointsInCourseByUserUuidAndCourseUuid(@Param("userUuid") UUID userUuid,
                                                         @Param("courseUuid") UUID courseUuid);
 
     @Query(value = """

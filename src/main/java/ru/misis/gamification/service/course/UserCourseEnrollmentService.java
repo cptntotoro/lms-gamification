@@ -50,13 +50,13 @@ public interface UserCourseEnrollmentService {
     UserCourseEnrollment save(@NotNull(message = "{enrollment.required}") UserCourseEnrollment enrollment);
 
     long countByCourseUuidAndTotalPointsInCourseGreaterThan(
-            @NotNull UUID courseUuid,
-            @NotNull Integer totalPointsInCourse
+            @NotNull(message = "{course.uuid.required}") UUID courseUuid,
+            @NotNull(message = "{points.required}") Integer totalPointsInCourse
     );
 
     Integer findTotalPointsInCourseByUserAndCourse(
-            @NotNull User user,
-            @NotNull Course course
+            @NotNull(message = "{user.required}") User user,
+            @NotNull(message = "{course.required}") Course course
     );
 
     Page<LeaderboardEntryDto> findLeaderboardByCourseAndGroup(UUID courseUuid, UUID groupUuid, Pageable pageable);

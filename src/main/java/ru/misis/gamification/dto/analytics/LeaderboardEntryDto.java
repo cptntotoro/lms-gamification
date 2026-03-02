@@ -1,6 +1,7 @@
 package ru.misis.gamification.dto.analytics;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 @Data
 @Builder
 @Schema(description = "Элемент лидерборда группы по курсу")
+@AllArgsConstructor
 public class LeaderboardEntryDto {
 
     /**
