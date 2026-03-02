@@ -30,13 +30,13 @@ public class UserCourseGroupLeaderboard {
     private LeaderboardEntryDto currentUserEntry;
 
     /**
-     * Моё место в общем лидерборде курса (null, если не зачислен)
+     * Место пользователя в общем лидерборде курса (null, если не зачислен)
      */
     @Schema(description = "Моё место в общем лидерборде курса (null, если не зачислен)")
     private Long currentUserRank;
 
     /**
-     * Мои очки по курсу (null, если не зачислен)
+     * Очки пользователя по курсу (null, если не зачислен)
      */
     @Schema(description = "Мои очки по курсу (null, если не зачислен)")
     private Integer currentUserPoints;
@@ -54,7 +54,7 @@ public class UserCourseGroupLeaderboard {
     private int pageSize;
 
     /**
-     * Общее количество элементов в лидерборде (без учёта меня, если вне топа)
+     * Общее количество элементов в лидерборде (без учёта пользователя, если вне топа)
      */
     @Schema(description = "Общее количество элементов в лидерборде")
     private long totalElements;

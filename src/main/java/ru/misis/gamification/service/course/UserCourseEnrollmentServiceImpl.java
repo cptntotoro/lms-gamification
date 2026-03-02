@@ -52,7 +52,7 @@ public class UserCourseEnrollmentServiceImpl implements UserCourseEnrollmentServ
     @Override
     public Integer findTotalPointsInCourseByUserAndCourse(@NotNull(message = "{user.required}") User user,
                                                           @NotNull(message = "{course.required}") Course course) {
-        return repository.findTotalPointsInCourseByUserAndCourse(user.getUuid(), course.getUuid())
+        return repository.findTotalPointsInCourseByUserUuidAndCourseUuid(user.getUuid(), course.getUuid())
                 .orElse(0);
     }
 
