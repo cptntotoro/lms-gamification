@@ -16,6 +16,7 @@ import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -216,15 +217,26 @@ class UserCourseEnrollmentRepositoryTest {
     }
 
     @Test
-    void findLeaderboardByCourseAndGroup_nullParameters_returnsEmpty() {
+    void findLeaderboardByCourseAndGroup_nullParameters_behavesCorrectly() {
+        // 1. courseUuid = null → должен вернуть ПУСТО (фильтр по курсу обязателен)
         Page<LeaderboardEntryDto> page1 = repository.findLeaderboardByCourseAndGroup(
                 null, pmGroup.getUuid(), PageRequest.of(0, 10));
 
+        assertThat(page1.getTotalElements()).isZero();
+        assertThat(page1.getContent()).isEmpty();
+
+        // 2. groupUuid = null → должен вернуть ВСЕХ на курсе (по спецификации)
         Page<LeaderboardEntryDto> page2 = repository.findLeaderboardByCourseAndGroup(
                 mathCourse.getUuid(), null, PageRequest.of(0, 10));
 
-        assertThat(page1.getTotalElements()).isZero();
-        assertThat(page2.getTotalElements()).isZero();
+        // На курсе 5 зачислений (4 в группе + 1 без)
+        assertThat(page2.getTotalElements()).isEqualTo(5);
+        assertThat(page2.getContent()).hasSizeLessThanOrEqualTo(10);
+
+        // Проверяем, что ранги правильные (ROW_NUMBER)
+        List<LeaderboardEntryDto> content = page2.getContent();
+        assertThat(content).isNotEmpty();
+        assertThat(content.getFirst().getRank()).isEqualTo(1L);
     }
 
     @Test

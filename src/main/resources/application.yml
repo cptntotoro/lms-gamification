@@ -45,10 +45,12 @@ logging:
   level:
     root: INFO
     ru.misis.gamification: DEBUG
-    org.springframework.web: INFO
+    org.springframework.web: DEBUG
     org.hibernate.SQL: INFO
     org.hibernate.orm.jdbc.bind: INFO
     org.hibernate.stat: INFO
+    org.springframework.web.servlet: DEBUG
+    org.springframework.web.servlet.handler: TRACE
 
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

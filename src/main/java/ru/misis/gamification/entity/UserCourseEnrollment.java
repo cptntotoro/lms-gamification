@@ -61,6 +61,7 @@ public class UserCourseEnrollment {
     /**
      * Всего очков за курс
      */
+    // TODO: везде заменить на Long
     @Builder.Default
     @Column(name = "total_points_in_course", nullable = false)
     private Integer totalPointsInCourse = 0;

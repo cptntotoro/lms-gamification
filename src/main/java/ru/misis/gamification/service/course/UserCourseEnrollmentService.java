@@ -14,6 +14,15 @@ import java.util.UUID;
 
 /**
  * Сервис зачислений на курс (связь пользователь — курс)
+ * <p>
+ * Основные задачи сервиса:
+ * <ul>
+ *     <li>Проверка статуса зачисления</li>
+ *     <li>Получение и сохранение записей зачисления</li>
+ *     <li>Получение лидерборда по курсу (с фильтром по группе или без)</li>
+ *     <li>Расчёт текущего места пользователя в рейтинге</li>
+ *     </ul>
+ *     </p>
  */
 public interface UserCourseEnrollmentService {
 
@@ -49,15 +58,30 @@ public interface UserCourseEnrollmentService {
      */
     UserCourseEnrollment save(@NotNull(message = "{enrollment.required}") UserCourseEnrollment enrollment);
 
-    long countByCourseUuidAndTotalPointsInCourseGreaterThan(
-            @NotNull(message = "{course.uuid.required}") UUID courseUuid,
-            @NotNull(message = "{points.required}") Integer totalPointsInCourse
-    );
-
-    Integer findTotalPointsInCourseByUserAndCourse(
-            @NotNull(message = "{user.required}") User user,
-            @NotNull(message = "{course.required}") Course course
-    );
-
+    /**
+     * Получить страницу лидерборда студентов на курсе
+     *
+     * @param courseUuid UUID курса
+     * @param groupUuid  UUID группы
+     * @param pageable   Параметры пагинации и сортировки
+     * @return Страница элементов лидерборда группы по курсу
+     */
     Page<LeaderboardEntryDto> findLeaderboardByCourseAndGroup(UUID courseUuid, UUID groupUuid, Pageable pageable);
+
+    /**
+     * Получить текущее место (ранг) пользователя в лидерборде курса или группы
+     * <p>
+     * Ранг рассчитывается с помощью {@code DENSE_RANK()}:
+     * <ul>
+     *     <li>студенты с одинаковым количеством очков получают одинаковый ранг</li>
+     *     <li>следующий ранг не пропускается (dense rank)</li>
+     * </ul>
+     * </p>
+     *
+     * @param courseUuid      UUID курса
+     * @param groupUuid       UUID группы (может быть {@code null} для общего лидерборда курса)
+     * @param currentUserUuid UUID пользователя
+     * @return ранг пользователя (1 = лидер)
+     */
+    Long getRankByPointsInCourse(UUID courseUuid, UUID groupUuid, UUID currentUserUuid);
 }
