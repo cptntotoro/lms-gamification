@@ -44,20 +44,12 @@ public class UserCourseEnrollmentServiceImpl implements UserCourseEnrollmentServ
     }
 
     @Override
-    public long countByCourseUuidAndTotalPointsInCourseGreaterThan(@NotNull(message = "{course.uuid.required}") UUID courseUuid,
-                                                                   @NotNull(message = "{points.required}") Integer totalPointsInCourse) {
-        return repository.countByCourseUuidAndTotalPointsInCourseGreaterThan(courseUuid, totalPointsInCourse);
-    }
-
-    @Override
-    public Integer findTotalPointsInCourseByUserAndCourse(@NotNull(message = "{user.required}") User user,
-                                                          @NotNull(message = "{course.required}") Course course) {
-        return repository.findTotalPointsInCourseByUserUuidAndCourseUuid(user.getUuid(), course.getUuid())
-                .orElse(0);
-    }
-
-    @Override
     public Page<LeaderboardEntryDto> findLeaderboardByCourseAndGroup(UUID courseUuid, UUID groupUuid, Pageable pageable) {
         return repository.findLeaderboardByCourseAndGroup(courseUuid, groupUuid, pageable);
+    }
+
+    @Override
+    public Long getRankByPointsInCourse(UUID courseUuid, UUID groupUuid, UUID userUuid) {
+        return repository.findRankByPointsInCourse(courseUuid, groupUuid, userUuid);
     }
 }

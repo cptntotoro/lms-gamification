@@ -1,4 +1,4 @@
-package ru.misis.gamification.controller.page.admin;
+package ru.misis.gamification.controller.demo.admin;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

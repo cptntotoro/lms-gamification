@@ -37,7 +37,7 @@ public interface AnalyticsService {
      *                                      </ul>
      */
     GroupLeaderboardPageDto getGroupLeaderboard(@NotBlank(message = "{course.id.required}") String courseId,
-                                                @NotBlank(message = "{group.id.required}") String groupId,
+                                                @Nullable String groupId,
                                                 @Min(value = 0, message = "{page.non-negative}") int page,
                                                 @Min(value = 1, message = "{size.positive}") @Max(value = 100, message = "{size.too-large}") int size);
 

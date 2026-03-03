@@ -31,10 +31,10 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
     boolean existsByUserAndCourse(User user, Course course);
 
     /**
-     * Получить страницу лидерборда студентов группы на курсе, отсортированную
-     * по убыванию очков на курсе
+     * Получить страницу лидерборда студентов группы на курсе, отсортированную по убыванию очков
      * <p>
-     * Если курс или группа не существуют — возвращается пустая страница.
+     * Если groupUuid = null — возвращает лидерборд по всему курсу (все группы/студенты без группы)
+     * Если groupUuid указан — только студенты указанной группы
      * </p>
      *
      * @param courseUuid UUID курса
@@ -52,12 +52,12 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
                 )
                 FROM UserCourseEnrollment uce
                 JOIN uce.user u
-                WHERE uce.course.uuid = :courseUuid
-                  AND uce.group.uuid = :groupUuid
+                WHERE (:courseUuid IS NOT NULL AND uce.course.uuid = :courseUuid)
+                  AND (:groupUuid IS NULL OR uce.group.uuid = :groupUuid)
             """)
     Page<LeaderboardEntryDto> findLeaderboardByCourseAndGroup(
-            @Param("courseUuid") UUID courseUuid,
-            @Param("groupUuid") UUID groupUuid,
+            @Param("courseUuid") @Nullable UUID courseUuid,
+            @Param("groupUuid") @Nullable UUID groupUuid,
             Pageable pageable
     );
 
@@ -70,10 +70,17 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
      */
     Optional<UserCourseEnrollment> findByUserAndCourse(User user, Course course);
 
-    boolean existsByUserUuidAndCourseUuid(@Nullable UUID currentUserUuid, UUID courseUuid);
+    /**
+     * Проверяет существование зачисления по внутренним UUID пользователя и курса.
+     *
+     * @param userUuid   UUID пользователя
+     * @param courseUuid UUID курса
+     * @return Да / Нет
+     */
+    boolean existsByUserUuidAndCourseUuid(@Nullable UUID userUuid, UUID courseUuid);
 
     /**
-     * Возвращает общее количество очков, набранных пользователем на указанном курсе.
+     * Получить общее количество очков, набранных пользователем на указанном курсе.
      * <p>
      * Если пользователь не зачислен на курс — возвращает {@link Optional#empty()}.
      * </p>
@@ -85,32 +92,40 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
     @Query("SELECT uce.totalPointsInCourse FROM UserCourseEnrollment uce " +
             "WHERE uce.user.uuid = :userUuid AND uce.course.uuid = :courseUuid")
     Optional<Integer> findTotalPointsInCourseByUserUuidAndCourseUuid(@Param("userUuid") UUID userUuid,
-                                                        @Param("courseUuid") UUID courseUuid);
+                                                                     @Param("courseUuid") UUID courseUuid);
 
+    /**
+     * Получить страницу лидерборда студентов на курсе
+     * <p>
+     * Ранг рассчитывается через {@code DENSE_RANK()}:
+     * <ul>
+     *     <li>студенты с одинаковыми очками получают одинаковый ранг</li>
+     *     <li>следующий ранг не пропускается (dense rank)</li>
+     * </ul>
+     * <p>
+     *
+     * @param courseUuid UUID курса
+     * @param groupUuid  UUID группы
+     * @param userUuid   UUID пользователя
+     * @return Ранг пользователя (1 = лидер) или {@code null}, если пользователь не найден/не зачислен
+     */
     @Query(value = """
-                SELECT COUNT(*) + 1 
-                FROM user_course_enrollments uce
-                WHERE uce.course_uuid = :courseUuid
-                  AND (:groupUuid IS NULL OR uce.group_uuid = :groupUuid)
-                  AND uce.total_points_in_course > (
-                      SELECT uce2.total_points_in_course 
-                      FROM user_course_enrollments uce2 
-                      WHERE uce2.user_uuid = :userUuid 
-                        AND uce2.course_uuid = :courseUuid
-                  )
+                SELECT rank
+                    FROM (
+                        SELECT
+                            user_uuid,
+                            DENSE_RANK() OVER (
+                                ORDER BY total_points_in_course DESC
+                            ) AS rank
+                        FROM user_course_enrollments
+                        WHERE course_uuid = :courseUuid
+                          AND (:groupUuid IS NULL OR group_uuid = :groupUuid)
+                    ) ranked
+                    WHERE user_uuid = :userUuid
             """, nativeQuery = true)
     Long findRankByPointsInCourse(
             @Param("courseUuid") UUID courseUuid,
             @Param("groupUuid") UUID groupUuid,
             @Param("userUuid") UUID userUuid
     );
-
-    /**
-     * Количество пользователей с очками > заданного (для расчёта ранга)
-     *
-     * @param courseUuid
-     * @param totalPointsInCourse
-     * @return
-     */
-    long countByCourseUuidAndTotalPointsInCourseGreaterThan(UUID courseUuid, Integer totalPointsInCourse);
 }

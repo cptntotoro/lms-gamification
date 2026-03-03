@@ -59,14 +59,18 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Override
     public GroupLeaderboardPageDto getGroupLeaderboard(
             @NotBlank(message = "{course.id.required}") String courseId,
-            @NotBlank(message = "{group.id.required}") String groupId,
+            @Nullable String groupId,
             @Min(value = 0, message = "{page.non-negative}") int page,
             @Min(value = 1, message = "{size.positive}") @Max(value = 100, message = "{size.too-large}") int size
     ) {
         log.debug("Запрос лидерборда группы: courseId={}, groupId={}, page={}, size={}", courseId, groupId, page, size);
 
         UUID courseUuid = courseService.getCourseUuidByExternalId(courseId);
-        UUID groupUuid = groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId);
+
+        UUID groupUuid = null;
+        if (groupId != null) {
+            groupUuid = groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId);
+        }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "totalPointsInCourse"));
 
@@ -113,8 +117,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         // Данные текущего пользователя
         LeaderboardEntryDto currentUserEntry = null;
         Long currentUserRank = null;
-        Long currentUserPoints = null;
-        boolean isCurrentEnrolled = false;
+        Integer currentUserPoints = null;
+        boolean isCurrentEnrolled;
 
         try {
             User currentUser = userService.getUserByExternalId(currentUserId);
@@ -124,18 +128,18 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
             if (isCurrentEnrolled) {
                 UserCourseEnrollment enrollment = enrollmentService.findByUserAndCourse(currentUser, course);
-                currentUserPoints = Long.valueOf(enrollment.getTotalPointsInCourse());
+                currentUserPoints = enrollment.getTotalPointsInCourse();
 
-                // Ранг = количество пользователей с бОльшими очками + 1
-                long higherCount = enrollmentService.countByCourseUuidAndTotalPointsInCourseGreaterThan(
-                        courseUuid, Math.toIntExact(currentUserPoints));
-
-                currentUserRank = higherCount + 1;
+                currentUserRank = enrollmentService.getRankByPointsInCourse(
+                        courseUuid,
+                        groupUuid,
+                        currentUserUuid
+                );
 
                 currentUserEntry = LeaderboardEntryDto.builder()
                         .userUuid(currentUserUuid)
                         .userId(currentUserId)
-                        .pointsInCourse(Math.toIntExact(currentUserPoints))
+                        .pointsInCourse(currentUserPoints)
                         .globalLevel(currentUser.getLevel())
                         .rank(currentUserRank)
                         .isCurrentUser(true)
@@ -149,7 +153,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .topEntries(topPage.getContent())
                 .currentUserEntry(currentUserEntry)
                 .currentUserRank(currentUserRank)
-                .currentUserPoints(Math.toIntExact(currentUserPoints))
+                .currentUserPoints(currentUserPoints)
                 .pageNumber(topPage.getNumber())
                 .pageSize(topPage.getSize())
                 .totalElements(topPage.getTotalElements())

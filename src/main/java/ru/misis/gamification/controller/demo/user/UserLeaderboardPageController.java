@@ -1,4 +1,4 @@
-package ru.misis.gamification.controller.page.user;
+package ru.misis.gamification.controller.demo.user;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,8 +31,8 @@ public class UserLeaderboardPageController {
      */
     private final AnalyticsService analyticsService;
 
-    private static final int DEFAULT_SIZE = 50;
-    private static final int MAX_SIZE = 100;
+    private static final int DEFAULT_PAGE_SIZE = 50;
+    private static final int MAX_PAGE_SIZE = 100;
 
     /**
      * Лидерборд по курсу для текущего пользователя
@@ -40,26 +40,25 @@ public class UserLeaderboardPageController {
      */
     @Operation(summary = "Лидерборд по курсу для текущего студента",
             description = "Возвращает топ-N студентов курса + место и очки текущего пользователя")
-    @GetMapping("/course/{courseId}/groups/{groupId}")
-    public String getLeaderboardByGroup(
+    @GetMapping("/course/{courseId}/groups/{groupId}/user/{userId}")
+    public String getLeaderboardByCourseGroup(
             @PathVariable @NotBlank(message = "{course.id.required}")
             @Parameter(description = "Код курса из LMS") String courseId,
 
             @PathVariable
             @Parameter(description = "Код группы из LMS (null = весь курс)") String groupId,
 
-            @RequestParam(name = "userId")
-            @NotBlank(message = "{user.id.required}")
-            @Parameter(description = "ID текущего пользователя из LMS") String userId,
+            @PathVariable @NotBlank(message = "{user.id.required}")
+            @Parameter(description = "ID текущего пользователя из LMS", example = "student007") String userId,
 
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "{page.non-negative}")
             @Parameter(description = "Номер страницы (0-based)") int page,
 
-            @RequestParam(defaultValue = "" + DEFAULT_SIZE)
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE)
             @Min(value = 1, message = "{size.positive}")
-            @Max(value = MAX_SIZE, message = "{size.too-large}")
-            @Parameter(description = "Размер страницы (макс " + MAX_SIZE + ")") int size,
+            @Max(value = MAX_PAGE_SIZE, message = "{size.too-large}")
+            @Parameter(description = "Размер страницы (макс " + MAX_PAGE_SIZE + ")", example = "50") int size,
 
             Model model
     ) {
@@ -73,16 +72,27 @@ public class UserLeaderboardPageController {
         return "leaderboard";
     }
 
-    @GetMapping("/course/{courseId}")
+    @GetMapping("/course/{courseId}/user/{userId}")
     public String getLeaderboardByCourse(
-            @PathVariable @NotBlank String courseId,
-            @RequestParam @NotBlank String userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size,
+            @PathVariable @NotBlank(message = "{course.id.required}")
+            @Parameter(description = "Код курса из LMS", example = "MATH-101") String courseId,
+
+            @PathVariable @NotBlank(message = "{user.id.required}")
+            @Parameter(description = "ID текущего пользователя из LMS", example = "student007") String userId,
+
+            @RequestParam(defaultValue = "0")
+            @Min(value = 0, message = "{page.non-negative}")
+            @Parameter(description = "Номер страницы (0-based)", example = "0") int page,
+
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE)
+            @Min(value = 1, message = "{size.positive}")
+            @Max(value = MAX_PAGE_SIZE, message = "{size.too-large}")
+            @Parameter(description = "Размер страницы (макс " + MAX_PAGE_SIZE + ")", example = "50") int size,
+
             Model model) {
 
         UserCourseGroupLeaderboard lb = analyticsService.getCourseLeaderboardForUser(
-                courseId, null, page, size, userId);   // ← передаём null вместо groupId
+                courseId, null, page, size, userId);
 
         model.addAttribute("leaderboard", lb);
         model.addAttribute("courseId", courseId);
