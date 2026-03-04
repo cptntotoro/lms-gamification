@@ -1,4 +1,4 @@
-package ru.misis.gamification.controller.api;
+package ru.misis.gamification.controller.user;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +30,7 @@ import ru.misis.gamification.service.analytics.AnalyticsService;
  * <p>
  */
 @RestController
-@RequestMapping("/api/me/leaderboard")
+@RequestMapping("/api/v1/leaderboard")
 @RequiredArgsConstructor
 @Validated
 @Slf4j
@@ -57,13 +57,13 @@ public class UserLeaderboardController {
     @GetMapping("/course/{courseId}/groups/{groupId}/user/{userId}")
     public ResponseEntity<UserCourseGroupLeaderboard> getCourseLeaderboard(
             @PathVariable @NotBlank(message = "{course.id.required}")
-            @Parameter(description = "Код курса из LMS", example = "MATH-101") String courseId,
+            @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101") String courseId,
 
             @PathVariable @NotBlank(message = "{group.id.required}")
-            @Parameter(description = "Код группы из LMS", example = "M-21-2") String groupId,
+            @Parameter(description = "Идентификатор группы из LMS", example = "M-21-2") String groupId,
 
             @PathVariable @NotBlank(message = "{user.id.required}")
-            @Parameter(description = "ID текущего пользователя из LMS", example = "student007") String userId,
+            @Parameter(description = "Идентификатор пользователя из LMS", example = "student007") String userId,
 
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "{page.non-negative}")
@@ -96,10 +96,10 @@ public class UserLeaderboardController {
     @GetMapping("/course/{courseId}/user/{userId}")
     public ResponseEntity<UserCourseGroupLeaderboard> getLeaderboardByCourse(
             @PathVariable @NotBlank(message = "{course.id.required}")
-            @Parameter(description = "Код курса из LMS", example = "MATH-101") String courseId,
+            @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101") String courseId,
 
             @PathVariable @NotBlank(message = "{user.id.required}")
-            @Parameter(description = "ID текущего пользователя из LMS", example = "student007") String userId,
+            @Parameter(description = "Идентификатор пользователя из LMS", example = "student007") String userId,
 
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "{page.non-negative}")

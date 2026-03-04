@@ -3,7 +3,7 @@ package ru.misis.gamification.service.progress;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotBlank;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
-import ru.misis.gamification.dto.web.response.UserDto;
+import ru.misis.gamification.dto.user.response.UserDto;
 import ru.misis.gamification.exception.UserNotFoundException;
 
 /**

@@ -43,13 +43,13 @@ public class UserLeaderboardPageController {
     @GetMapping("/course/{courseId}/groups/{groupId}/user/{userId}")
     public String getLeaderboardByCourseGroup(
             @PathVariable @NotBlank(message = "{course.id.required}")
-            @Parameter(description = "Код курса из LMS") String courseId,
+            @Parameter(description = "Идентификатор курса из LMS") String courseId,
 
             @PathVariable
-            @Parameter(description = "Код группы из LMS (null = весь курс)") String groupId,
+            @Parameter(description = "Идентификатор группы из LMS (null = весь курс)") String groupId,
 
             @PathVariable @NotBlank(message = "{user.id.required}")
-            @Parameter(description = "ID текущего пользователя из LMS", example = "student007") String userId,
+            @Parameter(description = "Идентификатор пользователя из LMS", example = "student007") String userId,
 
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "{page.non-negative}")
@@ -75,10 +75,10 @@ public class UserLeaderboardPageController {
     @GetMapping("/course/{courseId}/user/{userId}")
     public String getLeaderboardByCourse(
             @PathVariable @NotBlank(message = "{course.id.required}")
-            @Parameter(description = "Код курса из LMS", example = "MATH-101") String courseId,
+            @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101") String courseId,
 
             @PathVariable @NotBlank(message = "{user.id.required}")
-            @Parameter(description = "ID текущего пользователя из LMS", example = "student007") String userId,
+            @Parameter(description = "Идентификатор пользователя из LMS", example = "student007") String userId,
 
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "{page.non-negative}")

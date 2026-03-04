@@ -3,7 +3,7 @@ package ru.misis.gamification.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
-import ru.misis.gamification.dto.web.response.UserDto;
+import ru.misis.gamification.dto.user.response.UserDto;
 import ru.misis.gamification.entity.User;
 
 /**

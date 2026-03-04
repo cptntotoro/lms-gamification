@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
-import ru.misis.gamification.dto.web.response.UserDto;
+import ru.misis.gamification.dto.user.response.UserDto;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.service.progress.calculator.ProgressCalculator;

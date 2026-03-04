@@ -22,7 +22,7 @@ import ru.misis.gamification.service.event.processor.LmsEventProcessor;
  * Контроллер для приема событий от LMS
  */
 @RestController
-@RequestMapping("/api/event")
+@RequestMapping("/api/v1/event")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "LMS Events", description = "Приём и обработка событий от LMS-платформы")

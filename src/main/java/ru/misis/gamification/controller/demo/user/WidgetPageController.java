@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import ru.misis.gamification.dto.web.response.UserDto;
+import ru.misis.gamification.dto.user.response.UserDto;
 import ru.misis.gamification.service.progress.UserProgressService;
 
 @Tag(name = "Web Pages", description = "Простые HTML-страницы приложения")
@@ -28,7 +28,7 @@ public class WidgetPageController {
             description = "Отображает демо-виджет геймификации с демонстрационными данными"
     )
     @GetMapping("/{userId}/widget")
-    public String getUserWidget(@Parameter(description = "Внешний ID пользователя из LMS",
+    public String getUserWidget(@Parameter(description = "Идентификатор пользователя из LMS",
             required = true, example = "alex123") @PathVariable String userId, Model model) {
         log.debug("Открыт демо-виджет для пользователя: userId={}", userId);
 

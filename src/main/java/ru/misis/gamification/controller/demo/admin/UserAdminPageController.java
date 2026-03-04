@@ -44,7 +44,7 @@ public class UserAdminPageController {
     })
     @GetMapping("/users/{userId}")
     public String getUserProfilePage(
-            @Parameter(description = "Внешний ID пользователя из LMS", required = true, example = "alex123")
+            @Parameter(description = "Идентификатор пользователя из LMS", required = true, example = "alex123")
             @PathVariable String userId,
             Model model) {
 

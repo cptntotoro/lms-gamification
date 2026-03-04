@@ -57,10 +57,10 @@ public class AnalyticsController {
     @GetMapping("/courses/{courseId}/groups/{groupId}/leaderboard")
     public ResponseEntity<GroupLeaderboardPageDto> getLeaderboardByCourseGroup(
             @PathVariable @NotBlank(message = "{course.id.required}")
-            @Parameter(description = "Код курса из LMS", example = "MATH-101") String courseId,
+            @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101") String courseId,
 
             @PathVariable @NotBlank(message = "{group.id.required}")
-            @Parameter(description = "Код группы из LMS", example = "M-21-2") String groupId,
+            @Parameter(description = "Идентификатор группы из LMS", example = "M-21-2") String groupId,
 
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "{page.non-negative}")
@@ -92,7 +92,7 @@ public class AnalyticsController {
     @GetMapping("/courses/{courseId}/leaderboard")
     public ResponseEntity<GroupLeaderboardPageDto> getLeaderboardByCourse(
             @PathVariable @NotBlank(message = "{course.id.required}")
-            @Parameter(description = "Код курса из LMS", example = "MATH-101") String courseId,
+            @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101") String courseId,
 
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "{page.non-negative}")
