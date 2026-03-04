@@ -37,7 +37,7 @@ public class Course {
     private UUID uuid;
 
     /**
-     * Внешний идентификатор курса из LMS
+     * Идентификатор курса из LMS
      */
     @Column(name = "course_id", nullable = false, unique = true, length = 100)
     private String courseId;

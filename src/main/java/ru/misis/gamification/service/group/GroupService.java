@@ -9,7 +9,7 @@ import ru.misis.gamification.exception.GroupNotFoundException;
 import java.util.UUID;
 
 /**
- * Сервис управления группами/потоками (группами студентов внутри курса)
+ * Сервис управления группами/потоками (группами пользователей внутри курса)
  */
 public interface GroupService {
 

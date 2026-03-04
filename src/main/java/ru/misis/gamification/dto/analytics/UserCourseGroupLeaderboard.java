@@ -14,7 +14,7 @@ import java.util.List;
  */
 @Data
 @Builder
-@Schema(description = "Лидерборд по курсу для студента (топ + мои данные)")
+@Schema(description = "Лидерборд по курсу для пользователя (топ + данные пользователя)")
 public class UserCourseGroupLeaderboard {
 
     /**
@@ -26,19 +26,19 @@ public class UserCourseGroupLeaderboard {
     /**
      * Запись текущего пользователя (null, если не зачислен на курс)
      */
-    @Schema(description = "Моя запись в лидерборде (null, если не зачислен)")
+    @Schema(description = "Запись пользователя в лидерборде (null, если не зачислен)")
     private LeaderboardEntryDto currentUserEntry;
 
     /**
      * Место пользователя в общем лидерборде курса (null, если не зачислен)
      */
-    @Schema(description = "Моё место в общем лидерборде курса (null, если не зачислен)")
+    @Schema(description = "Место пользователя в общем лидерборде курса (null, если не зачислен)")
     private Long currentUserRank;
 
     /**
      * Очки пользователя по курсу (null, если не зачислен)
      */
-    @Schema(description = "Мои очки по курсу (null, если не зачислен)")
+    @Schema(description = "Очки пользователя по курсу (null, если не зачислен)")
     private Integer currentUserPoints;
 
     /**

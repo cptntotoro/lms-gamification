@@ -25,8 +25,10 @@ public class LeaderboardEntryDto {
     /**
      * Идентификатор пользователя из LMS
      */
-    @Schema(description = "ID пользователя из LMS")
+    @Schema(description = "Идентификатор пользователя из LMS")
     private String userId;
+
+//    private String displayName;      // полное имя или ник
 
     /**
      * Очки, заработанные на этом курсе
@@ -46,7 +48,10 @@ public class LeaderboardEntryDto {
     @Schema(description = "Позиция в лидерборде группы (1 = лидер)")
     private Long rank;
 
-    @Schema(description = "Это текущий пользователь? (true если запись принадлежит запрашивающему)")
+    /**
+     * Флаг текущего пользователя
+     */
+    @Schema(description = "Флаг текущего пользователя (true если запись принадлежит запрашивающему)")
     private Boolean isCurrentUser;
 
     public LeaderboardEntryDto(UUID userUuid, String userId, Integer pointsInCourse, Integer globalLevel, Long rank) {

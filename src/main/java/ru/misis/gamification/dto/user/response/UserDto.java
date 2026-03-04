@@ -1,4 +1,4 @@
-package ru.misis.gamification.dto.web.response;
+package ru.misis.gamification.dto.user.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -20,13 +20,13 @@ public class UserDto {
      * Идентификатор пользователя из LMS
      */
     @Schema(description = "Идентификатор пользователя из LMS", example = "user-12345")
-    String userId;
+    private String userId;
 
     /**
      * Сумма очков
      */
     @Schema(description = "Общее количество очков", example = "1250")
-    Integer totalPoints;
+    private Integer totalPoints;
 
     /**
      * Текущий уровень
