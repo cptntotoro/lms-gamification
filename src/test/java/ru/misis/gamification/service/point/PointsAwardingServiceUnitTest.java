@@ -14,13 +14,13 @@ import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
-import ru.misis.gamification.service.course.CourseService;
 import ru.misis.gamification.service.course.UserCourseService;
 import ru.misis.gamification.service.event.EventTypeService;
 import ru.misis.gamification.service.point.result.AwardResult;
 import ru.misis.gamification.service.progress.LevelCalculatorService;
-import ru.misis.gamification.service.transaction.TransactionService;
-import ru.misis.gamification.service.user.UserService;
+import ru.misis.gamification.service.simple.course.CourseService;
+import ru.misis.gamification.service.simple.transaction.TransactionService;
+import ru.misis.gamification.service.simple.user.UserService;
 
 import java.util.UUID;
 

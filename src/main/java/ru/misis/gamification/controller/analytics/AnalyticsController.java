@@ -20,13 +20,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.analytics.GroupLeaderboardPageDto;
-import ru.misis.gamification.service.analytics.AnalyticsService;
+import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.model.LeaderboardPageView;
+import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicationService;
 
 /**
- * REST-контроллер для получения лидерборда
+ * REST-контроллер для получения лидербордов и аналитики геймификации
  * <p>
- * Предоставляет данные о топ-N участников курса (или группы) + обязательную информацию
- * о месте и очках текущего пользователя.
+ * Предоставляет данные о ранжировании студентов по курсу и/или группе.
+ * Все идентификаторы (курса, группы, пользователя) — внешние строки из LMS.
  * <p>
  */
 @Tag(name = "Analytics — Лидерборд и статистика")
@@ -36,10 +38,12 @@ import ru.misis.gamification.service.analytics.AnalyticsService;
 @Slf4j
 public class AnalyticsController {
 
+    private final LeaderboardApplicationService leaderboardApplicationService;
+
     /**
-     * Сервис аналитики и отчётов по геймификации
+     * Маппер моделей в DTO
      */
-    private final AnalyticsService analyticsService;
+    private final ApplicationModelMapper applicationModelMapper;
 
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 100;
@@ -71,12 +75,12 @@ public class AnalyticsController {
             @Max(value = MAX_PAGE_SIZE, message = "{size.too-large}")
             @Parameter(description = "Размер страницы (макс " + MAX_PAGE_SIZE + ")", example = "50") int size
     ) {
-        log.debug("Лидерборд группы курса: courseId={}, groupId={}, page={}, size={}", courseId, groupId, page, size);
+        log.debug("Запрос лидерборда группы курса: courseId={}, groupId={}, page={}, size={}",
+                courseId, groupId, page, size);
 
-        GroupLeaderboardPageDto leaderboard = analyticsService.getGroupLeaderboard(
-                courseId, groupId, page, size
-        );
-        return ResponseEntity.ok(leaderboard);
+        LeaderboardPageView view = leaderboardApplicationService.getGroupLeaderboard(courseId, groupId, page, size);
+        GroupLeaderboardPageDto dto = applicationModelMapper.toGroupLeaderboardPageDto(view);
+        return ResponseEntity.ok(dto);
     }
 
     @Operation(
@@ -103,11 +107,10 @@ public class AnalyticsController {
             @Max(value = MAX_PAGE_SIZE, message = "{size.too-large}")
             @Parameter(description = "Размер страницы (макс " + MAX_PAGE_SIZE + ")", example = "50") int size
     ) {
-        log.debug("Лидерборд курса: courseId={}, page={}, size={}", courseId, page, size);
+        log.debug("Запрос общего лидерборда курса: courseId={}, page={}, size={}", courseId, page, size);
 
-        GroupLeaderboardPageDto leaderboard = analyticsService.getGroupLeaderboard(
-                courseId, null, page, size
-        );
-        return ResponseEntity.ok(leaderboard);
+        LeaderboardPageView view = leaderboardApplicationService.getGroupLeaderboard(courseId, null, page, size);
+        GroupLeaderboardPageDto dto = applicationModelMapper.toGroupLeaderboardPageDto(view);
+        return ResponseEntity.ok(dto);
     }
 }

@@ -20,11 +20,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.admin.response.TransactionPageDto;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
-import ru.misis.gamification.entity.Transaction;
-import ru.misis.gamification.exception.UserNotFoundException;
-import ru.misis.gamification.mapper.TransactionMapper;
-import ru.misis.gamification.service.transaction.TransactionService;
-import ru.misis.gamification.service.user.UserAdminService;
+import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.model.TransactionSummary;
+import ru.misis.gamification.model.UserAdminView;
+import ru.misis.gamification.service.application.transaction.TransactionHistoryApplicationService;
+import ru.misis.gamification.service.application.user.UserAdminApplicationService;
 
 @Slf4j
 @RestController
@@ -33,30 +33,18 @@ import ru.misis.gamification.service.user.UserAdminService;
 @Tag(name = "Admin - Пользователи", description = "Административные операции с пользователями и их транзакциями")
 public class UserAdminController {
 
-    /**
-     * Сервис управления транзакциями
-     */
-    private final TransactionService transactionService;
-
-    /**
-     * Маппер транзакций
-     */
-    private final TransactionMapper transactionMapper;
+    private final TransactionHistoryApplicationService transactionHistoryApplicationService;
 
     /**
      * Сервис управления пользователями
      */
-    private final UserAdminService userAdminService;
+    private final UserAdminApplicationService adminApplicationService;
 
     /**
-     * Получение истории транзакций пользователя с пагинацией
-     *
-     * @param userId  Идентификатор пользователя из LMS
-     * @param page    Номер страницы (0-based), по умолчанию 0
-     * @param size    Размер страницы, по умолчанию 20
-     * @param sortDir Направление сортировки: asc / desc (по умолчанию desc по дате)
-     * @return Страница транзакций
+     * Маппер моделей в DTO
      */
+    private final ApplicationModelMapper applicationModelMapper;
+
     @Operation(
             summary = "Получить историю транзакций пользователя",
             description = "Возвращает пагинированный список транзакций для указанного пользователя с сортировкой по дате"
@@ -73,22 +61,21 @@ public class UserAdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDir.toUpperCase()), "createdAt");
-        Pageable pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        Sort.Direction direction = Sort.Direction.fromString(sortDir.toUpperCase());
+        Sort sort = Sort.by(direction, "createdAt");
 
-        Page<Transaction> transactionPage = transactionService.getTransactionsByUserId(userId, pageable);
-        TransactionPageDto response = transactionMapper.transactionPagetoTransactionPageDto(transactionPage);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        Pageable pageable = PageRequest.of(page, safeSize, sort);
+
+        Page<TransactionSummary> transactionPage =
+                transactionHistoryApplicationService.getTransactionsByUserId(userId, pageable);
+
+        TransactionPageDto response =
+                applicationModelMapper.toTransactionPageDto(transactionPage);
 
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Поиск пользователя по его ID из LMS (для админ-панели)
-     *
-     * @param userId внешний идентификатор пользователя из LMS
-     * @return информация о пользователе
-     * @throws UserNotFoundException если пользователь не найден
-     */
     @GetMapping("/{userId}")
     @Operation(
             summary = "Получить информацию о пользователе по ID из LMS",
@@ -101,7 +88,7 @@ public class UserAdminController {
             @ApiResponse(responseCode = "400", description = "Некорректный формат userId")
     })
     public ResponseEntity<UserAdminDto> getUserById(@PathVariable String userId) {
-        UserAdminDto dto = userAdminService.findByUserId(userId);
-        return ResponseEntity.ok(dto);
+        UserAdminView dto = adminApplicationService.findByUserId(userId);
+        return ResponseEntity.ok(applicationModelMapper.toUserAdminDto(dto));
     }
 }

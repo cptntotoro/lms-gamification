@@ -15,7 +15,8 @@ import ru.misis.gamification.entity.UserCourseEnrollment;
 import ru.misis.gamification.exception.CourseNotFoundException;
 import ru.misis.gamification.exception.GroupNotFoundException;
 import ru.misis.gamification.exception.UserNotEnrolledInCourseException;
-import ru.misis.gamification.service.group.GroupService;
+import ru.misis.gamification.service.simple.course.CourseService;
+import ru.misis.gamification.service.simple.group.GroupService;
 
 import java.util.UUID;
 

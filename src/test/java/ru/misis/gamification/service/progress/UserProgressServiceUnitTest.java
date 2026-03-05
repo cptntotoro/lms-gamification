@@ -12,7 +12,7 @@ import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.service.progress.calculator.ProgressCalculator;
 import ru.misis.gamification.service.progress.result.ProgressMetrics;
-import ru.misis.gamification.service.user.UserService;
+import ru.misis.gamification.service.simple.user.UserService;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

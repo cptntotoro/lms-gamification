@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.UserNotFoundException;
-import ru.misis.gamification.mapper.UserMapper;
+import ru.misis.gamification.service.simple.user.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;

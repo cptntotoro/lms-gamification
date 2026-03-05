@@ -15,6 +15,7 @@ import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.repository.UserRepository;
 import ru.misis.gamification.service.course.UserCourseService;
+import ru.misis.gamification.service.simple.user.UserServiceImpl;
 
 import java.util.List;
 import java.util.Optional;

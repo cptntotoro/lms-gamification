@@ -23,8 +23,9 @@ import ru.misis.gamification.dto.admin.request.EventTypeCreateDto;
 import ru.misis.gamification.dto.admin.request.EventTypeUpdateDto;
 import ru.misis.gamification.dto.admin.response.EventTypeDto;
 import ru.misis.gamification.entity.EventType;
-import ru.misis.gamification.mapper.EventTypeMapper;
-import ru.misis.gamification.service.event.EventTypeAdminService;
+import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.model.EventTypeSummary;
+import ru.misis.gamification.service.application.eventtype.EventTypeAdminApplicationService;
 
 import java.util.UUID;
 
@@ -38,12 +39,12 @@ public class EventTypeAdminController {
     /**
      * Сервис для работы с типами событий для администратора
      */
-    private final EventTypeAdminService eventTypeAdminService;
+    private final EventTypeAdminApplicationService eventTypeAdminService;
 
     /**
-     * Маппер событий
+     * Маппер моделей в DTO
      */
-    private final EventTypeMapper eventTypeMapper;
+    private final ApplicationModelMapper applicationModelMapper;
 
     @PostMapping
     @Operation(
@@ -60,9 +61,10 @@ public class EventTypeAdminController {
             @ApiResponse(responseCode = "409", description = "Тип события с таким typeCode уже существует")
     })
     public ResponseEntity<EventTypeDto> create(@Valid @RequestBody EventTypeCreateDto dto) {
-        EventType entity = eventTypeMapper.eventTypeCreateDtoToEventType(dto);
-        EventType saved = eventTypeAdminService.create(entity);
-        return ResponseEntity.ok(eventTypeMapper.eventTypeToEventTypeDto(saved));
+        EventType entity = applicationModelMapper.eventTypeCreateDtoToEventType(dto);
+        EventTypeSummary eventTypeSummary = eventTypeAdminService.create(entity);
+        EventTypeDto eventTypeDto = applicationModelMapper.toEventTypeDto(eventTypeSummary);
+        return ResponseEntity.ok(eventTypeDto);
     }
 
     @GetMapping("/{id}")
@@ -79,8 +81,9 @@ public class EventTypeAdminController {
             @ApiResponse(responseCode = "404", description = "Тип события не найден")
     })
     public ResponseEntity<EventTypeDto> getById(@PathVariable UUID id) {
-        EventType type = eventTypeAdminService.getById(id);
-        return ResponseEntity.ok(eventTypeMapper.eventTypeToEventTypeDto(type));
+        EventTypeSummary eventTypeSummary = eventTypeAdminService.getById(id);
+        EventTypeDto eventTypeDto = applicationModelMapper.toEventTypeDto(eventTypeSummary);
+        return ResponseEntity.ok(eventTypeDto);
     }
 
     @PutMapping("/{id}")
@@ -101,9 +104,10 @@ public class EventTypeAdminController {
             @PathVariable UUID id,
             @Valid @RequestBody EventTypeUpdateDto dto) {
 
-        EventType entity = eventTypeMapper.eventTypeUpdateDtoToEventType(dto);
-        EventType updated = eventTypeAdminService.update(id, entity);
-        return ResponseEntity.ok(eventTypeMapper.eventTypeToEventTypeDto(updated));
+        EventType entity = applicationModelMapper.eventTypeUpdateDtoToEventType(dto);
+        EventTypeSummary eventTypeSummary = eventTypeAdminService.update(id, entity);
+        EventTypeDto eventTypeDto = applicationModelMapper.toEventTypeDto(eventTypeSummary);
+        return ResponseEntity.ok(eventTypeDto);
     }
 
     @DeleteMapping("/{id}")
@@ -133,7 +137,7 @@ public class EventTypeAdminController {
             )
     })
     public ResponseEntity<Page<EventTypeDto>> getAll(Pageable pageable) {
-        Page<EventType> page = eventTypeAdminService.findAll(pageable);
-        return ResponseEntity.ok(page.map(eventTypeMapper::eventTypeToEventTypeDto));
+        Page<EventTypeSummary> page = eventTypeAdminService.findAll(pageable);
+        return ResponseEntity.ok(page.map(applicationModelMapper::toEventTypeDto));
     }
 }

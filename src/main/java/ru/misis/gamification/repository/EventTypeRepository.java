@@ -18,7 +18,7 @@ public interface EventTypeRepository extends JpaRepository<EventType, UUID> {
     /**
      * Получить тип события из LMS по его коду
      *
-     * @param typeCode Уникальный код типа события
+     * @param typeCode Уникальный код типа события из LMS
      * @return Тип события из LMS
      */
     Optional<EventType> findByTypeCodeAndActiveTrue(String typeCode);
@@ -26,7 +26,7 @@ public interface EventTypeRepository extends JpaRepository<EventType, UUID> {
     /**
      * Проверить существование типа события из LMS по его коду
      *
-     * @param typeCode Уникальный код типа события
+     * @param typeCode Уникальный код типа события из LMS
      * @return Да / Нет
      */
     boolean existsByTypeCode(String typeCode);

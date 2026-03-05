@@ -7,10 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import ru.misis.gamification.dto.analytics.LeaderboardEntryDto;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
+import ru.misis.gamification.model.LeaderboardEntryView;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -42,22 +42,40 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
      * @param pageable   Параметры пагинации и сортировки
      * @return Страница {@link UserCourseEnrollment} с загруженными пользователями
      */
+//    @Query("""
+//                SELECT new ru.misis.gamification.dto.analytics.LeaderboardEntryDto(
+//                    u.uuid,
+//                    u.userId,
+//                    uce.totalPointsInCourse,
+//                    u.level,
+//                    ROW_NUMBER() OVER (ORDER BY uce.totalPointsInCourse DESC)
+//                )
+//                FROM UserCourseEnrollment uce
+//                JOIN uce.user u
+//                WHERE (:courseUuid IS NOT NULL AND uce.course.uuid = :courseUuid)
+//                  AND (:groupUuid IS NULL OR uce.group.uuid = :groupUuid)
+//            """)
+//    Page<LeaderboardEntryDto> findLeaderboardByCourseAndGroup(
+//            @Param("courseUuid") @Nullable UUID courseUuid,
+//            @Param("groupUuid") @Nullable UUID groupUuid,
+//            Pageable pageable
+//    );
     @Query("""
-                SELECT new ru.misis.gamification.dto.analytics.LeaderboardEntryDto(
-                    u.uuid,
-                    u.userId,
-                    uce.totalPointsInCourse,
-                    u.level,
-                    ROW_NUMBER() OVER (ORDER BY uce.totalPointsInCourse DESC)
-                )
-                FROM UserCourseEnrollment uce
-                JOIN uce.user u
-                WHERE (:courseUuid IS NOT NULL AND uce.course.uuid = :courseUuid)
-                  AND (:groupUuid IS NULL OR uce.group.uuid = :groupUuid)
+            SELECT new ru.misis.gamification.application.model.LeaderboardEntryView(
+                u.uuid,
+                u.userId,
+                uce.totalPointsInCourse,
+                u.level,
+                ROW_NUMBER() OVER (ORDER BY uce.totalPointsInCourse DESC)
+            )
+            FROM UserCourseEnrollment uce
+            JOIN uce.user u
+            WHERE (:courseUuid IS NOT NULL AND uce.course.uuid = :courseUuid)
+              AND (:groupUuid IS NULL OR uce.group.uuid = :groupUuid)
             """)
-    Page<LeaderboardEntryDto> findLeaderboardByCourseAndGroup(
-            @Param("courseUuid") @Nullable UUID courseUuid,
-            @Param("groupUuid") @Nullable UUID groupUuid,
+    Page<LeaderboardEntryView> findLeaderboardByCourseAndGroup(
+            @Param("courseUuid") UUID courseUuid,
+            @Param("groupUuid") UUID groupUuid,
             Pageable pageable
     );
 
