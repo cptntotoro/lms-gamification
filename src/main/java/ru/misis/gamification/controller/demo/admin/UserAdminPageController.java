@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.exception.UserNotFoundException;
-import ru.misis.gamification.service.progress.UserProgressService;
+import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.model.UserAdminView;
+import ru.misis.gamification.service.application.user.UserAdminApplicationService;
 
 @Tag(name = "Admin - Пользователи (страницы)", description = "HTML-страницы админ-панели")
 @Controller
@@ -26,7 +28,12 @@ public class UserAdminPageController {
     /**
      * Сервис подготовки данных прогресса пользователя для виджета и админ-панели
      */
-    private final UserProgressService userProgressService;
+    private final UserAdminApplicationService userProgressService;
+
+    /**
+     * Маппер моделей в DTO
+     */
+    private final ApplicationModelMapper applicationModelMapper;
 
     @GetMapping
     @Operation(summary = "Административная панель", description = "Отображает админ-панель (требуется авторизация)")
@@ -51,9 +58,10 @@ public class UserAdminPageController {
         log.debug("Админ открыл профиль пользователя: userId={}", userId);
 
         try {
-            UserAdminDto user = userProgressService.getAdminProgress(userId);
-            model.addAttribute("user", user);
-            model.addAttribute("nextLevel", user.getLevel() + 1);
+            UserAdminView userAdminView = userProgressService.findByUserId(userId);
+            UserAdminDto userAdminDto = applicationModelMapper.toUserAdminDto(userAdminView);
+            model.addAttribute("user", userAdminDto);
+            model.addAttribute("nextLevel", userAdminDto.getLevel() + 1);
             return "admin/user-profile";
         } catch (UserNotFoundException e) {
             log.warn("Пользователь не найден: userId={}", userId, e);
@@ -61,11 +69,5 @@ public class UserAdminPageController {
             model.addAttribute("user", null);
             return "admin/user-profile";
         }
-//        catch (Exception e) {
-//            log.error("Ошибка при загрузке профиля userId={}", userId, e);
-//            model.addAttribute("error", "Произошла ошибка при загрузке профиля");
-//            model.addAttribute("user", null);
-//            return "admin/user-profile";
-//        }
     }
 }

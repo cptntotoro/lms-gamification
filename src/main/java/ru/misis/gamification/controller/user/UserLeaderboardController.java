@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboard;
-import ru.misis.gamification.service.analytics.AnalyticsService;
+import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboardDto;
+import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.model.UserCourseGroupLeaderboardView;
+import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicationService;
 
 /**
  * REST-контроллер для получения персонализированного лидерборда студента.
@@ -39,7 +41,12 @@ public class UserLeaderboardController {
     /**
      * Сервис аналитики и отчётов по геймификации
      */
-    private final AnalyticsService analyticsService;
+    private final LeaderboardApplicationService leaderboardService;
+
+    /**
+     * Маппер моделей в DTO
+     */
+    private final ApplicationModelMapper applicationModelMapper;
 
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 100;
@@ -52,10 +59,10 @@ public class UserLeaderboardController {
     @ApiResponses(
             @ApiResponse(responseCode = "200", description = "Успешно получен лидерборд",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UserCourseGroupLeaderboard.class)))
+                            schema = @Schema(implementation = UserCourseGroupLeaderboardDto.class)))
     )
     @GetMapping("/course/{courseId}/groups/{groupId}/user/{userId}")
-    public ResponseEntity<UserCourseGroupLeaderboard> getCourseLeaderboard(
+    public ResponseEntity<UserCourseGroupLeaderboardDto> getCourseLeaderboard(
             @PathVariable @NotBlank(message = "{course.id.required}")
             @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101") String courseId,
 
@@ -77,11 +84,11 @@ public class UserLeaderboardController {
         log.debug("Студенческий лидерборд курса: userId={}, courseId={}, page={}, size={}",
                 userId, courseId, page, size);
 
-        UserCourseGroupLeaderboard leaderboard = analyticsService.getCourseLeaderboardForUser(
-                courseId, groupId, page, size, userId
-        );
+        UserCourseGroupLeaderboardView leaderboardForUser = leaderboardService.getCourseLeaderboardForUser(
+                courseId, groupId, page, size, userId);
+        UserCourseGroupLeaderboardDto lb = applicationModelMapper.toUserCourseGroupLeaderboardDto(leaderboardForUser);
 
-        return ResponseEntity.ok(leaderboard);
+        return ResponseEntity.ok(lb);
     }
 
     @Operation(
@@ -91,10 +98,10 @@ public class UserLeaderboardController {
     @ApiResponses(
             @ApiResponse(responseCode = "200", description = "Успешно получен лидерборд",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UserCourseGroupLeaderboard.class)))
+                            schema = @Schema(implementation = UserCourseGroupLeaderboardDto.class)))
     )
     @GetMapping("/course/{courseId}/user/{userId}")
-    public ResponseEntity<UserCourseGroupLeaderboard> getLeaderboardByCourse(
+    public ResponseEntity<UserCourseGroupLeaderboardDto> getLeaderboardByCourse(
             @PathVariable @NotBlank(message = "{course.id.required}")
             @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101") String courseId,
 
@@ -113,9 +120,10 @@ public class UserLeaderboardController {
         log.debug("Запрос лидерборда (по курсу): userId={}, courseId={}, page={}, size={}",
                 userId, courseId, page, size);
 
-        UserCourseGroupLeaderboard leaderboard = analyticsService.getCourseLeaderboardForUser(
+        UserCourseGroupLeaderboardView leaderboardForUser = leaderboardService.getCourseLeaderboardForUser(
                 courseId, null, page, size, userId);
+        UserCourseGroupLeaderboardDto lb = applicationModelMapper.toUserCourseGroupLeaderboardDto(leaderboardForUser);
 
-        return ResponseEntity.ok(leaderboard);
+        return ResponseEntity.ok(lb);
     }
 }

@@ -9,6 +9,7 @@ import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.exception.GroupNotFoundException;
 import ru.misis.gamification.repository.GroupRepository;
+import ru.misis.gamification.service.simple.group.GroupServiceImpl;
 
 import java.util.Optional;
 import java.util.UUID;

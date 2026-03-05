@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboard;
-import ru.misis.gamification.service.analytics.AnalyticsService;
+import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboardDto;
+import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.model.UserCourseGroupLeaderboardView;
+import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicationService;
 
 @Tag(name = "Web Pages", description = "Простые HTML-страницы приложения")
 @Controller
@@ -29,15 +31,16 @@ public class UserLeaderboardPageController {
     /**
      * Сервис аналитики и отчётов по геймификации
      */
-    private final AnalyticsService analyticsService;
+    private final LeaderboardApplicationService leaderboardService;
+
+    /**
+     * Маппер моделей в DTO
+     */
+    private final ApplicationModelMapper applicationModelMapper;
 
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 100;
 
-    /**
-     * Лидерборд по курсу для текущего пользователя
-     * Возвращает топ-N + обязательно место и очки текущего студента
-     */
     @Operation(summary = "Лидерборд по курсу для текущего студента",
             description = "Возвращает топ-N студентов курса + место и очки текущего пользователя")
     @GetMapping("/course/{courseId}/groups/{groupId}/user/{userId}")
@@ -62,8 +65,10 @@ public class UserLeaderboardPageController {
 
             Model model
     ) {
-        UserCourseGroupLeaderboard lb = analyticsService.getCourseLeaderboardForUser(
+        UserCourseGroupLeaderboardView leaderboardForUser = leaderboardService.getCourseLeaderboardForUser(
                 courseId, groupId, page, size, userId);
+
+        UserCourseGroupLeaderboardDto lb = applicationModelMapper.toUserCourseGroupLeaderboardDto(leaderboardForUser);
 
         model.addAttribute("leaderboard", lb);
         model.addAttribute("courseId", courseId);
@@ -91,8 +96,10 @@ public class UserLeaderboardPageController {
 
             Model model) {
 
-        UserCourseGroupLeaderboard lb = analyticsService.getCourseLeaderboardForUser(
+        UserCourseGroupLeaderboardView leaderboardForUser = leaderboardService.getCourseLeaderboardForUser(
                 courseId, null, page, size, userId);
+
+        UserCourseGroupLeaderboardDto lb = applicationModelMapper.toUserCourseGroupLeaderboardDto(leaderboardForUser);
 
         model.addAttribute("leaderboard", lb);
         model.addAttribute("courseId", courseId);

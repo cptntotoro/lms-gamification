@@ -11,11 +11,10 @@ import ru.misis.gamification.service.point.result.AwardResult;
 import ru.misis.gamification.service.point.result.AwardStatus;
 import ru.misis.gamification.service.progress.calculator.ProgressCalculator;
 import ru.misis.gamification.service.progress.result.ProgressMetrics;
-import ru.misis.gamification.service.user.UserService;
+import ru.misis.gamification.service.simple.user.UserService;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
-import ru.misis.gamification.service.event.processor.LmsEventProcessor;
+import ru.misis.gamification.service.application.awarding.LmsEventProcessorApplicationService;
 
 /**
  * Контроллер для приема событий от LMS
@@ -31,7 +31,7 @@ public class LmsController {
     /**
      * Сервис обработки событий от LMS
      */
-    private final LmsEventProcessor lmsEventProcessor;
+    private final LmsEventProcessorApplicationService lmsEventProcessor;
 
     @PostMapping
     @Operation(

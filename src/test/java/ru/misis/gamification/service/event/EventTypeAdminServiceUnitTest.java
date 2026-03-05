@@ -16,6 +16,7 @@ import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.exception.DuplicateEventTypeException;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
 import ru.misis.gamification.repository.EventTypeRepository;
+import ru.misis.gamification.service.simple.eventtype.EventTypeAdminServiceImpl;
 
 import java.util.List;
 import java.util.Optional;

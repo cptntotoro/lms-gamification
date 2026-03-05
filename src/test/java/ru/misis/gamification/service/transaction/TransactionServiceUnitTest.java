@@ -17,7 +17,8 @@ import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.DuplicateEventException;
 import ru.misis.gamification.repository.TransactionRepository;
-import ru.misis.gamification.service.user.UserService;
+import ru.misis.gamification.service.simple.transaction.TransactionServiceImpl;
+import ru.misis.gamification.service.simple.user.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

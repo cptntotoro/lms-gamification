@@ -15,16 +15,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import ru.misis.gamification.dto.analytics.GroupLeaderboardPageDto;
 import ru.misis.gamification.dto.analytics.LeaderboardEntryDto;
-import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboard;
+import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboardDto;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
 import ru.misis.gamification.exception.CourseNotFoundException;
 import ru.misis.gamification.exception.GroupNotFoundException;
-import ru.misis.gamification.service.course.CourseService;
-import ru.misis.gamification.service.course.UserCourseEnrollmentService;
-import ru.misis.gamification.service.group.GroupService;
-import ru.misis.gamification.service.user.UserService;
+import ru.misis.gamification.service.simple.course.CourseService;
+import ru.misis.gamification.service.simple.group.GroupService;
+import ru.misis.gamification.service.simple.user.UserService;
 
 import java.util.List;
 import java.util.UUID;
@@ -199,7 +198,7 @@ class AnalyticsServiceUnitTest {
         when(enrollmentService.findLeaderboardByCourseAndGroup(eq(COURSE_UUID), eq(null), any(Pageable.class)))
                 .thenReturn(topPage);
 
-        UserCourseGroupLeaderboard result = analyticsService.getCourseLeaderboardForUser(
+        UserCourseGroupLeaderboardDto result = analyticsService.getCourseLeaderboardForUser(
                 COURSE_ID, null, 0, 10, USER_ID);
 
         assertThat(result.getTopEntries()).hasSize(1);
@@ -225,7 +224,7 @@ class AnalyticsServiceUnitTest {
         when(enrollmentService.findLeaderboardByCourseAndGroup(eq(COURSE_UUID), eq(null), any(Pageable.class)))
                 .thenReturn(topPage);
 
-        UserCourseGroupLeaderboard result = analyticsService.getCourseLeaderboardForUser(
+        UserCourseGroupLeaderboardDto result = analyticsService.getCourseLeaderboardForUser(
                 COURSE_ID, null, 0, 10, USER_ID);
 
         assertThat(result.getCurrentUserEntry()).isNull();
@@ -262,7 +261,7 @@ class AnalyticsServiceUnitTest {
         when(enrollmentService.findLeaderboardByCourseAndGroup(eq(COURSE_UUID), eq(GROUP_UUID), any(Pageable.class)))
                 .thenReturn(topPage);
 
-        UserCourseGroupLeaderboard result = analyticsService.getCourseLeaderboardForUser(
+        UserCourseGroupLeaderboardDto result = analyticsService.getCourseLeaderboardForUser(
                 COURSE_ID, GROUP_ID, 0, 10, USER_ID);
 
         assertThat(result.getCurrentUserRank()).isEqualTo(5L);

@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
 import ru.misis.gamification.repository.EventTypeRepository;
-import ru.misis.gamification.service.user.UserService;
+import ru.misis.gamification.service.simple.user.UserService;
 
 import java.time.LocalDate;
 import java.util.Optional;

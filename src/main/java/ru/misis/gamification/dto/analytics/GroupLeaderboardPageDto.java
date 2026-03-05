@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * Страница лидерборда группы по курсу
+ * DTO страницы лидерборда группы по курсу
  */
 @Data
 @Builder

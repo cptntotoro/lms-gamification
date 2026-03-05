@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.exception.CourseNotFoundException;
 import ru.misis.gamification.repository.CourseRepository;
+import ru.misis.gamification.service.simple.course.CourseServiceImpl;
 
 import java.util.Optional;
 import java.util.UUID;

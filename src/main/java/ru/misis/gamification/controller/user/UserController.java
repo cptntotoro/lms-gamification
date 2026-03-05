@@ -17,8 +17,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.user.response.UserDto;
 import ru.misis.gamification.dto.user.response.UserStatisticsDto;
-import ru.misis.gamification.service.progress.UserProgressService;
-import ru.misis.gamification.service.user.UserStatisticsService;
+import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.model.UserProgressView;
+import ru.misis.gamification.model.UserStatisticsView;
+import ru.misis.gamification.service.application.user.UserProgressApplicationService;
+import ru.misis.gamification.service.application.user.UserStatisticsApplicationService;
 
 /**
  * Контроллер для получения данных пользователями (виджеты).
@@ -29,12 +32,13 @@ import ru.misis.gamification.service.user.UserStatisticsService;
 @Tag(name = "Widget API", description = "API для виджетов и фронтенда пользователей")
 public class UserController {
 
-    /**
-     * Сервис подготовки данных прогресса пользователя для виджета
-     */
-    private final UserProgressService userProgressService;
+    private final UserProgressApplicationService progressService;
+    private final UserStatisticsApplicationService statisticsService;
 
-    private final UserStatisticsService userStatisticsService;
+    /**
+     * Маппер моделей в DTO
+     */
+    private final ApplicationModelMapper applicationModelMapper;
 
     /**
      * Получить прогресс пользователя для виджета
@@ -51,7 +55,10 @@ public class UserController {
     })
     public ResponseEntity<UserDto> getUserProgress(@Parameter(description = "Внешний ID пользователя из LMS",
             required = true, example = "alex123") @PathVariable String userId) {
-        return ResponseEntity.ok(userProgressService.getProgress(userId));
+
+        UserProgressView view = progressService.getProgress(userId);
+        UserDto userDto = applicationModelMapper.toUserDto(view);
+        return ResponseEntity.ok(userDto);
     }
 
     @GetMapping("/users/{userId}")
@@ -87,6 +94,9 @@ public class UserController {
             @Parameter(description = "Внешний идентификатор группы/потока", example = "G-14")
             String groupId) {
 
-        return ResponseEntity.ok(userStatisticsService.getUserStatisticsGlobalAndByCourseAndGroup(userId, courseId, groupId));
+        UserStatisticsView view = statisticsService.getUserStatistics(userId, courseId, groupId);
+        UserStatisticsDto userStatisticsDto = applicationModelMapper.toUserStatisticsDto(view);
+
+        return ResponseEntity.ok(userStatisticsDto);
     }
 }
