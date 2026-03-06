@@ -10,6 +10,7 @@ import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
+import ru.misis.gamification.exception.UserNotEnrolledInCourseException;
 import ru.misis.gamification.model.CourseEnrollmentSummary;
 import ru.misis.gamification.service.simple.course.CourseService;
 import ru.misis.gamification.service.simple.enrollment.EnrollmentService;
@@ -105,7 +106,7 @@ public class EnrollmentApplicationServiceImpl implements EnrollmentApplicationSe
         Course course = courseService.findByCourseId(courseId);
 
         if (!enrollmentService.isUserEnrolledInCourse(user, course)) {
-            return null; // TODO: или бросить исключение — по вашему выбору
+            throw new UserNotEnrolledInCourseException(userId, courseId);
         }
 
         UserCourseEnrollment enrollment = enrollmentService.findByUserAndCourse(user, course);

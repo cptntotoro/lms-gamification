@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.exception.UserNotFoundException;
-import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.mapper.UserMapper;
 import ru.misis.gamification.model.UserAdminView;
 import ru.misis.gamification.service.application.user.UserAdminApplicationService;
 
@@ -26,14 +26,14 @@ import ru.misis.gamification.service.application.user.UserAdminApplicationServic
 public class UserAdminPageController {
 
     /**
-     * Сервис подготовки данных прогресса пользователя для виджета и админ-панели
+     * Фасадный сервис управления пользователями для администратора
      */
     private final UserAdminApplicationService userProgressService;
 
     /**
-     * Маппер моделей в DTO
+     * Маппер пользователей
      */
-    private final ApplicationModelMapper applicationModelMapper;
+    private final UserMapper userMapper;
 
     @GetMapping
     @Operation(summary = "Административная панель", description = "Отображает админ-панель (требуется авторизация)")
@@ -59,7 +59,7 @@ public class UserAdminPageController {
 
         try {
             UserAdminView userAdminView = userProgressService.findByUserId(userId);
-            UserAdminDto userAdminDto = applicationModelMapper.toUserAdminDto(userAdminView);
+            UserAdminDto userAdminDto = userMapper.toUserAdminDto(userAdminView);
             model.addAttribute("user", userAdminDto);
             model.addAttribute("nextLevel", userAdminDto.getLevel() + 1);
             return "admin/user-profile";

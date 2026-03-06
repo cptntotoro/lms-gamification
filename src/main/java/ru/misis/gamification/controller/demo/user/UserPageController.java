@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import ru.misis.gamification.dto.user.response.UserDto;
-import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.mapper.UserMapper;
 import ru.misis.gamification.model.UserProgressView;
 import ru.misis.gamification.service.application.user.UserProgressApplicationService;
 
@@ -21,14 +21,14 @@ import ru.misis.gamification.service.application.user.UserProgressApplicationSer
 public class UserPageController {
 
     /**
-     * Сервис подготовки данных прогресса пользователя для виджета
+     * Фасадный сервис управления прогрессом очков и уровня пользователей
      */
     private final UserProgressApplicationService userProgressService;
 
     /**
-     * Маппер моделей в DTO
+     * Маппер пользователей
      */
-    private final ApplicationModelMapper applicationModelMapper;
+    private final UserMapper userMapper;
 
     @Operation(
             summary = "Главная страница",
@@ -41,7 +41,7 @@ public class UserPageController {
 
         try {
             UserProgressView userProgressView = userProgressService.getProgress(userId);
-            UserDto userDto = applicationModelMapper.toUserDto(userProgressView);
+            UserDto userDto = userMapper.toUserDto(userProgressView);
 
             model.addAttribute("user", userDto);
             return "widget";

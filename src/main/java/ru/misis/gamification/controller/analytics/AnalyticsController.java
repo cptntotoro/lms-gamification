@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.analytics.GroupLeaderboardPageDto;
-import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.mapper.LeaderboardMapper;
 import ru.misis.gamification.model.LeaderboardPageView;
 import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicationService;
 
@@ -38,12 +38,15 @@ import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicat
 @Slf4j
 public class AnalyticsController {
 
+    /**
+     * Фасадный сервис управления лидербордом
+     */
     private final LeaderboardApplicationService leaderboardApplicationService;
 
     /**
-     * Маппер моделей в DTO
+     * Маппер лидербордов
      */
-    private final ApplicationModelMapper applicationModelMapper;
+    private final LeaderboardMapper leaderboardMapper;
 
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 100;
@@ -79,7 +82,7 @@ public class AnalyticsController {
                 courseId, groupId, page, size);
 
         LeaderboardPageView view = leaderboardApplicationService.getGroupLeaderboard(courseId, groupId, page, size);
-        GroupLeaderboardPageDto dto = applicationModelMapper.toGroupLeaderboardPageDto(view);
+        GroupLeaderboardPageDto dto = leaderboardMapper.toGroupLeaderboardPageDto(view);
         return ResponseEntity.ok(dto);
     }
 
@@ -110,7 +113,7 @@ public class AnalyticsController {
         log.debug("Запрос общего лидерборда курса: courseId={}, page={}, size={}", courseId, page, size);
 
         LeaderboardPageView view = leaderboardApplicationService.getGroupLeaderboard(courseId, null, page, size);
-        GroupLeaderboardPageDto dto = applicationModelMapper.toGroupLeaderboardPageDto(view);
+        GroupLeaderboardPageDto dto = leaderboardMapper.toGroupLeaderboardPageDto(view);
         return ResponseEntity.ok(dto);
     }
 }

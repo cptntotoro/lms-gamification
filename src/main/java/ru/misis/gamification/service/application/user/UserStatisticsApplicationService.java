@@ -2,6 +2,9 @@ package ru.misis.gamification.service.application.user;
 
 import ru.misis.gamification.model.UserStatisticsView;
 
+/**
+ * Фасадный сервис управления статистикой пользователей
+ */
 public interface UserStatisticsApplicationService {
 
     /**

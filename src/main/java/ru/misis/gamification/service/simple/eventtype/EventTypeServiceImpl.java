@@ -26,7 +26,7 @@ public class EventTypeServiceImpl implements EventTypeService {
     /**
      * Сервис управления пользователями
      */
-    private final UserService userSimpleService;
+    private final UserService userService;
 
     @Override
     public EventType getActiveByCode(String typeCode) {
@@ -39,14 +39,14 @@ public class EventTypeServiceImpl implements EventTypeService {
         EventType type = getActiveByCode(typeCode);
         if (type.getMaxDailyPoints() == null) return true;
 
-        UUID userUuid = userSimpleService.getUserUuidByExternalId(userId);
+        UUID userUuid = userService.getUserUuidByExternalId(userId);
         long currentPoints = repository.calculateDailyPointsSumForUserAndType(userUuid, type.getUuid(), date);
         return currentPoints + pointsToAward <= type.getMaxDailyPoints();
     }
 
     @Override
     public long getDailyPointsSum(String userId, String typeCode, LocalDate date) {
-        UUID userUuid = userSimpleService.getUserUuidByExternalId(userId);
+        UUID userUuid = userService.getUserUuidByExternalId(userId);
         EventType type = getActiveByCode(typeCode);
         return repository.calculateDailyPointsSumForUserAndType(userUuid, type.getUuid(), date);
     }

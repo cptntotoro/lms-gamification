@@ -1,0 +1,40 @@
+package ru.misis.gamification.mapper;
+
+import org.mapstruct.Mapper;
+import ru.misis.gamification.dto.admin.response.UserAdminDto;
+import ru.misis.gamification.dto.user.response.UserDto;
+import ru.misis.gamification.dto.user.response.UserStatisticsDto;
+import ru.misis.gamification.model.UserAdminView;
+import ru.misis.gamification.model.UserProgressView;
+import ru.misis.gamification.model.UserStatisticsView;
+
+/**
+ * Маппер пользователей
+ */
+@Mapper(componentModel = "spring")
+public interface UserMapper {
+
+    /**
+     * Смаппить модель прогресса пользователя в DTO пользователя
+     *
+     * @param view Модель прогресса пользователя
+     * @return DTO пользователя
+     */
+    UserDto toUserDto(UserProgressView view);
+
+    /**
+     * Смаппить модель пользователя для админ-панели в соответствующий DTO
+     *
+     * @param view Модель пользователя для админ-панели
+     * @return DTO пользователя для администратора
+     */
+    UserAdminDto toUserAdminDto(UserAdminView view);
+
+    /**
+     * Смаппить модель статистики пользователя по курсу/группе в DTO
+     *
+     * @param view Модель статистики пользователя
+     * @return DTO пользователя в контексте курса и (опционально) группы
+     */
+    UserStatisticsDto toUserStatisticsDto(UserStatisticsView view);
+}

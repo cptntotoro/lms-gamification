@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
+import ru.misis.gamification.exception.UserNotEnrolledInCourseException;
 import ru.misis.gamification.model.UserProgressView;
 import ru.misis.gamification.model.UserStatisticsView;
 import ru.misis.gamification.service.simple.course.CourseService;
@@ -24,29 +25,48 @@ import java.util.UUID;
 @Validated
 public class UserStatisticsApplicationServiceImpl implements UserStatisticsApplicationService {
 
-    private final UserService userSimpleService;
-    private final CourseService courseSimpleService;
-    private final GroupService groupSimpleService;
-    private final EnrollmentService enrollmentSimpleService;
+    /**
+     * Сервис управления пользователями
+     */
+    private final UserService userService;
+
+    /**
+     * Сервис управления курсами
+     */
+    private final CourseService courseService;
+
+    /**
+     * Сервис управления группами/потоками
+     */
+    private final GroupService groupService;
+
+    /**
+     * Сервис зачисления пользователей на курс и в группу (опционально)
+     */
+    private final EnrollmentService enrollmentService;
+
+    /**
+     * Фасадный сервис управления прогрессом очков и уровня пользователей
+     */
     private final UserProgressApplicationService progressApplicationService;
 
     @Override
     public UserStatisticsView getUserStatistics(String courseId, String groupId, String userId) {
-        User user = userSimpleService.getUserByExternalId(userId);
-        Course course = courseSimpleService.findByCourseId(courseId);
+        User user = userService.getUserByExternalId(userId);
+        Course course = courseService.findByCourseId(courseId);
 
         UUID courseUuid = course.getUuid();
-        UUID groupUuid = groupId != null ? groupSimpleService.getGroupUuidByExternalIdAndCourseId(groupId, courseId) : null;
+        UUID groupUuid = groupId != null ? groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId) : null;
 
-        if (!enrollmentSimpleService.isUserEnrolledInCourse(user, course)) {
-            throw new RuntimeException("Пользователь не зачислен на курс"); // или ваше исключение
+        if (!enrollmentService.isUserEnrolledInCourse(user, course)) {
+            throw new UserNotEnrolledInCourseException(userId, courseId);
         }
 
-        UserCourseEnrollment enrollment = enrollmentSimpleService.findByUserAndCourse(user, course);
+        UserCourseEnrollment enrollment = enrollmentService.findByUserAndCourse(user, course);
 
-        Long rankInCourse = enrollmentSimpleService.getRankByPointsInCourse(courseUuid, null, user.getUuid());
+        Long rankInCourse = enrollmentService.getRankByPointsInCourse(courseUuid, null, user.getUuid());
         Long rankInGroup = groupUuid != null ?
-                enrollmentSimpleService.getRankByPointsInCourse(courseUuid, groupUuid, user.getUuid()) : null;
+                enrollmentService.getRankByPointsInCourse(courseUuid, groupUuid, user.getUuid()) : null;
 
         UserProgressView progress = progressApplicationService.getProgress(userId);
 

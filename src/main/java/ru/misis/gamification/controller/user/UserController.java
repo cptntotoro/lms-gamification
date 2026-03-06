@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.user.response.UserDto;
 import ru.misis.gamification.dto.user.response.UserStatisticsDto;
-import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.mapper.UserMapper;
 import ru.misis.gamification.model.UserProgressView;
 import ru.misis.gamification.model.UserStatisticsView;
 import ru.misis.gamification.service.application.user.UserProgressApplicationService;
@@ -32,13 +32,20 @@ import ru.misis.gamification.service.application.user.UserStatisticsApplicationS
 @Tag(name = "Widget API", description = "API для виджетов и фронтенда пользователей")
 public class UserController {
 
+    /**
+     * Фасадный сервис управления прогрессом очков и уровня пользователей
+     */
     private final UserProgressApplicationService progressService;
+
+    /**
+     * Фасадный сервис управления статистикой пользователей
+     */
     private final UserStatisticsApplicationService statisticsService;
 
     /**
-     * Маппер моделей в DTO
+     * Маппер пользователей
      */
-    private final ApplicationModelMapper applicationModelMapper;
+    private final UserMapper userMapper;
 
     /**
      * Получить прогресс пользователя для виджета
@@ -57,7 +64,7 @@ public class UserController {
             required = true, example = "alex123") @PathVariable String userId) {
 
         UserProgressView view = progressService.getProgress(userId);
-        UserDto userDto = applicationModelMapper.toUserDto(view);
+        UserDto userDto = userMapper.toUserDto(view);
         return ResponseEntity.ok(userDto);
     }
 
@@ -95,7 +102,7 @@ public class UserController {
             String groupId) {
 
         UserStatisticsView view = statisticsService.getUserStatistics(userId, courseId, groupId);
-        UserStatisticsDto userStatisticsDto = applicationModelMapper.toUserStatisticsDto(view);
+        UserStatisticsDto userStatisticsDto = userMapper.toUserStatisticsDto(view);
 
         return ResponseEntity.ok(userStatisticsDto);
     }

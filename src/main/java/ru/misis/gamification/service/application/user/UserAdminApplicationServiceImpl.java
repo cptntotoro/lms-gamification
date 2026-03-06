@@ -18,9 +18,15 @@ import ru.misis.gamification.service.simple.user.UserService;
 @Validated
 public class UserAdminApplicationServiceImpl implements UserAdminApplicationService {
 
+    /**
+     * Сервис управления пользователями
+     */
     private final UserService userService;
-    private final UserProgressApplicationService progressApplicationService;
 
+    /**
+     * Фасадный сервис управления прогрессом очков и уровня пользователей
+     */
+    private final UserProgressApplicationService progressApplicationService;
 
     @Override
     public UserAdminView findByUserId(String userId) {

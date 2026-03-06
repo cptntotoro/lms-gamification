@@ -17,7 +17,7 @@ import java.util.UUID;
 public class LeaderboardEntryDto {
 
     /**
-     * Внутренний идентификатор пользователя
+     * UUID пользователя
      */
     @Schema(description = "Внутренний UUID пользователя")
     private UUID userUuid;
@@ -53,6 +53,9 @@ public class LeaderboardEntryDto {
      */
     @Schema(description = "Флаг текущего пользователя (true если запись принадлежит запрашивающему)")
     private Boolean isCurrentUser;
+
+    public LeaderboardEntryDto() {
+    }
 
     public LeaderboardEntryDto(UUID userUuid, String userId, Integer pointsInCourse, Integer globalLevel, Long rank) {
         this.userUuid = userUuid;

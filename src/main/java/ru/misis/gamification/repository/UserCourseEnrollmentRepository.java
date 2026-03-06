@@ -61,7 +61,7 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
 //            Pageable pageable
 //    );
     @Query("""
-            SELECT new ru.misis.gamification.application.model.LeaderboardEntryView(
+            SELECT new ru.misis.gamification.model.LeaderboardEntryView(
                 u.uuid,
                 u.userId,
                 uce.totalPointsInCourse,

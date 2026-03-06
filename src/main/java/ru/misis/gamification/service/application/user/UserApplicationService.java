@@ -2,6 +2,9 @@ package ru.misis.gamification.service.application.user;
 
 import ru.misis.gamification.model.UserSummary;
 
+/**
+ * Фасадный сервис управления пользователями
+ */
 public interface UserApplicationService {
 
     /**

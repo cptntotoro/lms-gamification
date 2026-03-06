@@ -16,6 +16,9 @@ import ru.misis.gamification.service.simple.user.UserService;
 @Validated
 public class UserApplicationServiceImpl implements UserApplicationService {
 
+    /**
+     * Сервис управления пользователями
+     */
     private final UserService userService;
 
     @Override

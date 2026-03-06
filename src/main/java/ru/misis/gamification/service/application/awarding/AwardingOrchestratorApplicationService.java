@@ -2,6 +2,9 @@ package ru.misis.gamification.service.application.awarding;
 
 import ru.misis.gamification.model.AwardResultView;
 
+/**
+ * Сервис-ркестратор начисления баллов для события из LMS
+ */
 public interface AwardingOrchestratorApplicationService {
 
     /**

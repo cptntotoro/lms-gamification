@@ -13,6 +13,8 @@ import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
+import ru.misis.gamification.exception.CourseNotFoundException;
+import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.model.LeaderboardEntryView;
 import ru.misis.gamification.model.LeaderboardPageView;
 import ru.misis.gamification.model.UserCourseGroupLeaderboardView;
@@ -45,6 +47,10 @@ public class LeaderboardApplicationServiceImpl implements LeaderboardApplication
      * Сервис управления пользователями
      */
     private final UserService userService;
+
+    /**
+     * Сервис зачисления пользователей на курс и в группу (опционально)
+     */
     private final EnrollmentService enrollmentService;
 
     @Override
@@ -101,7 +107,7 @@ public class LeaderboardApplicationServiceImpl implements LeaderboardApplication
                         true
                 );
             }
-        } catch (Exception e) {
+        } catch (CourseNotFoundException | UserNotFoundException e) {
             log.debug("Пользователь или курс не найден: userId={}, courseId={}", currentUserId, courseId);
         }
 

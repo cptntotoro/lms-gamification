@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboardDto;
-import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.mapper.LeaderboardMapper;
 import ru.misis.gamification.model.UserCourseGroupLeaderboardView;
 import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicationService;
 
@@ -44,9 +44,9 @@ public class UserLeaderboardController {
     private final LeaderboardApplicationService leaderboardService;
 
     /**
-     * Маппер моделей в DTO
+     * Маппер лидербордов
      */
-    private final ApplicationModelMapper applicationModelMapper;
+    private final LeaderboardMapper applicationModelMapper;
 
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 100;

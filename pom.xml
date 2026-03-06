@@ -199,9 +199,11 @@
                     <excludes>
                         <exclude>**/controller/**</exclude>
                         <exclude>**/exception/**</exclude>
+                        <exclude>**/model/**</exclude>
                         <exclude>**/config/**</exclude>
                         <exclude>**/dto/**</exclude>
                         <exclude>**/entity/**</exclude>
+                        <exclude>**/GamificationApplication.class</exclude>
                     </excludes>
                 </configuration>
             </plugin>

@@ -4,30 +4,10 @@ import ru.misis.gamification.model.CourseEnrollmentSummary;
 
 import java.util.UUID;
 
+/**
+ * Фасадный сервис управления зачислениями пользователей на курсы и в группы
+ */
 public interface EnrollmentApplicationService {
-
-//    /**
-//     * Зачислить пользователя на курс (и группу, если указана)
-//     * Если курсы отключены — ничего не делает
-//     *
-//     * @param user     Пользователь
-//     * @param courseId Идентификатор курса из LMS
-//     * @param groupId  Идентификатор группы из LMS
-//     * @throws ConstraintViolationException если user == null
-//     */
-//    void enrollIfNeeded(@NotNull(message = "{user.required}") User user, String courseId, String groupId);
-//
-//    /**
-//     * Начислить очки пользователю по конкретному курсу
-//     *
-//     * @param user       Пользователь
-//     * @param courseUuid UUID курса
-//     * @param points     Количество очков
-//     * @throws ConstraintViolationException если user == null или courseUuid == null
-//     */
-//    void addPointsToCourse(@NotNull(message = "{user.required}") User user,
-//                           @NotNull(message = "{course.uuid.required}") UUID courseUuid,
-//                           int points);
 
     /**
      * Зачислить пользователя на курс (и группу, если указана).

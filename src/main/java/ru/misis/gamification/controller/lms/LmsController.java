@@ -29,7 +29,7 @@ import ru.misis.gamification.service.application.awarding.LmsEventProcessorAppli
 public class LmsController {
 
     /**
-     * Сервис обработки событий от LMS
+     * Фасандый сервис обработки событий из LMS
      */
     private final LmsEventProcessorApplicationService lmsEventProcessor;
 

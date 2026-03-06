@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboardDto;
-import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.mapper.LeaderboardMapper;
 import ru.misis.gamification.model.UserCourseGroupLeaderboardView;
 import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicationService;
 
@@ -34,9 +34,9 @@ public class UserLeaderboardPageController {
     private final LeaderboardApplicationService leaderboardService;
 
     /**
-     * Маппер моделей в DTO
+     * Маппер лидербордов
      */
-    private final ApplicationModelMapper applicationModelMapper;
+    private final LeaderboardMapper leaderboardMapper;
 
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 100;
@@ -68,7 +68,7 @@ public class UserLeaderboardPageController {
         UserCourseGroupLeaderboardView leaderboardForUser = leaderboardService.getCourseLeaderboardForUser(
                 courseId, groupId, page, size, userId);
 
-        UserCourseGroupLeaderboardDto lb = applicationModelMapper.toUserCourseGroupLeaderboardDto(leaderboardForUser);
+        UserCourseGroupLeaderboardDto lb = leaderboardMapper.toUserCourseGroupLeaderboardDto(leaderboardForUser);
 
         model.addAttribute("leaderboard", lb);
         model.addAttribute("courseId", courseId);
@@ -99,7 +99,7 @@ public class UserLeaderboardPageController {
         UserCourseGroupLeaderboardView leaderboardForUser = leaderboardService.getCourseLeaderboardForUser(
                 courseId, null, page, size, userId);
 
-        UserCourseGroupLeaderboardDto lb = applicationModelMapper.toUserCourseGroupLeaderboardDto(leaderboardForUser);
+        UserCourseGroupLeaderboardDto lb = leaderboardMapper.toUserCourseGroupLeaderboardDto(leaderboardForUser);
 
         model.addAttribute("leaderboard", lb);
         model.addAttribute("courseId", courseId);
