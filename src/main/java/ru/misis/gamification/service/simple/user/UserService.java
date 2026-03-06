@@ -1,8 +1,6 @@
 package ru.misis.gamification.service.simple.user;
 
 import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.misis.gamification.entity.User;
@@ -33,7 +31,7 @@ public interface UserService {
      * @return Пользователь (существующий или только что созданный)
      * @throws ConstraintViolationException если userId == null или пустая строка
      */
-    User createIfNotExists(@NotBlank(message = "{user.id.required}") String userId,
+    User createIfNotExists(String userId,
                            String courseId,
                            String groupId);
 
@@ -45,7 +43,7 @@ public interface UserService {
      * @throws UserNotFoundException        если пользователь не существует
      * @throws ConstraintViolationException если userId == null или пустая строка
      */
-    User get(@NotBlank(message = "{user.id.required}") String userId) throws UserNotFoundException;
+    User get(String userId) throws UserNotFoundException;
 
     /**
      * Обновить пользователя
@@ -55,7 +53,7 @@ public interface UserService {
      * @throws IllegalArgumentException     если у пользователя нет UUID
      * @throws ConstraintViolationException если user == null
      */
-    User update(@NotNull(message = "{user.required}") User user);
+    User update(User user);
 
     /**
      * Получить страницу всех пользователей с поддержкой пагинации и сортировки
@@ -64,7 +62,7 @@ public interface UserService {
      * @return Страница пользователей
      * @throws ConstraintViolationException если pageable == null
      */
-    Page<User> findAll(@NotNull(message = "{pageable.required}") Pageable pageable);
+    Page<User> findAll(Pageable pageable);
 
     /**
      * Получить UUID пользователя по идентификатору пользователя из LMS
@@ -74,7 +72,7 @@ public interface UserService {
      * @throws UserNotFoundException        если пользователь не найден
      * @throws ConstraintViolationException если userId == null или пустая строка
      */
-    UUID getUserUuidByExternalId(@NotBlank(message = "{user.id.required}") String userId);
+    UUID getUserUuidByExternalId(String userId);
 
     /**
      * Получить пользователя по идентификатору из LMS
@@ -84,7 +82,7 @@ public interface UserService {
      * @throws IllegalArgumentException если userId пустой или null
      * @throws UserNotFoundException    если пользователь не найден
      */
-    User getUserByExternalId(@NotBlank(message = "{user.id.required}") String userId) throws UserNotFoundException;
+    User getUserByExternalId(String userId) throws UserNotFoundException;
 
     /**
      * Получить пользователя по UUID
@@ -94,5 +92,5 @@ public interface UserService {
      * @throws UserNotFoundException                           если пользователь не найден
      * @throws jakarta.validation.ConstraintViolationException если userId == null или пустая строка
      */
-    User getByUuid(@NotNull(message = "{user.uuid.required}") UUID uuid) throws UserNotFoundException;
+    User getByUuid(UUID uuid) throws UserNotFoundException;
 }

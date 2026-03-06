@@ -4,6 +4,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.misis.gamification.model.TransactionSummary;
 
+/**
+ * Фасадный сервис управления историей транзакций
+ */
 public interface TransactionHistoryApplicationService {
 
     /**

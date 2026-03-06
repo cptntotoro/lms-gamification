@@ -1,14 +1,12 @@
 package ru.misis.gamification.service.simple.user;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.repository.UserRepository;
@@ -19,7 +17,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Validated
 public class UserServiceImpl implements UserService {
 
     /**
@@ -27,7 +24,16 @@ public class UserServiceImpl implements UserService {
      */
     private final UserRepository userRepository;
 
+    /**
+     * Фасадный сервис управления зачислениями пользователей на курсы и в группы
+     */
     private final EnrollmentApplicationService enrollmentApplicationService;
+
+    @Value("${gamification.user.default.initial-points:0}")
+    private int initialPoints;
+
+    @Value("${gamification.user.default.initial-level:1}")
+    private int initialLevel;
 
     @Override
     public User createIfNotExists(String userId) {
@@ -35,7 +41,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User createIfNotExists(@NotBlank(message = "{user.id.required}") String userId,
+    public User createIfNotExists(String userId,
                                   String courseId,
                                   String groupId) {
         log.debug("Проверка/создание пользователя: userId={}, course={}, group={}",
@@ -46,7 +52,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User get(@NotBlank(message = "{user.id.required}") String userId) throws UserNotFoundException {
+    public User get(String userId) throws UserNotFoundException {
         return userRepository.findByUserId(userId)
                 .orElseThrow(() -> {
                     log.warn("Пользователь не найден: userId={}", userId);
@@ -55,7 +61,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User update(@NotNull(message = "{user.required}") User user) {
+    public User update(User user) {
         if (user.getUuid() == null) {
             throw new IllegalArgumentException("Пользователь должен иметь uuid для обновления");
         }
@@ -68,7 +74,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<User> findAll(@NotNull(message = "{pageable.required}") Pageable pageable) {
+    public Page<User> findAll(Pageable pageable) {
         log.debug("Запрос списка всех пользователей: page={}, size={}, sort={}",
                 pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
@@ -76,19 +82,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UUID getUserUuidByExternalId(@NotBlank(message = "{user.id.required}") String userId) {
+    public UUID getUserUuidByExternalId(String userId) {
         return userRepository.findUuidByUserId(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
     }
 
     @Override
-    public User getUserByExternalId(@NotBlank(message = "{user.id.required}") String userId) throws UserNotFoundException {
+    public User getUserByExternalId(String userId) throws UserNotFoundException {
         return userRepository.findByUserId(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
     }
 
     @Override
-    public User getByUuid(@NotNull(message = "{user.uuid.required}") UUID uuid) throws UserNotFoundException {
+    public User getByUuid(UUID uuid) throws UserNotFoundException {
         return userRepository.findById(uuid)
                 .orElseThrow(() -> {
                     log.warn("Пользователь не найден: uuid={}", uuid);
@@ -99,8 +105,8 @@ public class UserServiceImpl implements UserService {
     private User createNewUser(String userId, String courseId, String groupId) {
         User newUser = User.builder()
                 .userId(userId)
-                .totalPoints(0)
-                .level(1)
+                .totalPoints(initialPoints)
+                .level(initialLevel)
                 .build();
 
         User savedUser = userRepository.save(newUser);

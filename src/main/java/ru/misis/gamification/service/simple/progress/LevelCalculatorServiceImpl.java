@@ -27,23 +27,37 @@ public class LevelCalculatorServiceImpl implements LevelCalculatorService {
     @Value("${gamification.features.leveling.formula.increment:200}")
     private int increment;
 
+    @Value("${gamification.features.leveling.formula.fallback-level-increment:1000}")
+    private long fallbackIncrement;
+
     @Override
     public int calculateLevel(int totalPoints) {
+        if (totalPoints <= 0) {
+            return 1;
+        }
+
         return switch (formula.toUpperCase()) {
             case "TRIANGULAR" -> calculateTriangular(totalPoints);
             case "QUADRATIC" -> calculateQuadratic(totalPoints);
             case "LINEAR" -> calculateLinear(totalPoints);
-            default -> 1 + (totalPoints / 1000);
+            default -> {
+                if (fallbackIncrement == 0) yield 1;
+                yield 1 + (totalPoints / (int) fallbackIncrement);
+            }
         };
     }
 
     @Override
     public long pointsToNextLevel(int currentLevel) {
+        if (currentLevel < 1) {
+            return pointsToNextLevel(1);
+        }
+
         return switch (formula.toUpperCase()) {
             case "TRIANGULAR" -> calculateTriangularToNext(currentLevel);
             case "QUADRATIC" -> calculateQuadraticToNext(currentLevel);
             case "LINEAR" -> calculateLinearToNext(currentLevel);
-            default -> 1000L;
+            default -> fallbackIncrement == 0 ? 1000L : fallbackIncrement;
         };
     }
 

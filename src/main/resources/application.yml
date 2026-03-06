@@ -56,6 +56,14 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
 gamification:
+  user:
+    default:
+      initial-points: 0
+      initial-level: 1
+  progress:
+    default-points: 0
+    default-level: 1
+    max-progress: 100.0
   features:
     courses:
       # Включить поддержку курсов и групп
@@ -71,3 +79,4 @@ gamification:
         type: TRIANGULAR     # TRIANGULAR, QUADRATIC, LINEAR
         base: 500            # базовый множитель
         increment: 200       # только для LINEAR
+        fallback-level-increment: 1000

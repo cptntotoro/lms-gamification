@@ -14,7 +14,7 @@
 Исследование архитектурных подходов и технологий real-time обновлений, а также разработка концепции серверного
 backend-модуля геймификации для интеграции с российскими LMS-платформами
 
-## Основные результаты НИР (на 19 февраля 2026)
+## Основные результаты НИР (на март 2026)
 
 ### 1. Серверная логика начисления очков и уровней
 
@@ -187,15 +187,14 @@ L = 1 + ⌊ totalPoints / 1000 ⌋
 - Добавлена возможность деактивации типов событий без удаления истории начислений
 - Логирование ключевых операций (начисление, дубли, ошибки) с eventId и userId
 
-### 6. Поддержка курсов и групп студентов (новое, февраль 2026)
+### 6. Поддержка курсов и групп студентов
 
 - Реализована гибридная модель: курсы и группы **опциональны** (управляется настройкой
   `gamification.features.courses.enabled`)
 - Добавлены сущности: `Course`, `Group`, `UserCourseEnrollment`
 - Пользователь может быть зачислен на несколько курсов одновременно
-- Очки начисляются **дважды**:
-  - глобально (`users.total_points`)
-  - по конкретному курсу (`user_course_enrollments.total_points_in_course`)
+- Очки начисляются глобально (users.total_points — сумма по всем курсам) и отдельно по каждому курсу
+  (user_course_enrollments.total_points_in_course — только за события внутри курса).
 - Реализована защита от дублирования зачислений (`unique_user_course`)
 - Кастомные исключения:
   - `CourseNotFoundException`
@@ -227,27 +226,26 @@ L = 1 + ⌊ totalPoints / 1000 ⌋
     ↓ Webhook / API (POST /api/events, LmsEventRequestDto)
 [REST API]  ← Spring Boot Controllers
     ↓
-[Service Layer]  ← основные бизнес-сервисы
-    ├── UserService                 (поиск/создание/обновление пользователей по userId)
-    ├── UserCourseService           (зачисление на курсы, начисление очков по курсу)
-    ├── UserAdminService            (админ-доступ: поиск, список, блокировка пользователей)
-    ├── PointsService               (начисление очков)
-    ├── PointsService               (бизнес-логика начисления очков за событие из LMS)
-    ├── LevelCalculatorService      (расчёт уровня и очков до следующего уровня — TRIANGULAR/QUADRATIC/LINEAR)
-    ├── TransactionService          (сохранение транзакций, проверка дублей по eventId, сумма по дате/типу)
-    ├── EventManagementService      (оркестрация: вызов PointsService → получение типа события → формирование ответа LMS)
-    ├── EventTypeService            (поиск активных типов событий, проверка доступности)
-    └── EventTypeAdminService       (админ-CRUD типов событий: создание/редактирование/деактивация)
-    ↓
-[Repository Layer]  ← Spring Data JPA
-    ↓
-[PostgreSQL]
-    ├── users                       (uuid, user_id, total_points, level, created_at, updated_at)
-    ├── courses                     (uuid, course_id, display_name, short_name, description, active)
-    ├── groups                      (uuid, group_id, display_name, course_id, active)
-    ├── user_course_enrollments     (uuid, user_id, course_id, group_id, total_points_in_course, enrolled_at)
-    ├── transactions                (uuid, user_id, event_id, event_type_code, points_earned, created_at)
-    └── event_types                 (uuid, type_code, display_name, points, max_daily_points, active)
+Application Services:
+    ├── AwardingOrchestratorApplicationService   (начисление очков, проверка лимитов)
+    ├── LmsEventProcessorApplicationService      (оркестрация webhook → ответ LMS)
+    ├── UserApplicationService                   (createIfNotExists, get summary)
+    ├── UserProgressApplicationService           (прогресс + уровень)
+    ├── UserStatisticsApplicationService         (статистика по курсу/группе)
+    ├── LeaderboardApplicationService            (лидерборды курса/группы)
+    ├── UserAdminApplicationService              (админ: пользователи)
+    └── EventTypeAdminApplicationService         (админ: типы событий)
+        ↓
+Simple / Domain Services:
+    ├── UserService
+    ├── CourseService
+    ├── GroupService
+    ├── EnrollmentService
+    ├── TransactionService
+    ├── EventTypeService
+    └── LevelCalculatorService
+        ↓
+JPA Repositories → PostgreSQL
 ```
 
 Основные защитные механизмы:
@@ -345,22 +343,22 @@ API спроектировано по принципам REST:
 - Виджет-функции под `/api/users` (для фронтенда)
 - События от LMS под `/api/events`
 
-| Метод  | Путь                                                                   | Описание                                                            | Доступ    | Примечание                      |
-|--------|------------------------------------------------------------------------|---------------------------------------------------------------------|-----------|---------------------------------|
-| POST   | `/api/events`                                                          | Обработка события из LMS (начисление очков)                         | LMS       | Основной webhook-эндпоинт       |
-| GET    | `/api/users/{userId}/progress`                                         | Прогресс пользователя для виджета                                   | Публичный | Используется фронтендом         |
-| GET    | `/api/me/leaderboard/course/{courseId}/user/{userId}`                  | Лидерборд всего курса (все группы) + место и очки текущего студента | Публичный | —                               |
-| GET    | `/api/me/leaderboard/course/{courseId}/groups/{groupId}/user/{userId}` | Лидерборд группы курса + место и очки текущего студента             | Публичный | Используется фронтендом         |
-| GET    | `/api/admin/users`                                                     | Список всех пользователей                                           | ADMIN     | Пагинация и фильтры позже       |
-| GET    | `/api/admin/users/{userId}`                                            | Полная информация о пользователе                                    | ADMIN     | Для админ-панели                |
-| GET    | `/api/admin/users/{userId}/transactions`                               | История транзакций пользователя                                     | ADMIN     | Пагинация, сортировка           |
-| GET    | `/api/admin/event-types`                                               | Список всех типов событий                                           | ADMIN     | Пагинация                       |
-| POST   | `/api/admin/event-types`                                               | Создание нового типа события                                        | ADMIN     | typeCode должен быть уникальным |
-| GET    | `/api/admin/event-types/{id}`                                          | Получение типа события по UUID                                      | ADMIN     | —                               |
-| PUT    | `/api/admin/event-types/{id}`                                          | Обновление типа события (частичное)                                 | ADMIN     | typeCode изменить нельзя        |
-| DELETE | `/api/admin/event-types/{id}`                                          | Деактивация типа события (active = false)                           | ADMIN     | Без физического удаления        |
-| GET    | `/api/admin/analytics/courses/{courseId}/leaderboard`                  | Лидерборд курса (все группы)                                        | ADMIN     | —                               |
-| GET    | `/api/admin/analytics/courses/{courseId}/groups/{groupId}/leaderboard` | Лидерборд конкретной группы курса                                   | ADMIN     | —                               |
+| Метод  | Путь                                                                   | Описание                                                             | Доступ    | Примечание                       |
+|--------|------------------------------------------------------------------------|----------------------------------------------------------------------|-----------|----------------------------------|
+| POST   | `/api/v1/event`                                                        | Обработка события от LMS (начисление очков)                          | LMS       | Основной webhook-эндпоинт        |
+| GET    | `/api/v1/widget/users/{userId}/progress`                               | Прогресс пользователя (уровень, очки, % до следующего) — для виджета | Публичный | Используется фронтендом          |
+| GET    | `/api/v1/widget/users/{userId}`                                        | Полная статистика пользователя по курсу и группе (если передана)     | Публичный | Для виджета, courseId обязателен |
+| GET    | `/api/v1/leaderboard/course/{courseId}/user/{userId}`                  | Лидерборд курса (все группы) + место и очки текущего студента        | Публичный | Персонализированный лидерборд    |
+| GET    | `/api/v1/leaderboard/course/{courseId}/groups/{groupId}/user/{userId}` | Лидерборд группы внутри курса + место и очки текущего студента       | Публичный | Персонализированный лидерборд    |
+| GET    | `/api/admin/event-types`                                               | Список всех типов событий с пагинацией                               | ADMIN     | —                                |
+| POST   | `/api/admin/event-types`                                               | Создание нового типа события                                         | ADMIN     | typeCode должен быть уникальным  |
+| GET    | `/api/admin/event-types/{id}`                                          | Получение типа события по UUID                                       | ADMIN     | —                                |
+| PUT    | `/api/admin/event-types/{id}`                                          | Обновление типа события (typeCode изменить нельзя)                   | ADMIN     | Частичное обновление             |
+| DELETE | `/api/admin/event-types/{id}`                                          | Деактивация типа события (active = false)                            | ADMIN     | Без физического удаления         |
+| GET    | `/api/admin/transactions/{userId}/transactions`                        | История транзакций пользователя с пагинацией                         | ADMIN     | Сортировка по дате               |
+| GET    | `/api/admin/users/{userId}`                                            | Полная информация о пользователе для админ-панели                    | ADMIN     | —                                |
+| GET    | `/api/admin/analytics/courses/{courseId}/leaderboard`                  | Лидерборд курса (все группы) для админа                              | ADMIN     | Пагинация                        |
+| GET    | `/api/admin/analytics/courses/{courseId}/groups/{groupId}/leaderboard` | Лидерборд конкретной группы внутри курса для админа                  | ADMIN     | Пагинация                        |
 
 ### Рекомендации по использованию
 

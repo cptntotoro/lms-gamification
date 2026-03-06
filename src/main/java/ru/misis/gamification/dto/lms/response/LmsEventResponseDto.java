@@ -110,7 +110,7 @@ public class LmsEventResponseDto {
             Long pointsToNextLevel,
             Double progressPercent,
             String eventId,
-            UUID transactionId,
+//            UUID transactionId,
             String displayName
     ) {
         return LmsEventResponseDto.builder()
@@ -124,7 +124,7 @@ public class LmsEventResponseDto {
                 .newLevel(newLevel)
                 .pointsToNextLevel(pointsToNextLevel)
                 .progressPercent(progressPercent)
-                .transactionId(transactionId)
+//                .transactionId(transactionId)
                 .processedAt(LocalDateTime.now())
                 .build();
     }

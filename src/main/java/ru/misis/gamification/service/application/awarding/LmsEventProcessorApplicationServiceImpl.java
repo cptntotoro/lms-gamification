@@ -18,12 +18,15 @@ import ru.misis.gamification.service.simple.eventtype.EventTypeService;
 @Validated
 public class LmsEventProcessorApplicationServiceImpl implements LmsEventProcessorApplicationService {
 
+    /**
+     * Сервис-ркестратор начисления баллов для события из LMS
+     */
     private final AwardingOrchestratorApplicationService awardingOrchestrator;
 
     /**
      * Сервис управления типами событий
      */
-    private final EventTypeService eventTypeSimpleService;
+    private final EventTypeService eventTypeService;
 
     @Override
     public LmsEventResponseDto process(LmsEventRequestDto request) {
@@ -35,7 +38,7 @@ public class LmsEventProcessorApplicationServiceImpl implements LmsEventProcesso
                 request.getCourseId(), request.getGroupId());
 
         if (result.success()) {
-            EventType type = eventTypeSimpleService.getActiveByCode(request.getEventType());
+            EventType type = eventTypeService.getActiveByCode(request.getEventType());
 
             return LmsEventResponseDto.success(
                     request.getUserId(),
@@ -46,8 +49,6 @@ public class LmsEventProcessorApplicationServiceImpl implements LmsEventProcesso
                     result.pointsToNextLevel(),
                     result.progressPercent(),
                     request.getEventId(),
-                    null
-                    /* TODO: transactionId можно добавить в AwardResultView при необходимости */,
                     type.getDisplayName()
             );
         }

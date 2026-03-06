@@ -3,6 +3,9 @@ package ru.misis.gamification.service.application.awarding;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
 
+/**
+ * Фасандый сервис обработки событий из LMS
+ */
 public interface LmsEventProcessorApplicationService {
 
     /**

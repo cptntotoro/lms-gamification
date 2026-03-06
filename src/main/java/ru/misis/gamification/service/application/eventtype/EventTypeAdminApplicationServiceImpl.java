@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.entity.EventType;
+import ru.misis.gamification.mapper.EventTypeMapper;
 import ru.misis.gamification.model.EventTypeSummary;
 import ru.misis.gamification.service.simple.eventtype.EventTypeAdminService;
 
@@ -19,29 +20,35 @@ import java.util.UUID;
 @Validated
 public class EventTypeAdminApplicationServiceImpl implements EventTypeAdminApplicationService {
 
+    /**
+     * Административный сервис для управления типами событий
+     */
     private final EventTypeAdminService eventTypeAdminService;
 
-    // TODO: добавить маппинг
+    /**
+     * Маппер типов событий
+     */
+    private final EventTypeMapper eventTypeMapper;
 
     @Transactional
     @Override
     public EventTypeSummary create(EventType eventType) {
         EventType saved = eventTypeAdminService.create(eventType);
         log.info("Создан новый тип события: code={}", saved.getTypeCode());
-        return toSummary(saved);
+        return eventTypeMapper.toEventTypeSummary(saved);
     }
 
     @Override
     public EventTypeSummary getById(UUID uuid) {
         EventType type = eventTypeAdminService.getById(uuid);
-        return toSummary(type);
+        return eventTypeMapper.toEventTypeSummary(type);
     }
 
     @Transactional
     @Override
     public EventTypeSummary update(UUID uuid, EventType eventType) {
         EventType updated = eventTypeAdminService.update(uuid, eventType);
-        return toSummary(updated);
+        return eventTypeMapper.toEventTypeSummary(updated);
     }
 
     @Transactional
@@ -53,19 +60,6 @@ public class EventTypeAdminApplicationServiceImpl implements EventTypeAdminAppli
 
     @Override
     public Page<EventTypeSummary> findAll(Pageable pageable) {
-        return eventTypeAdminService.findAll(pageable).map(this::toSummary);
-    }
-
-    private EventTypeSummary toSummary(EventType type) {
-        return new EventTypeSummary(
-                type.getUuid(),
-                type.getTypeCode(),
-                type.getDisplayName(),
-                type.getPoints(),
-                type.getMaxDailyPoints(),
-                type.isActive(),
-                type.getCreatedAt(),
-                type.getUpdatedAt()
-        );
+        return eventTypeAdminService.findAll(pageable).map(eventTypeMapper::toEventTypeSummary);
     }
 }

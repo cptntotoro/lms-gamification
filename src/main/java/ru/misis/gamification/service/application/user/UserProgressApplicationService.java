@@ -2,6 +2,9 @@ package ru.misis.gamification.service.application.user;
 
 import ru.misis.gamification.model.UserProgressView;
 
+/**
+ * Фасадный сервис управления прогрессом очков и уровня пользователей
+ */
 public interface UserProgressApplicationService {
 
     /**

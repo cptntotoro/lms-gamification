@@ -4,6 +4,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.misis.gamification.model.UserAdminView;
 
+/**
+ * Фасадный сервис управления пользователями для администратора
+ */
 public interface UserAdminApplicationService {
 
     /**

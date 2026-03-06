@@ -7,6 +7,9 @@ import ru.misis.gamification.model.EventTypeSummary;
 
 import java.util.UUID;
 
+/**
+ * Фасадный сервис управления типами событий для администратора
+ */
 public interface EventTypeAdminApplicationService {
 
     /**

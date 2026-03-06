@@ -8,6 +8,9 @@ import jakarta.validation.constraints.NotBlank;
 import ru.misis.gamification.model.LeaderboardPageView;
 import ru.misis.gamification.model.UserCourseGroupLeaderboardView;
 
+/**
+ * Фасадный сервис управления лидербордом
+ */
 public interface LeaderboardApplicationService {
 
     /**

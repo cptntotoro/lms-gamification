@@ -9,6 +9,7 @@ import ru.misis.gamification.dto.admin.response.TransactionItemDto;
 import ru.misis.gamification.dto.admin.response.TransactionPageDto;
 import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.entity.User;
+import ru.misis.gamification.model.TransactionSummary;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,104 +22,125 @@ class TransactionMapperTest {
     private final TransactionMapper mapper = Mappers.getMapper(TransactionMapper.class);
 
     @Test
-    void transactionToTransactionItemDto_shouldMapAllFieldsCorrectly() {
+    void toTransactionItemDto_mapsAllFieldsCorrectly() {
+        UUID uuid = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        TransactionSummary summary = new TransactionSummary(
+                uuid,
+                "user-abc123",
+                "event-xyz789",
+                150,
+                "Прохождение теста #5",
+                now
+        );
+
+        TransactionItemDto dto = mapper.toTransactionItemDto(summary);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.getUuid()).isEqualTo(uuid);
+        assertThat(dto.getUserId()).isEqualTo("user-abc123");
+        assertThat(dto.getEventId()).isEqualTo("event-xyz789");
+        assertThat(dto.getPoints()).isEqualTo(150);
+        assertThat(dto.getDescription()).isEqualTo("Прохождение теста #5");
+        assertThat(dto.getCreatedAt()).isEqualTo(now);
+    }
+
+    @Test
+    void toTransactionItemDto_nullSummary_returnsNull() {
+        assertThat(mapper.toTransactionItemDto(null)).isNull();
+    }
+
+    @Test
+    void toTransactionSummary_mapsAllFieldsCorrectly() {
+        UUID uuid = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
         User user = User.builder()
                 .uuid(UUID.randomUUID())
-                .userId("lms-user-123")
+                .userId("student-456")
                 .build();
 
         Transaction entity = Transaction.builder()
-                .uuid(UUID.randomUUID())
+                .uuid(uuid)
                 .user(user)
-                .eventId("event-abc-001")
-                .points(250)
-                .description("Выполнено задание #5")
-                .createdAt(LocalDateTime.of(2026, 2, 15, 14, 30))
+                .eventId("quiz-event-001")
+                .points(200)
+                .description("Успешный квиз")
+                .createdAt(now)
                 .build();
 
-        TransactionItemDto dto = mapper.transactionToTransactionItemDto(entity);
+        TransactionSummary summary = mapper.toTransactionSummary(entity);
 
-        assertThat(dto).isNotNull();
-        assertThat(dto.getUuid()).isEqualTo(entity.getUuid());
-        assertThat(dto.getUserId()).isEqualTo("lms-user-123");
-        assertThat(dto.getEventId()).isEqualTo("event-abc-001");
-        assertThat(dto.getPoints()).isEqualTo(250);
-        assertThat(dto.getDescription()).isEqualTo("Выполнено задание #5");
-        assertThat(dto.getCreatedAt()).isEqualTo(LocalDateTime.of(2026, 2, 15, 14, 30));
+        assertThat(summary).isNotNull();
+        assertThat(summary.uuid()).isEqualTo(uuid);
+        assertThat(summary.userId()).isEqualTo("student-456");
+        assertThat(summary.eventId()).isEqualTo("quiz-event-001");
+        assertThat(summary.points()).isEqualTo(200);
+        assertThat(summary.description()).isEqualTo("Успешный квиз");
+        assertThat(summary.createdAt()).isEqualTo(now);
     }
 
     @Test
-    void transactionPagetoTransactionPageDto_shouldMapPageCorrectly() {
-        User user1 = User.builder().userId("user-1").build();
-        User user2 = User.builder().userId("user-2").build();
+    void toTransactionSummary_nullTransaction_returnsNull() {
+        assertThat(mapper.toTransactionSummary(null)).isNull();
+    }
 
-        Transaction t1 = Transaction.builder()
-                .uuid(UUID.randomUUID())
-                .user(user1)
-                .eventId("e1")
-                .points(100)
-                .createdAt(LocalDateTime.now().minusDays(1))
-                .build();
+    @Test
+    void toTransactionPageDto_mapsPageCorrectly() {
+        UUID uuid1 = UUID.randomUUID();
+        UUID uuid2 = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
 
-        Transaction t2 = Transaction.builder()
-                .uuid(UUID.randomUUID())
-                .user(user2)
-                .eventId("e2")
-                .points(200)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        Page<Transaction> page = new PageImpl<>(
-                List.of(t1, t2),
-                PageRequest.of(0, 10),
-                2
+        List<TransactionSummary> summaries = List.of(
+                new TransactionSummary(uuid1, "alice", "event-1", 100, "Тест 1", now.minusHours(2)),
+                new TransactionSummary(uuid2, "bob", "event-2", 50, "Квиз 2", now.minusHours(1))
         );
 
-        TransactionPageDto pageDto = mapper.transactionPagetoTransactionPageDto(page);
+        Page<TransactionSummary> page = new PageImpl<>(
+                summaries,
+                PageRequest.of(0, 10),
+                25L  // всего 25 элементов
+        );
 
-        assertThat(pageDto).isNotNull();
-        assertThat(pageDto.getContent()).hasSize(2);
-        assertThat(pageDto.getContent().get(0).getEventId()).isEqualTo("e1");
-        assertThat(pageDto.getContent().get(1).getEventId()).isEqualTo("e2");
-        assertThat(pageDto.getContent().get(0).getUserId()).isEqualTo("user-1");
-        assertThat(pageDto.getContent().get(1).getUserId()).isEqualTo("user-2");
-        assertThat(pageDto.getPageNumber()).isZero();
-        assertThat(pageDto.getPageSize()).isEqualTo(10);
-        assertThat(pageDto.getTotalElements()).isEqualTo(2L);
-        assertThat(pageDto.getTotalPages()).isEqualTo(1);
-        assertThat(pageDto.isHasNext()).isFalse();
-        assertThat(pageDto.isHasPrevious()).isFalse();
+        TransactionPageDto dto = mapper.toTransactionPageDto(page);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.getContent()).hasSize(2);
+        assertThat(dto.getContent().get(0).getUuid()).isEqualTo(uuid1);
+        assertThat(dto.getContent().get(0).getUserId()).isEqualTo("alice");
+        assertThat(dto.getContent().get(1).getPoints()).isEqualTo(50);
+
+        // Пагинация
+        assertThat(dto.getPageNumber()).isEqualTo(0);
+        assertThat(dto.getPageSize()).isEqualTo(10);
+        assertThat(dto.getTotalElements()).isEqualTo(25L);
+        assertThat(dto.getTotalPages()).isEqualTo(3);  // 25 / 10 = 3 страницы
+        assertThat(dto.isHasNext()).isTrue();
+        assertThat(dto.isHasPrevious()).isFalse();
     }
 
     @Test
-    void transactionPagetoTransactionPageDto_emptyPage_shouldReturnEmptyDto() {
-        Page<Transaction> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+    void toTransactionPageDto_emptyPage_mapsCorrectly() {
+        Page<TransactionSummary> emptyPage = new PageImpl<>(
+                List.of(),
+                PageRequest.of(1, 20),
+                0L
+        );
 
-        TransactionPageDto pageDto = mapper.transactionPagetoTransactionPageDto(emptyPage);
+        TransactionPageDto dto = mapper.toTransactionPageDto(emptyPage);
 
-        assertThat(pageDto.getContent()).isEmpty();
-        assertThat(pageDto.getTotalElements()).isZero();
-        assertThat(pageDto.getTotalPages()).isZero();
-        assertThat(pageDto.isHasNext()).isFalse();
-        assertThat(pageDto.isHasPrevious()).isFalse();
+        assertThat(dto.getContent()).isEmpty();
+        assertThat(dto.getPageNumber()).isEqualTo(1);
+        assertThat(dto.getPageSize()).isEqualTo(20);
+        assertThat(dto.getTotalElements()).isZero();
+        assertThat(dto.getTotalPages()).isZero();
+        assertThat(dto.isHasNext()).isFalse();
+        assertThat(dto.isHasPrevious()).isTrue();
     }
 
     @Test
-    void transactionToTransactionItemDto_nullInput_shouldReturnNull() {
-        TransactionItemDto dto = mapper.transactionToTransactionItemDto(null);
-        assertThat(dto).isNull();
-    }
-
-    @Test
-    void transactionPagetoTransactionPageDto_nullPage_shouldReturnEmptyPage() {
-        TransactionPageDto pageDto = mapper.transactionPagetoTransactionPageDto(null);
-
-        assertThat(pageDto.getContent()).isEmpty();
-        assertThat(pageDto.getPageNumber()).isZero();
-        assertThat(pageDto.getPageSize()).isZero();
-        assertThat(pageDto.getTotalElements()).isZero();
-        assertThat(pageDto.getTotalPages()).isZero();
-        assertThat(pageDto.isHasNext()).isFalse();
-        assertThat(pageDto.isHasPrevious()).isFalse();
+    void toTransactionPageDto_nullPage_returnsNull() {
+        assertThat(mapper.toTransactionPageDto(null)).isNull();
     }
 }

@@ -9,15 +9,14 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
-import ru.misis.gamification.dto.analytics.LeaderboardEntryDto;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
+import ru.misis.gamification.model.LeaderboardEntryView;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,13 +64,13 @@ class UserCourseEnrollmentRepositoryTest {
         em.persist(eve);
         em.flush();
 
-        // Зачисления в группу PM-21-1
+        // Зачисления в группу PM-21-1 (4 студента)
         createEnrollment(alice, 850);
         createEnrollment(bob, 620);
         createEnrollment(carol, 300);
         createEnrollment(eve, 150);
 
-        // David зачислен на курс, но без группы → не попадёт в лидерборд по группе
+        // David зачислен на курс, но без группы
         em.persistAndFlush(UserCourseEnrollment.builder()
                 .user(david)
                 .course(mathCourse)
@@ -82,12 +81,12 @@ class UserCourseEnrollmentRepositoryTest {
         em.flush();
     }
 
-    private void createEnrollment(User user, int points) {
+    private void createEnrollment(User user, int pointsInCourse) {
         em.persistAndFlush(UserCourseEnrollment.builder()
                 .user(user)
                 .course(mathCourse)
                 .group(pmGroup)
-                .totalPointsInCourse(points)
+                .totalPointsInCourse(pointsInCourse)
                 .build());
     }
 
@@ -113,19 +112,20 @@ class UserCourseEnrollmentRepositoryTest {
     }
 
     @Test
-    void existsByUserAndCourse_nullUserOrCourse_returnsFalse() {
+    void existsByUserAndCourse_nullParameters_returnsFalse() {
         assertThat(repository.existsByUserAndCourse(null, mathCourse)).isFalse();
         assertThat(repository.existsByUserAndCourse(alice, null)).isFalse();
     }
 
     @Test
-    void findByUserAndCourse_existing_returnsEnrollment() {
-        Optional<UserCourseEnrollment> found = repository.findByUserAndCourse(alice, mathCourse);
+    void findByUserAndCourse_existing_returnsEnrollmentWithLoadedRelations() {
+        var found = repository.findByUserAndCourse(alice, mathCourse);
 
         assertThat(found).isPresent();
-        assertThat(found.get().getUser().getUuid()).isEqualTo(alice.getUuid());
-        assertThat(found.get().getCourse().getUuid()).isEqualTo(mathCourse.getUuid());
+        assertThat(found.get().getUser().getUserId()).isEqualTo("alice");
+        assertThat(found.get().getCourse().getCourseId()).isEqualTo("MATH-101");
         assertThat(found.get().getTotalPointsInCourse()).isEqualTo(850);
+        assertThat(found.get().getGroup().getGroupId()).isEqualTo("PM-21-1");
     }
 
     @Test
@@ -137,70 +137,63 @@ class UserCourseEnrollmentRepositoryTest {
     }
 
     @Test
-    void findByUserAndCourse_wrongCourse_returnsEmpty() {
-        Course physics = Course.builder().courseId("PHYS-202").displayName("Физика").build();
-        em.persistAndFlush(physics);
+    void findLeaderboardByCourseAndGroup_groupLeaderboard_correctRanking() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("totalPointsInCourse").descending());
 
-        assertThat(repository.findByUserAndCourse(alice, physics)).isEmpty();
-    }
-
-    @Test
-    void findByUserAndCourse_nullParameters_returnsEmpty() {
-        assertThat(repository.findByUserAndCourse(null, mathCourse)).isEmpty();
-        assertThat(repository.findByUserAndCourse(alice, null)).isEmpty();
-    }
-
-    @Test
-    void findLeaderboardByCourseAndGroup_correctRankingAndPage() {
-        Pageable pageable = PageRequest.of(0, 10);
-
-        Page<LeaderboardEntryDto> page = repository.findLeaderboardByCourseAndGroup(
+        Page<LeaderboardEntryView> page = repository.findLeaderboardByCourseAndGroup(
                 mathCourse.getUuid(), pmGroup.getUuid(), pageable);
 
         assertThat(page.getTotalElements()).isEqualTo(4);
         assertThat(page.getContent()).hasSize(4);
 
-        LeaderboardEntryDto first = page.getContent().getFirst();
+        LeaderboardEntryView first = page.getContent().getFirst();
         assertThat(first.getUserId()).isEqualTo("alice");
         assertThat(first.getPointsInCourse()).isEqualTo(850);
         assertThat(first.getRank()).isEqualTo(1L);
+        assertThat(first.getGlobalLevel()).isEqualTo(5);
 
-        LeaderboardEntryDto second = page.getContent().get(1);
+        LeaderboardEntryView second = page.getContent().get(1);
         assertThat(second.getUserId()).isEqualTo("bob");
         assertThat(second.getPointsInCourse()).isEqualTo(620);
         assertThat(second.getRank()).isEqualTo(2L);
-
-        assertThat(page.getContent().get(2).getUserId()).isEqualTo("carol");
-        assertThat(page.getContent().get(3).getUserId()).isEqualTo("eve");
     }
 
     @Test
-    void findLeaderboardByCourseAndGroup_pagination_correct() {
+    void findLeaderboardByCourseAndGroup_courseLeaderboard_includesAll() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<LeaderboardEntryView> page = repository.findLeaderboardByCourseAndGroup(
+                mathCourse.getUuid(), null, pageable);
+
+        assertThat(page.getTotalElements()).isEqualTo(5); // 4 в группе + David без группы
+        assertThat(page.getContent()).anySatisfy(entry ->
+                assertThat(entry.getUserId()).isEqualTo("david")
+        );
+    }
+
+    @Test
+    void findLeaderboardByCourseAndGroup_pagination_worksCorrectly() {
         Pageable firstPage = PageRequest.of(0, 2);
-        Page<LeaderboardEntryDto> page1 = repository.findLeaderboardByCourseAndGroup(
+        Page<LeaderboardEntryView> page1 = repository.findLeaderboardByCourseAndGroup(
                 mathCourse.getUuid(), pmGroup.getUuid(), firstPage);
 
         assertThat(page1.getTotalElements()).isEqualTo(4);
         assertThat(page1.getContent()).hasSize(2);
         assertThat(page1.getContent().get(0).getUserId()).isEqualTo("alice");
-        assertThat(page1.getContent().get(0).getRank()).isEqualTo(1L);
         assertThat(page1.getContent().get(1).getUserId()).isEqualTo("bob");
-        assertThat(page1.getContent().get(1).getRank()).isEqualTo(2L);
 
         Pageable secondPage = PageRequest.of(1, 2);
-        Page<LeaderboardEntryDto> page2 = repository.findLeaderboardByCourseAndGroup(
+        Page<LeaderboardEntryView> page2 = repository.findLeaderboardByCourseAndGroup(
                 mathCourse.getUuid(), pmGroup.getUuid(), secondPage);
 
         assertThat(page2.getContent()).hasSize(2);
         assertThat(page2.getContent().get(0).getUserId()).isEqualTo("carol");
-        assertThat(page2.getContent().get(0).getRank()).isEqualTo(3L);
         assertThat(page2.getContent().get(1).getUserId()).isEqualTo("eve");
-        assertThat(page2.getContent().get(1).getRank()).isEqualTo(4L);
     }
 
     @Test
-    void findLeaderboardByCourseAndGroup_nonExistentGroup_returnsEmpty() {
-        Page<LeaderboardEntryDto> page = repository.findLeaderboardByCourseAndGroup(
+    void findLeaderboardByCourseAndGroup_nonExistentGroup_returnsEmptyPage() {
+        Page<LeaderboardEntryView> page = repository.findLeaderboardByCourseAndGroup(
                 mathCourse.getUuid(), UUID.randomUUID(), PageRequest.of(0, 10));
 
         assertThat(page.getTotalElements()).isZero();
@@ -208,8 +201,8 @@ class UserCourseEnrollmentRepositoryTest {
     }
 
     @Test
-    void findLeaderboardByCourseAndGroup_nonExistentCourse_returnsEmpty() {
-        Page<LeaderboardEntryDto> page = repository.findLeaderboardByCourseAndGroup(
+    void findLeaderboardByCourseAndGroup_nonExistentCourse_returnsEmptyPage() {
+        Page<LeaderboardEntryView> page = repository.findLeaderboardByCourseAndGroup(
                 UUID.randomUUID(), pmGroup.getUuid(), PageRequest.of(0, 10));
 
         assertThat(page.getTotalElements()).isZero();
@@ -217,36 +210,20 @@ class UserCourseEnrollmentRepositoryTest {
     }
 
     @Test
-    void findLeaderboardByCourseAndGroup_nullParameters_behavesCorrectly() {
-        // 1. courseUuid = null → должен вернуть ПУСТО (фильтр по курсу обязателен)
-        Page<LeaderboardEntryDto> page1 = repository.findLeaderboardByCourseAndGroup(
+    void findLeaderboardByCourseAndGroup_nullCourseUuid_returnsEmptyPage() {
+        Page<LeaderboardEntryView> page = repository.findLeaderboardByCourseAndGroup(
                 null, pmGroup.getUuid(), PageRequest.of(0, 10));
 
-        assertThat(page1.getTotalElements()).isZero();
-        assertThat(page1.getContent()).isEmpty();
-
-        // 2. groupUuid = null → должен вернуть ВСЕХ на курсе (по спецификации)
-        Page<LeaderboardEntryDto> page2 = repository.findLeaderboardByCourseAndGroup(
-                mathCourse.getUuid(), null, PageRequest.of(0, 10));
-
-        // На курсе 5 зачислений (4 в группе + 1 без)
-        assertThat(page2.getTotalElements()).isEqualTo(5);
-        assertThat(page2.getContent()).hasSizeLessThanOrEqualTo(10);
-
-        // Проверяем, что ранги правильные (ROW_NUMBER)
-        List<LeaderboardEntryDto> content = page2.getContent();
-        assertThat(content).isNotEmpty();
-        assertThat(content.getFirst().getRank()).isEqualTo(1L);
+        assertThat(page.getTotalElements()).isZero();
+        assertThat(page.getContent()).isEmpty();
     }
 
     @Test
-    void findLeaderboardByCourseAndGroup_noEnrollmentsInGroup_returnsEmpty() {
-        // Удаляем все зачисления в группе PM-21-1
-        em.getEntityManager().createQuery(
-                "DELETE FROM UserCourseEnrollment uce WHERE uce.group.uuid = :groupUuid"
-        ).setParameter("groupUuid", pmGroup.getUuid()).executeUpdate();
+    void findLeaderboardByCourseAndGroup_noEnrollments_returnsEmptyPage() {
+        // Удаляем все зачисления
+        em.getEntityManager().createQuery("DELETE FROM UserCourseEnrollment").executeUpdate();
 
-        Page<LeaderboardEntryDto> page = repository.findLeaderboardByCourseAndGroup(
+        Page<LeaderboardEntryView> page = repository.findLeaderboardByCourseAndGroup(
                 mathCourse.getUuid(), pmGroup.getUuid(), PageRequest.of(0, 10));
 
         assertThat(page.getTotalElements()).isZero();

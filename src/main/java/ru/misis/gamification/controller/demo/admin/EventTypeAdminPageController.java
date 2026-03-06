@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ru.misis.gamification.dto.admin.response.EventTypeDto;
-import ru.misis.gamification.mapper.ApplicationModelMapper;
+import ru.misis.gamification.mapper.EventTypeMapper;
 import ru.misis.gamification.model.EventTypeSummary;
 import ru.misis.gamification.service.application.eventtype.EventTypeAdminApplicationService;
 
@@ -21,20 +21,20 @@ import ru.misis.gamification.service.application.eventtype.EventTypeAdminApplica
 public class EventTypeAdminPageController {
 
     /**
-     * Сервис для работы с типами событий для администратора
+     * Фасадный сервис управления типами событий для администратора
      */
     private final EventTypeAdminApplicationService eventTypeAdminService;
 
     /**
-     * Маппер моделей в DTO
+     * Маппер типов событий
      */
-    private final ApplicationModelMapper applicationModelMapper;
+    private final EventTypeMapper eventTypeMapper;
 
     @Operation(summary = "Страница управления типами событий")
     @GetMapping
     public String getEventTypesPage(Pageable pageable, Model model) {
         Page<EventTypeSummary> eventTypeSummaries = eventTypeAdminService.findAll(pageable);
-        Page<EventTypeDto> page = eventTypeSummaries.map(applicationModelMapper::toEventTypeDto);
+        Page<EventTypeDto> page = eventTypeSummaries.map(eventTypeMapper::toEventTypeDto);
 
         model.addAttribute("page", page);
         model.addAttribute("types", page.getContent());

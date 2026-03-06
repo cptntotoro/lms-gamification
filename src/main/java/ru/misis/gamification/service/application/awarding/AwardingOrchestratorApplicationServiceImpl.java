@@ -52,6 +52,10 @@ public class AwardingOrchestratorApplicationServiceImpl implements AwardingOrche
      * Сервис управления курсами
      */
     private final CourseService courseService;
+
+    /**
+     * Фасадный сервис управления зачислениями пользователей на курсы и в группы
+     */
     private final EnrollmentApplicationService enrollmentApplicationService;
 
     @Override
@@ -99,7 +103,7 @@ public class AwardingOrchestratorApplicationServiceImpl implements AwardingOrche
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        Transaction savedTx = transactionService.saveIfNotExists(tx);
+        transactionService.saveIfNotExists(tx);
 
         int oldLevel = user.getLevel();
         int newTotal = user.getTotalPoints() + points;
