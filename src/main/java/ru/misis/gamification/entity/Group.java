@@ -6,15 +6,19 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -23,7 +27,15 @@ import java.util.UUID;
  * Группа / поток внутри курса
  */
 @Entity
-@Table(name = "groups")
+@Table(
+        name = "groups",
+        uniqueConstraints = @UniqueConstraint(name = "unique_group_in_course", columnNames = {"group_id", "course_id"}),
+        indexes = {
+                @Index(name = "idx_groups_group_id_course", columnList = "group_id, course_id"),
+                @Index(name = "idx_groups_active", columnList = "active")
+        }
+)
+@Comment("Группы / потоки / классы внутри курса")
 @Data
 @Builder
 @NoArgsConstructor
@@ -41,7 +53,9 @@ public class Group {
     /**
      * Внешний идентификатор группы из LMS
      */
+    @NotBlank
     @Column(name = "group_id", nullable = false, length = 100)
+    @Comment("Внешний идентификатор группы из LMS")
     private String groupId;
 
     /**
@@ -67,7 +81,7 @@ public class Group {
     /**
      * Дата создания записи
      */
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     /**

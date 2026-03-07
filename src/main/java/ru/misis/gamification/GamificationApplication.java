@@ -2,17 +2,9 @@ package ru.misis.gamification;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 
-/**
- * Главный класс приложения для сервиса геймификации.
- * <p>
- * Запускает Spring Boot приложение с встроенным сервером Tomcat.
- * Приложение предоставляет REST API для приема событий от LMS,
- * начисления очков пользователям и отображения прогресса.
- * </p>
- *
- * @version 1.0
- */
+@EnableAsync
 @SpringBootApplication
 public class GamificationApplication {
 

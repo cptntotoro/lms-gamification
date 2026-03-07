@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -15,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 
 import java.time.LocalDateTime;
@@ -27,7 +29,14 @@ import java.util.UUID;
  * Каждый тип имеет уникальный код (например: "quiz", "lab", "essay").
  */
 @Entity
-@Table(name = "event_types")
+@Table(
+        name = "event_types",
+        indexes = {
+                @Index(name = "idx_event_types_type_code", columnList = "type_code"),
+                @Index(name = "idx_event_types_active", columnList = "active")
+        }
+)
+@Comment("Типы событий из LMS (настраиваемые шаблоны начисления очков)")
 @Data
 @Builder
 @NoArgsConstructor
@@ -46,14 +55,16 @@ public class EventType {
      * Уникальный код типа события из LMS {@link LmsEventRequestDto#getEventType()}
      */
     @NotBlank(message = "Код типа события обязателен")
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "type_code", nullable = false, unique = true, length = 50)
+    @Comment("Уникальный код типа события из LMS (используется LMS в поле eventType)")
     private String typeCode;
 
     /**
      * Название для отображения
      */
     @NotBlank(message = "Название типа события обязательно")
-    @Column(nullable = false, length = 100)
+    @Column(name = "display_name", nullable = false, length = 100)
+    @Comment("Название для отображения")
     private String displayName;
 
     /**
@@ -62,6 +73,7 @@ public class EventType {
     @NotNull(message = "Количество очков обязательно")
     @Min(value = 1, message = "Очки должны быть положительным числом")
     @Column(nullable = false)
+    @Comment("Количество очков, начисляемых за одно событие этого типа")
     private Integer points;
 
     /**
@@ -69,6 +81,7 @@ public class EventType {
      */
     @Min(value = 0, message = "Максимум в день должен быть ≥ 0")
     @Column
+    @Comment("Максимум очков в день по типу (NULL = без лимита)")
     private Integer maxDailyPoints;
 
     /**
@@ -76,6 +89,7 @@ public class EventType {
      */
     @Column(nullable = false)
     @Builder.Default
+    @Comment("Активен ли тип (можно отключать без удаления)")
     private boolean active = true;
 
     /**

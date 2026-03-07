@@ -3,6 +3,7 @@ package ru.misis.gamification.service.application.enrollment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -10,6 +11,7 @@ import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
+import ru.misis.gamification.events.UserCreatedEvent;
 import ru.misis.gamification.exception.UserNotEnrolledInCourseException;
 import ru.misis.gamification.model.CourseEnrollmentSummary;
 import ru.misis.gamification.service.simple.course.CourseService;
@@ -54,6 +56,8 @@ public class EnrollmentApplicationServiceImpl implements EnrollmentApplicationSe
         if (!coursesEnabled || courseId == null || courseId.trim().isEmpty()) {
             return;
         }
+
+        log.info("Зачисление пользователя {} на курс {} / группу {}", userId, courseId, groupId);
 
         User user = userService.getUserByExternalId(userId);
         Course course = courseService.findByCourseId(courseId);
@@ -120,5 +124,10 @@ public class EnrollmentApplicationServiceImpl implements EnrollmentApplicationSe
                 enrollment.getGroup() != null ? enrollment.getGroup().getGroupId() : null,
                 enrollment.getTotalPointsInCourse()
         );
+    }
+
+    @EventListener
+    public void onUserCreated(UserCreatedEvent event) {
+        enrollIfNeeded(event.getUserId(), event.getCourseId(), event.getGroupId());
     }
 }
