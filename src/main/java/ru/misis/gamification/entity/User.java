@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -12,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,7 +22,15 @@ import java.util.UUID;
  * Пользователь
  */
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        indexes = {
+                @Index(name = "idx_users_external_id", columnList = "user_id"),
+                @Index(name = "idx_users_points", columnList = "total_points DESC"),
+                @Index(name = "idx_users_level", columnList = "level DESC")
+        }
+)
+@Comment("Пользователи системы")
 @Data
 @Builder
 @NoArgsConstructor
@@ -39,6 +49,7 @@ public class User {
      * Идентификатор пользователя из LMS
      */
     @Column(name = "user_id", nullable = false, unique = true, length = 100)
+    @Comment("Идентификатор пользователя из LMS")
     private String userId;
 
     /**
@@ -46,6 +57,7 @@ public class User {
      */
     @Builder.Default
     @Column(name = "total_points", nullable = false)
+    @Comment("Общее количество очков")
     private Integer totalPoints = 0;
 
     /**
@@ -53,12 +65,13 @@ public class User {
      */
     @Builder.Default
     @Column(name = "level", nullable = false)
+    @Comment("Текущий уровень")
     private Integer level = 1;
 
     /**
      * Дата создания записи
      */
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     /**

@@ -3,14 +3,15 @@ package ru.misis.gamification.service.simple.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.misis.gamification.entity.User;
+import ru.misis.gamification.events.UserCreatedEvent;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.repository.UserRepository;
-import ru.misis.gamification.service.application.enrollment.EnrollmentApplicationService;
 
 import java.util.UUID;
 
@@ -24,10 +25,7 @@ public class UserServiceImpl implements UserService {
      */
     private final UserRepository userRepository;
 
-    /**
-     * Фасадный сервис управления зачислениями пользователей на курсы и в группы
-     */
-    private final EnrollmentApplicationService enrollmentApplicationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${gamification.user.default.initial-points:0}")
     private int initialPoints;
@@ -110,7 +108,7 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User savedUser = userRepository.save(newUser);
-        enrollmentApplicationService.enrollIfNeeded(userId, courseId, groupId);
+        eventPublisher.publishEvent(new UserCreatedEvent(userId, courseId, groupId));
 
         log.info("Создан новый пользователь: userId={}, uuid={}", userId, savedUser.getUuid());
         return savedUser;
