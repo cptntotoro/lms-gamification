@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.user.response.UserDto;
-import ru.misis.gamification.dto.user.response.UserStatisticsDto;
+import ru.misis.gamification.dto.user.response.UserGlobalCourseGroupDto;
 import ru.misis.gamification.mapper.UserMapper;
 import ru.misis.gamification.model.UserProgressView;
 import ru.misis.gamification.model.UserStatisticsView;
@@ -27,7 +27,7 @@ import ru.misis.gamification.service.application.user.UserStatisticsApplicationS
  * Контроллер для получения данных пользователями (виджеты).
  */
 @RestController
-@RequestMapping("/api/v1/widget")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @Tag(name = "Widget API", description = "API для виджетов и фронтенда пользователей")
 public class UserController {
@@ -47,63 +47,52 @@ public class UserController {
      */
     private final UserMapper userMapper;
 
-    /**
-     * Получить прогресс пользователя для виджета
-     */
-    @GetMapping("/users/{userId}/progress")
+    @GetMapping("/{userId}")
     @Operation(
-            summary = "Получить прогресс пользователя для виджета",
-            description = "Возвращает текущий уровень, очки и базовую информацию для отображения в виджете"
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Прогресс пользователя успешно получен",
-                    content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
-    })
-    public ResponseEntity<UserDto> getUserProgress(@Parameter(description = "Внешний ID пользователя из LMS",
-            required = true, example = "alex123") @PathVariable String userId) {
-
-        UserProgressView view = progressService.getProgress(userId);
-        UserDto userDto = userMapper.toUserDto(view);
-        return ResponseEntity.ok(userDto);
-    }
-
-    @GetMapping("/users/{userId}")
-    @Operation(
-            summary = "Данные для виджета пользователя",
+            summary = "Данные пользователя для виджета",
             description = """
-                    Возвращает прогресс пользователя в контексте курса и (опционально) группы.
-                    courseId — обязательный параметр.
-                    groupId — опциональный (если передан, то возвращаются также данные по группе).
-                    """
+                     Возвращает глобальный прогресс пользователя.\s
+                     Если передан courseId — добавляет статистику по курсу и (опционально) группе.
+                    \s"""
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Успешно получены данные для виджета",
-                    content = @Content(schema = @Schema(implementation = UserStatisticsDto.class))
+                    description = "Данные успешно получены",
+                    content = @Content(schema = @Schema(implementation = UserDto.class))
             ),
-            @ApiResponse(responseCode = "400", description = "Некорректные входные параметры"),
-            @ApiResponse(responseCode = "404", description = "Пользователь / курс / группа / зачисление не найдены")
+            @ApiResponse(responseCode = "400", description = "Некорректные параметры (например, courseId без значения)"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
-    public ResponseEntity<UserStatisticsDto> getUserWidgetData(
+    public ResponseEntity<UserGlobalCourseGroupDto> getUserData(
             @PathVariable
             @NotBlank(message = "userId обязателен")
-            @Parameter(description = "Внешний ID пользователя из LMS", example = "stud-98765", required = true)
+            @Parameter(description = "Внешний ID пользователя из LMS", example = "alex123", required = true)
             String userId,
 
-            @RequestParam
-            @NotBlank(message = "courseId обязателен")
-            @Parameter(description = "Внешний идентификатор курса", example = "CS-101-2025", required = true)
+            @RequestParam(required = false)
+            @Parameter(description = "Идентификатор курса (если передан — возвращается статистика по курсу)", example = "CS-101-2025")
             String courseId,
 
             @RequestParam(required = false)
-            @Parameter(description = "Внешний идентификатор группы/потока", example = "G-14")
+            @Parameter(description = "Идентификатор группы (опционально, только вместе с courseId)", example = "G-14")
             String groupId) {
 
-        UserStatisticsView view = statisticsService.getUserStatistics(userId, courseId, groupId);
-        UserStatisticsDto userStatisticsDto = userMapper.toUserStatisticsDto(view);
+        UserProgressView progress = progressService.getProgress(userId);
+        UserGlobalCourseGroupDto userGlobalCourseGroupDto = userMapper.toUserGlobalCourseGroupDto(progress);
 
-        return ResponseEntity.ok(userStatisticsDto);
+        if (courseId != null && !courseId.trim().isEmpty()) {
+            UserStatisticsView stats = statisticsService.getUserStatistics(userId, courseId, groupId);
+
+            userGlobalCourseGroupDto = userGlobalCourseGroupDto.toBuilder()
+                    .courseId(stats.courseId())
+                    .groupId(stats.groupId())
+                    .pointsInCourse(stats.pointsInCourse())
+                    .rankInCourse(stats.rankInCourse())
+                    .rankInGroup(stats.rankInGroup())
+                    .build();
+        }
+
+        return ResponseEntity.ok(userGlobalCourseGroupDto);
     }
 }

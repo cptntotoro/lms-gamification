@@ -3,6 +3,7 @@ package ru.misis.gamification.mapper;
 import org.mapstruct.Mapper;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.dto.user.response.UserDto;
+import ru.misis.gamification.dto.user.response.UserGlobalCourseGroupDto;
 import ru.misis.gamification.dto.user.response.UserStatisticsDto;
 import ru.misis.gamification.model.UserAdminView;
 import ru.misis.gamification.model.UserProgressView;
@@ -37,4 +38,12 @@ public interface UserMapper {
      * @return DTO пользователя в контексте курса и (опционально) группы
      */
     UserStatisticsDto toUserStatisticsDto(UserStatisticsView view);
+
+    /**
+     * Смаппить модель прогресса пользователя в DTO
+     *
+     * @param progress Модель прогресса пользователя
+     * @return DTO
+     */
+    UserGlobalCourseGroupDto toUserGlobalCourseGroupDto(UserProgressView progress);
 }

@@ -10,10 +10,10 @@ public interface UserStatisticsApplicationService {
     /**
      * Получить статистику пользователя по группе и курсу
      *
+     * @param userId   Идентификатор пользователя из LMS
      * @param courseId Идентификатор курса из LMS
      * @param groupId  Идентификатор группы из LMS
-     * @param userId   Идентификатор пользователя из LMS
      * @return Модель статистики пользователя
      */
-    UserStatisticsView getUserStatistics(String courseId, String groupId, String userId);
+    UserStatisticsView getUserStatistics(String userId, String courseId, String groupId);
 }
