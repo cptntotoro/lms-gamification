@@ -51,7 +51,7 @@ public class UserStatisticsApplicationServiceImpl implements UserStatisticsAppli
     private final UserProgressApplicationService progressApplicationService;
 
     @Override
-    public UserStatisticsView getUserStatistics(String courseId, String groupId, String userId) {
+    public UserStatisticsView getUserStatistics(String userId, String courseId, String groupId) {
         User user = userService.getUserByExternalId(userId);
         Course course = courseService.findByCourseId(courseId);
 

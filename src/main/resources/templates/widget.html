@@ -11,6 +11,7 @@
 
 <div class="container">
     <div th:if="${user}" class="gamification-widget">
+        <!-- Заголовок: аватар + имя + уровень -->
         <div class="widget-header">
             <div class="avatar">
                 <span th:text="${user.userId?.substring(0,1)?.toUpperCase()}"></span>
@@ -23,9 +24,10 @@
             </div>
         </div>
 
-        <div class="progress-section">
+        <!-- Глобальный прогресс (всегда) -->
+        <div class="progress-section global-progress">
             <div class="progress-header">
-                <span>Текущий прогресс</span>
+                <span>Глобальный прогресс</span>
                 <span th:text="${user.totalPoints} + ' / ' + ${user.pointsToNextLevel} + ' XP'"></span>
             </div>
             <div class="progress-bar-container">
@@ -37,12 +39,44 @@
                 <strong th:text="${user.pointsToNextLevel - user.totalPoints} + ' очков'"></strong>
                 до следующего уровня
             </div>
-        </div>
-    </div>
 
-    <!-- Если данных нет -->
-    <div th:unless="${user}" class="error-message">
-        <p th:if="${error}" th:text="${error}">Данные пользователя пока недоступны</p>
+            <!-- Блок курса (только если есть stats) -->
+            <div th:if="${stats}" class="course-section">
+                <h3 class="course-title">
+                    Курс: <strong th:text="${stats.courseId}"></strong>
+                    <span th:if="${stats.groupId}" class="group-badge">
+                    • Группа <strong th:text="${stats.groupId}"></strong>
+                </span>
+                </h3>
+
+                <div class="course-stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Место в курсе</div>
+                        <div class="stat-value rank" th:text="${stats.rankInCourse}"></div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-label">Очки в курсе</div>
+                        <div class="stat-value points" th:text="${stats.pointsInCourse}"></div>
+                    </div>
+
+                    <div th:if="${stats.rankInGroup}" class="stat-item">
+                        <div class="stat-label">Место в группе</div>
+                        <div class="stat-value rank" th:text="${stats.rankInGroup}"></div>
+                    </div>
+                </div>
+
+                <!-- Если данных по курсу нет, но courseId был передан -->
+                <div th:if="${courseId != null and !stats}" class="warning-message">
+                    Вы не зачислены на курс <strong th:text="${courseId}"></strong>
+                </div>
+            </div>
+
+            <!-- Ошибка -->
+            <div th:unless="${user}" class="error-message">
+                <p th:if="${error}" th:text="${error}">Данные пользователя пока недоступны</p>
+            </div>
+        </div>
     </div>
 </div>
 
