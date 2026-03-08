@@ -14,6 +14,7 @@ import ru.misis.gamification.exception.UserCourseEnrollmentNotFoundException;
 import ru.misis.gamification.model.LeaderboardEntryView;
 import ru.misis.gamification.repository.UserCourseEnrollmentRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -53,5 +54,10 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     @Override
     public UserCourseEnrollment save(UserCourseEnrollment enrollment) {
         return repository.save(enrollment);
+    }
+
+    @Override
+    public List<UserCourseEnrollment> findAllByUser(User user) {
+        return repository.findAllByUser(user);
     }
 }

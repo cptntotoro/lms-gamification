@@ -1,5 +1,6 @@
 package ru.misis.gamification.service.application.user;
 
+import ru.misis.gamification.model.UserCoursesView;
 import ru.misis.gamification.model.UserStatisticsView;
 
 /**
@@ -16,4 +17,12 @@ public interface UserStatisticsApplicationService {
      * @return Модель статистики пользователя
      */
     UserStatisticsView getUserStatistics(String userId, String courseId, String groupId);
+
+    /**
+     * Получить полную статистику пользователя (общая + по всем его курсам и группам)
+     *
+     * @param userId Идентификатор пользователя из LMS
+     * @return Статистика пользователя общая + по всем его курсам и группам
+     */
+    UserCoursesView getUserCourses(String userId);
 }

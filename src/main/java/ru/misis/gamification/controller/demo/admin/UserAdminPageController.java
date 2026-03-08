@@ -20,7 +20,7 @@ import ru.misis.gamification.service.application.user.UserAdminApplicationServic
 
 @Tag(name = "Admin - Пользователи (страницы)", description = "HTML-страницы админ-панели")
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/demo/admin/users")
 @RequiredArgsConstructor
 @Slf4j
 public class UserAdminPageController {
@@ -49,7 +49,7 @@ public class UserAdminPageController {
             @ApiResponse(responseCode = "200", description = "Страница успешно отображена"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
-    @GetMapping("/users/{userId}")
+    @GetMapping("/{userId}")
     public String getUserProfilePage(
             @Parameter(description = "Идентификатор пользователя из LMS", required = true, example = "alex123")
             @PathVariable String userId,

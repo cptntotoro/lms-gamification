@@ -16,7 +16,7 @@ import ru.misis.gamification.service.application.eventtype.EventTypeAdminApplica
 
 @Tag(name = "Admin - Типы событий (страницы)", description = "HTML-страницы управления типами событий")
 @Controller
-@RequestMapping("/admin/event-types")
+@RequestMapping("/demo/admin/event-types")
 @RequiredArgsConstructor
 public class EventTypeAdminPageController {
 

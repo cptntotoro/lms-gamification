@@ -10,6 +10,7 @@ import ru.misis.gamification.entity.UserCourseEnrollment;
 import ru.misis.gamification.exception.UserCourseEnrollmentNotFoundException;
 import ru.misis.gamification.model.LeaderboardEntryView;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -75,4 +76,12 @@ public interface EnrollmentService {
      * @throws ConstraintViolationException если enrollment == null
      */
     UserCourseEnrollment save(@NotNull(message = "{enrollment.required}") UserCourseEnrollment enrollment);
+
+    /**
+     * Получить все зачисления пользователя на курсы
+     *
+     * @param user Пользователь
+     * @return Список зачислений на курсы
+     */
+    List<UserCourseEnrollment> findAllByUser(User user);
 }
