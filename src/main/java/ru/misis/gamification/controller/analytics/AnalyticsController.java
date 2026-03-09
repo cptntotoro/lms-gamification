@@ -33,7 +33,7 @@ import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicat
  */
 @Tag(name = "Analytics — Лидерборд и статистика")
 @RestController
-@RequestMapping("/api/admin/analytics")
+@RequestMapping("/api/admin/analytics/leaderboard")
 @RequiredArgsConstructor
 @Slf4j
 public class AnalyticsController {
@@ -52,68 +52,46 @@ public class AnalyticsController {
     private static final int MAX_PAGE_SIZE = 100;
 
     @Operation(
-            summary = "Лидерборд студентов группы внутри курса",
-            description = "Возвращает пагинированный список студентов группы, отсортированный по очкам на курсе. "
-                    + "Идентификаторы курса и группы — внешние строки из LMS."
+            summary = "Лидерборд студентов по курсу (и опционально по группе)",
+            description = """
+                    Возвращает пагинированный лидерборд студентов курса.
+                    Если передан groupId — показывает лидерборд только внутри указанной группы.
+                    Если groupId не указан — показывает общий лидерборд по всему курсу.
+                    """
     )
     @ApiResponses(
             @ApiResponse(responseCode = "200", description = "Успешно получен лидерборд",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = GroupLeaderboardPageDto.class)))
     )
-    @GetMapping("/courses/{courseId}/groups/{groupId}/leaderboard")
-    public ResponseEntity<GroupLeaderboardPageDto> getLeaderboardByCourseGroup(
+    @GetMapping("/courses/{courseId}")
+    public ResponseEntity<GroupLeaderboardPageDto> getLeaderboard(
             @PathVariable @NotBlank(message = "{course.id.required}")
-            @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101") String courseId,
+            @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101")
+            String courseId,
 
-            @PathVariable @NotBlank(message = "{group.id.required}")
-            @Parameter(description = "Идентификатор группы из LMS", example = "M-21-2") String groupId,
+            @RequestParam(required = false)
+            @Parameter(description = "Идентификатор группы (опционально). Если не указан — лидерборд всего курса",
+                    example = "M-21-2")
+            String groupId,
 
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "{page.non-negative}")
-            @Parameter(description = "Номер страницы (0-based)", example = "0") int page,
+            @Parameter(description = "Номер страницы (0-based)", example = "0")
+            int page,
 
             @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE)
             @Min(value = 1, message = "{size.positive}")
             @Max(value = MAX_PAGE_SIZE, message = "{size.too-large}")
-            @Parameter(description = "Размер страницы (макс " + MAX_PAGE_SIZE + ")", example = "50") int size
+            @Parameter(description = "Размер страницы (макс " + MAX_PAGE_SIZE + ")", example = "50")
+            int size
     ) {
-        log.debug("Запрос лидерборда группы курса: courseId={}, groupId={}, page={}, size={}",
+        log.debug("Запрос лидерборда: courseId={}, groupId={}, page={}, size={}",
                 courseId, groupId, page, size);
 
         LeaderboardPageView view = leaderboardApplicationService.getGroupLeaderboard(courseId, groupId, page, size);
         GroupLeaderboardPageDto dto = leaderboardMapper.toGroupLeaderboardPageDto(view);
-        return ResponseEntity.ok(dto);
-    }
 
-    @Operation(
-            summary = "Лидерборд студентов внутри курса",
-            description = "Возвращает пагинированный список студентов группы, отсортированный по очкам на курсе. "
-                    + "Идентификаторы курса и группы — внешние строки из LMS."
-    )
-    @ApiResponses(
-            @ApiResponse(responseCode = "200", description = "Успешно получен лидерборд",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = GroupLeaderboardPageDto.class)))
-    )
-    @GetMapping("/courses/{courseId}/leaderboard")
-    public ResponseEntity<GroupLeaderboardPageDto> getLeaderboardByCourse(
-            @PathVariable @NotBlank(message = "{course.id.required}")
-            @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101") String courseId,
-
-            @RequestParam(defaultValue = "0")
-            @Min(value = 0, message = "{page.non-negative}")
-            @Parameter(description = "Номер страницы (0-based)", example = "0") int page,
-
-            @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE)
-            @Min(value = 1, message = "{size.positive}")
-            @Max(value = MAX_PAGE_SIZE, message = "{size.too-large}")
-            @Parameter(description = "Размер страницы (макс " + MAX_PAGE_SIZE + ")", example = "50") int size
-    ) {
-        log.debug("Запрос общего лидерборда курса: courseId={}, page={}, size={}", courseId, page, size);
-
-        LeaderboardPageView view = leaderboardApplicationService.getGroupLeaderboard(courseId, null, page, size);
-        GroupLeaderboardPageDto dto = leaderboardMapper.toGroupLeaderboardPageDto(view);
         return ResponseEntity.ok(dto);
     }
 }
