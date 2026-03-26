@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,11 +49,16 @@ public class UserCoursesController {
                     Курсы отсортированы по дате зачисления (новые сверху).
                     """
     )
-    @ApiResponses(
+    @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Успешно получен список курсов",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UserCoursesResponseDto.class)))
-    )
+                            schema = @Schema(implementation = UserCoursesResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Некорректный запрос (например, пустой userId)"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @PreAuthorize("#userId == authentication.principal.userId")
     @GetMapping("/users/{userId}/courses")
     public ResponseEntity<UserCoursesResponseDto> getUserCourses(
             @PathVariable

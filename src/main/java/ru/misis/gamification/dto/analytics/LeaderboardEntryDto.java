@@ -28,8 +28,6 @@ public class LeaderboardEntryDto {
     @Schema(description = "Идентификатор пользователя из LMS")
     private String userId;
 
-//    private String displayName;      // полное имя или ник
-
     /**
      * Очки, заработанные на этом курсе
      */

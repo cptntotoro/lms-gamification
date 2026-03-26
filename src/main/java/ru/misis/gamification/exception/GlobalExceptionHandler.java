@@ -4,6 +4,8 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -99,5 +101,19 @@ public class GlobalExceptionHandler {
         log.error("Необработанная ошибка при обработке запроса", ex);
         return ResponseEntity.internalServerError()
                 .body(LmsEventResponseDto.error("Внутренняя ошибка сервера геймификации"));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<LmsEventResponseDto> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Доступ запрещён: {}", ex.getMessage());
+        return ResponseEntity.status(403)
+                .body(LmsEventResponseDto.error("Доступ запрещён. У вас нет прав на эти данные."));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<LmsEventResponseDto> handleAuthenticationException(AuthenticationException ex) {
+        log.warn("Ошибка аутентификации: {}", ex.getMessage());
+        return ResponseEntity.status(401)
+                .body(LmsEventResponseDto.error("Не авторизован. Отсутствует заголовок X-User-Id."));
     }
 }
