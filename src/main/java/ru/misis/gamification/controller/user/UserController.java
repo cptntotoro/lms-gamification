@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +49,7 @@ public class UserController {
     private final UserMapper userMapper;
 
     @GetMapping("/{userId}")
+    @PreAuthorize("#userId == authentication.principal.userId")
     @Operation(
             summary = "Данные пользователя для виджета",
             description = """
@@ -62,6 +64,8 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = UserDto.class))
             ),
             @ApiResponse(responseCode = "400", description = "Некорректные параметры (например, courseId без значения)"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
     public ResponseEntity<UserGlobalCourseGroupDto> getUserData(

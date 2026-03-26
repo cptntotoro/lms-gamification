@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,16 +55,21 @@ public class UserLeaderboardController {
     @Operation(
             summary = "Персонализированный лидерборд по курсу (и опционально группе)",
             description = """
-                     Возвращает пагинированный топ участников курса (все группы или конкретную группу) +\s
+                     Возвращает пагинированный топ участников курса (все группы или конкретную группу) +
                      обязательные данные о текущем студенте: место, очки, уровень.
                      groupId — опциональный параметр.
-                    \s"""
+                    """
     )
-    @ApiResponses(
+    @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Успешно получен лидерборд",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UserCourseGroupLeaderboardDto.class)))
-    )
+                            schema = @Schema(implementation = UserCourseGroupLeaderboardDto.class))),
+            @ApiResponse(responseCode = "400", description = "Некорректные параметры запроса (page < 0, size > 100 и т.п.)"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
+            @ApiResponse(responseCode = "404", description = "Курс, группа или пользователь не найдены")
+    })
+    @PreAuthorize("#userId == authentication.principal.userId")
     @GetMapping("/course/{courseId}/user/{userId}")
     public ResponseEntity<UserCourseGroupLeaderboardDto> getLeaderboard(
             @PathVariable @NotBlank(message = "{course.id.required}")

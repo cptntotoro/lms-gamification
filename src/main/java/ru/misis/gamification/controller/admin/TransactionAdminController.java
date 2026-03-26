@@ -1,6 +1,7 @@
 package ru.misis.gamification.controller.admin;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,9 +25,12 @@ import ru.misis.gamification.mapper.TransactionMapper;
 import ru.misis.gamification.model.TransactionSummary;
 import ru.misis.gamification.service.application.transaction.TransactionHistoryApplicationService;
 
+// TODO: /api/v1/transactions/users/{userId} – возвращает историю транзакций пользователя с пагинацией
+
+@PreAuthorize("hasRole('ADMIN')")
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/transactions/")
+@RequestMapping("/api/admin/transactions")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Пользователи", description = "Административные операции с транзакциями")
 public class TransactionAdminController {
@@ -48,14 +53,24 @@ public class TransactionAdminController {
             @ApiResponse(responseCode = "200", description = "Список транзакций успешно получен",
                     content = @Content(schema = @Schema(implementation = TransactionPageDto.class))),
             @ApiResponse(responseCode = "400", description = "Некорректные параметры пагинации или сортировки"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
     @GetMapping("/{userId}/transactions")
     public ResponseEntity<TransactionPageDto> getUserTransactions(
+            @Parameter(description = "Идентификатор пользователя из LMS", example = "user123")
             @PathVariable String userId,
+
+            @Parameter(description = "Номер страницы (0-based)", example = "0")
             @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Размер страницы (от 1 до 100)", example = "20")
             @RequestParam(defaultValue = "20") int size,
+
+            @Parameter(description = "Направление сортировки (asc/desc)", example = "desc")
             @RequestParam(defaultValue = "desc") String sortDir) {
+
         Sort.Direction direction = Sort.Direction.fromString(sortDir.toUpperCase());
         Sort sort = Sort.by(direction, "createdAt");
 

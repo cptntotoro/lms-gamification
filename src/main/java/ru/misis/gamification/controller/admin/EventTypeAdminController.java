@@ -1,6 +1,7 @@
 package ru.misis.gamification.controller.admin;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +31,7 @@ import ru.misis.gamification.service.application.eventtype.EventTypeAdminApplica
 
 import java.util.UUID;
 
-//@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/admin/event-types")
 @RequiredArgsConstructor
@@ -58,6 +60,8 @@ public class EventTypeAdminController {
                     content = @Content(schema = @Schema(implementation = EventTypeDto.class))
             ),
             @ApiResponse(responseCode = "400", description = "Некорректные данные (валидация DTO)"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
             @ApiResponse(responseCode = "409", description = "Тип события с таким typeCode уже существует")
     })
     public ResponseEntity<EventTypeDto> create(@Valid @RequestBody EventTypeCreateDto dto) {
@@ -78,9 +82,11 @@ public class EventTypeAdminController {
                     description = "Тип события найден",
                     content = @Content(schema = @Schema(implementation = EventTypeDto.class))
             ),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
             @ApiResponse(responseCode = "404", description = "Тип события не найден")
     })
-    public ResponseEntity<EventTypeDto> getById(@PathVariable UUID id) {
+    public ResponseEntity<EventTypeDto> getById(@Parameter(description = "UUID типа события") @PathVariable UUID id) {
         EventTypeSummary eventTypeSummary = eventTypeAdminService.getById(id);
         EventTypeDto eventTypeDto = eventTypeMapper.toEventTypeDto(eventTypeSummary);
         return ResponseEntity.ok(eventTypeDto);
@@ -98,10 +104,12 @@ public class EventTypeAdminController {
                     content = @Content(schema = @Schema(implementation = EventTypeDto.class))
             ),
             @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
             @ApiResponse(responseCode = "404", description = "Тип события не найден")
     })
     public ResponseEntity<EventTypeDto> update(
-            @PathVariable UUID id,
+            @Parameter(description = "UUID типа события") @PathVariable UUID id,
             @Valid @RequestBody EventTypeUpdateDto dto) {
 
         EventType entity = eventTypeMapper.eventTypeUpdateDtoToEventType(dto);
@@ -117,9 +125,11 @@ public class EventTypeAdminController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Тип события успешно деактивирован"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
             @ApiResponse(responseCode = "404", description = "Тип события не найден")
     })
-    public ResponseEntity<Void> deactivate(@PathVariable UUID id) {
+    public ResponseEntity<Void> deactivate(@Parameter(description = "UUID типа события") @PathVariable UUID id) {
         eventTypeAdminService.deactivate(id);
         return ResponseEntity.noContent().build();
     }
@@ -134,7 +144,9 @@ public class EventTypeAdminController {
                     responseCode = "200",
                     description = "Список типов событий успешно получен",
                     content = @Content(schema = @Schema(implementation = Page.class))
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав.")
     })
     public ResponseEntity<Page<EventTypeDto>> getAll(Pageable pageable) {
         Page<EventTypeSummary> page = eventTypeAdminService.findAll(pageable);

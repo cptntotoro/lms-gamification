@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +32,7 @@ import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicat
  * Все идентификаторы (курса, группы, пользователя) — внешние строки из LMS.
  * <p>
  */
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Analytics — Лидерборд и статистика")
 @RestController
 @RequestMapping("/api/admin/analytics/leaderboard")
@@ -59,11 +61,17 @@ public class AnalyticsController {
                     Если groupId не указан — показывает общий лидерборд по всему курсу.
                     """
     )
-    @ApiResponses(
+    @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Успешно получен лидерборд",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = GroupLeaderboardPageDto.class)))
-    )
+                            schema = @Schema(implementation = GroupLeaderboardPageDto.class))
+
+            ),
+            @ApiResponse(responseCode = "400", description = "Некорректные параметры запроса (например, page < 0 или size > 100)"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
+            @ApiResponse(responseCode = "404", description = "Курс или группа не найдены")
+    })
     @GetMapping("/courses/{courseId}")
     public ResponseEntity<GroupLeaderboardPageDto> getLeaderboard(
             @PathVariable @NotBlank(message = "{course.id.required}")
