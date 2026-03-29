@@ -72,11 +72,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<User> findAll(Pageable pageable) {
-        log.debug("Запрос списка всех пользователей: page={}, size={}, sort={}",
-                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+    public Page<User> findAll(String courseId, String groupId, Pageable pageable) {
+        log.debug("Запрос списка пользователей: courseId={}, groupId={}, page={}, size={}, sort={}",
+                courseId, groupId, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
-        return userRepository.findAll(pageable);
+        String normalizedCourseId = (courseId == null || courseId.trim().isEmpty()) ? null : courseId.trim();
+        String normalizedGroupId = (groupId == null || groupId.trim().isEmpty()) ? null : groupId.trim();
+
+        return userRepository.findAll(normalizedCourseId, normalizedGroupId, pageable);
     }
 
     @Override

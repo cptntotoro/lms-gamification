@@ -19,7 +19,7 @@ public class UserStatisticsDto {
     /**
      * Идентификатор пользователя из LMS
      */
-    @Schema(description = "Идентификатор пользователя из LMS", example = "stud-98765", required = true)
+    @Schema(description = "Идентификатор пользователя из LMS", example = "stud-98765")
     private String userId;
 
     /**

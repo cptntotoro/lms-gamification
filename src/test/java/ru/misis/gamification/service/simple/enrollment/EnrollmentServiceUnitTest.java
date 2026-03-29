@@ -144,4 +144,43 @@ class EnrollmentServiceUnitTest {
         assertThat(result).isNull();
         verify(repository).save(null);
     }
+
+    @Test
+    void findAllByUser_returnsList() {
+        User user = new User();
+
+        UserCourseEnrollment e1 = new UserCourseEnrollment();
+        UserCourseEnrollment e2 = new UserCourseEnrollment();
+
+        List<UserCourseEnrollment> expected = List.of(e1, e2);
+
+        when(repository.findAllByUser(user)).thenReturn(expected);
+
+        List<UserCourseEnrollment> result = service.findAllByUser(user);
+
+        assertThat(result).isSameAs(expected);
+        verify(repository).findAllByUser(user);
+    }
+
+    @Test
+    void findAllByUser_emptyList() {
+        User user = new User();
+
+        when(repository.findAllByUser(user)).thenReturn(List.of());
+
+        List<UserCourseEnrollment> result = service.findAllByUser(user);
+
+        assertThat(result).isEmpty();
+        verify(repository).findAllByUser(user);
+    }
+
+    @Test
+    void findAllByUser_nullUser() {
+        when(repository.findAllByUser(null)).thenReturn(List.of());
+
+        List<UserCourseEnrollment> result = service.findAllByUser(null);
+
+        assertThat(result).isEmpty();
+        verify(repository).findAllByUser(null);
+    }
 }

@@ -9,6 +9,7 @@ import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
+import ru.misis.gamification.exception.CourseNotFoundException;
 import ru.misis.gamification.exception.UserNotEnrolledInCourseException;
 import ru.misis.gamification.model.UserCourseSummary;
 import ru.misis.gamification.model.UserCoursesView;
@@ -57,10 +58,16 @@ public class UserStatisticsApplicationServiceImpl implements UserStatisticsAppli
     @Override
     public UserStatisticsView getUserStatistics(String userId, String courseId, String groupId) {
         User user = userService.getUserByExternalId(userId);
+
         Course course = courseService.findByCourseId(courseId);
+        if (course == null) {
+            throw new CourseNotFoundException(courseId);
+        }
 
         UUID courseUuid = course.getUuid();
-        UUID groupUuid = groupId != null ? groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId) : null;
+        UUID groupUuid = (groupId != null)
+                ? groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId)
+                : null;
 
         if (!enrollmentService.isUserEnrolledInCourse(user, course)) {
             throw new UserNotEnrolledInCourseException(userId, courseId);
@@ -69,8 +76,9 @@ public class UserStatisticsApplicationServiceImpl implements UserStatisticsAppli
         UserCourseEnrollment enrollment = enrollmentService.findByUserAndCourse(user, course);
 
         Long rankInCourse = enrollmentService.getRankByPointsInCourse(courseUuid, null, user.getUuid());
-        Long rankInGroup = groupUuid != null ?
-                enrollmentService.getRankByPointsInCourse(courseUuid, groupUuid, user.getUuid()) : null;
+        Long rankInGroup = (groupUuid != null)
+                ? enrollmentService.getRankByPointsInCourse(courseUuid, groupUuid, user.getUuid())
+                : null;
 
         UserProgressView progress = progressApplicationService.getProgress(userId);
 

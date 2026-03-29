@@ -9,11 +9,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.misis.gamification.entity.User;
+import ru.misis.gamification.events.UserCreatedEvent;
 import ru.misis.gamification.exception.UserNotFoundException;
 import ru.misis.gamification.repository.UserRepository;
 import ru.misis.gamification.service.application.enrollment.EnrollmentApplicationService;
@@ -26,6 +28,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -39,6 +42,9 @@ class UserServiceUnitTest {
 
     @Mock
     private EnrollmentApplicationService enrollmentApplicationService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @Spy
     @InjectMocks
@@ -97,11 +103,21 @@ class UserServiceUnitTest {
         assertThat(result.getLevel()).isEqualTo(1);
         assertThat(result.getUuid()).isNotNull();
 
+        // Проверяем сохранение пользователя
         verify(userRepository).save(userCaptor.capture());
         User saved = userCaptor.getValue();
         assertThat(saved.getUserId()).isEqualTo("new-user");
 
-        verify(enrollmentApplicationService).enrollIfNeeded("new-user", "CS-101", "G-14");
+        // Проверяем публикацию события
+        ArgumentCaptor<UserCreatedEvent> eventCaptor = ArgumentCaptor.forClass(UserCreatedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+        UserCreatedEvent publishedEvent = eventCaptor.getValue();
+        assertThat(publishedEvent.getUserId()).isEqualTo("new-user");
+        assertThat(publishedEvent.getCourseId()).isEqualTo("CS-101");
+        assertThat(publishedEvent.getGroupId()).isEqualTo("G-14");
+
+        verifyNoMoreInteractions(userRepository, eventPublisher);
     }
 
     @Test
@@ -154,16 +170,89 @@ class UserServiceUnitTest {
     }
 
     @Test
-    void findAll_callsRepositoryWithPageable() {
-        Pageable pageable = PageRequest.of(1, 20);
-        Page<User> page = new PageImpl<>(List.of(existingUser), pageable, 1);
+    void findAll_callsRepositoryWithNormalizedParameters() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<User> expectedPage = new PageImpl<>(List.of(existingUser), pageable, 1);
 
-        when(userRepository.findAll(pageable)).thenReturn(page);
+        when(userRepository.findAll(null, null, pageable))
+                .thenReturn(expectedPage);
 
-        Page<User> result = service.findAll(pageable);
+        Page<User> result = service.findAll(null, null, pageable);
 
-        assertThat(result).isSameAs(page);
-        verify(userRepository).findAll(pageable);
+        assertThat(result).isSameAs(expectedPage);
+        verify(userRepository).findAll(null, null, pageable);
+    }
+
+    @Test
+    void findAll_withCourseId_only_callsRepositoryCorrectly() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> expectedPage = new PageImpl<>(List.of(existingUser));
+
+        when(userRepository.findAll("CS-101", null, pageable))
+                .thenReturn(expectedPage);
+
+        Page<User> result = service.findAll("CS-101", null, pageable);
+
+        assertThat(result).isSameAs(expectedPage);
+        verify(userRepository).findAll("CS-101", null, pageable);
+    }
+
+    @Test
+    void findAll_withCourseAndGroup_callsRepositoryCorrectly() {
+        Pageable pageable = PageRequest.of(1, 15);
+        Page<User> expectedPage = new PageImpl<>(List.of(existingUser), pageable, 5);
+
+        when(userRepository.findAll("MATH-202", "GROUP-A1", pageable))
+                .thenReturn(expectedPage);
+
+        Page<User> result = service.findAll("MATH-202", "GROUP-A1", pageable);
+
+        assertThat(result).isSameAs(expectedPage);
+        verify(userRepository).findAll("MATH-202", "GROUP-A1", pageable);
+    }
+
+    @Test
+    void findAll_withEmptyStrings_normalizesToNull() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<User> expectedPage = new PageImpl<>(List.of(existingUser));
+
+        when(userRepository.findAll(null, null, pageable)).thenReturn(expectedPage);
+
+        Page<User> result1 = service.findAll("", null, pageable);
+        Page<User> result2 = service.findAll(null, "", pageable);
+        Page<User> result3 = service.findAll("   ", "   ", pageable);
+
+        assertThat(result1).isSameAs(expectedPage);
+        assertThat(result2).isSameAs(expectedPage);
+        assertThat(result3).isSameAs(expectedPage);
+
+        verify(userRepository, times(3)).findAll(null, null, pageable);
+    }
+
+    @Test
+    void findAll_withWhitespaceOnly_normalizesToNull() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> expectedPage = new PageImpl<>(List.of());
+
+        when(userRepository.findAll(null, "GROUP-X", pageable)).thenReturn(expectedPage);
+
+        Page<User> result = service.findAll("   ", "GROUP-X", pageable);
+
+        assertThat(result).isSameAs(expectedPage);
+        verify(userRepository).findAll(null, "GROUP-X", pageable);
+    }
+
+    @Test
+    void findAll_withNullAndValidMixedParameters() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<User> expectedPage = new PageImpl<>(List.of(existingUser));
+
+        when(userRepository.findAll("PHYS-101", null, pageable)).thenReturn(expectedPage);
+
+        Page<User> result = service.findAll("PHYS-101", "   ", pageable);
+
+        assertThat(result).isSameAs(expectedPage);
+        verify(userRepository).findAll("PHYS-101", null, pageable);
     }
 
     @Test

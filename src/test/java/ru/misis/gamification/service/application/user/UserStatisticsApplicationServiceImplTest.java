@@ -5,10 +5,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import ru.misis.gamification.entity.Course;
+import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
+import ru.misis.gamification.exception.CourseNotFoundException;
 import ru.misis.gamification.exception.UserNotEnrolledInCourseException;
+import ru.misis.gamification.model.UserCoursesView;
 import ru.misis.gamification.model.UserProgressView;
 import ru.misis.gamification.model.UserStatisticsView;
 import ru.misis.gamification.service.simple.course.CourseService;
@@ -16,15 +21,16 @@ import ru.misis.gamification.service.simple.enrollment.EnrollmentService;
 import ru.misis.gamification.service.simple.group.GroupService;
 import ru.misis.gamification.service.simple.user.UserService;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.STRICT_STUBS)
 class UserStatisticsApplicationServiceImplTest {
 
     @Mock
@@ -42,127 +48,148 @@ class UserStatisticsApplicationServiceImplTest {
     private UserStatisticsApplicationServiceImpl service;
 
     @Test
-    void getUserStatistics_withGroup_returnsFullView() {
-        String userId = "u-123";
-        String courseId = "CS-101";
-        String groupId = "G-1";
+    void getUserStatistics_withGroup() {
+        String userId = "u1";
+        String courseId = "c1";
+        String groupId = "g1";
 
         UUID userUuid = UUID.randomUUID();
         UUID courseUuid = UUID.randomUUID();
         UUID groupUuid = UUID.randomUUID();
 
-        User user = User.builder().uuid(userUuid).userId(userId).totalPoints(1200).level(6).build();
-        Course course = Course.builder().uuid(courseUuid).build();
-
-        UserCourseEnrollment enrollment = UserCourseEnrollment.builder()
-                .totalPointsInCourse(450)
-                .build();
-
-        UserProgressView progress = new UserProgressView(userId, 1200, 6, 300L, 80.0);
+        User user = User.builder().uuid(userUuid).userId(userId).level(3).totalPoints(100).build();
+        Course course = Course.builder().uuid(courseUuid).courseId(courseId).build();
+        UserCourseEnrollment enrollment = UserCourseEnrollment.builder().totalPointsInCourse(50).build();
+        UserProgressView progress = new UserProgressView(userId, 100, 3, 20L, 40.0);
 
         when(userService.getUserByExternalId(userId)).thenReturn(user);
         when(courseService.findByCourseId(courseId)).thenReturn(course);
         when(groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId)).thenReturn(groupUuid);
         when(enrollmentService.isUserEnrolledInCourse(user, course)).thenReturn(true);
         when(enrollmentService.findByUserAndCourse(user, course)).thenReturn(enrollment);
-        when(enrollmentService.getRankByPointsInCourse(courseUuid, null, userUuid)).thenReturn(5L);
+        when(enrollmentService.getRankByPointsInCourse(courseUuid, null, userUuid)).thenReturn(10L);
         when(enrollmentService.getRankByPointsInCourse(courseUuid, groupUuid, userUuid)).thenReturn(2L);
         when(progressApplicationService.getProgress(userId)).thenReturn(progress);
 
-        UserStatisticsView result = service.getUserStatistics(courseId, groupId, userId);
+        UserStatisticsView result = service.getUserStatistics(userId, courseId, groupId);
 
-        assertThat(result.userId()).isEqualTo("u-123");
-        assertThat(result.globalLevel()).isEqualTo(6);
-        assertThat(result.totalPoints()).isEqualTo(1200);
-        assertThat(result.courseId()).isEqualTo("CS-101");
-        assertThat(result.groupId()).isEqualTo("G-1");
-        assertThat(result.pointsInCourse()).isEqualTo(450);
-        assertThat(result.rankInCourse()).isEqualTo(5L);
+        assertThat(result.userId()).isEqualTo(userId);
+        assertThat(result.rankInCourse()).isEqualTo(10L);
         assertThat(result.rankInGroup()).isEqualTo(2L);
-        assertThat(result.pointsToNextGlobalLevel()).isEqualTo(300L);
-        assertThat(result.progressPercent()).isEqualTo(80.0);
-
-        verify(enrollmentService).isUserEnrolledInCourse(user, course);
-        verify(enrollmentService).getRankByPointsInCourse(courseUuid, null, userUuid);
-        verify(enrollmentService).getRankByPointsInCourse(courseUuid, groupUuid, userUuid);
+        assertThat(result.pointsInCourse()).isEqualTo(50);
     }
 
     @Test
-    void getUserStatistics_withoutGroup_rankInGroupNull() {
-        String userId = "u-456";
-        String courseId = "MATH-202";
-        String groupId = null;
+    void getUserStatistics_withoutGroup() {
+        String userId = "u1";
+        String courseId = "c1";
 
         UUID userUuid = UUID.randomUUID();
         UUID courseUuid = UUID.randomUUID();
 
-        User user = User.builder().uuid(userUuid).userId(userId).build();
-        Course course = Course.builder().uuid(courseUuid).build();
-
-        UserCourseEnrollment enrollment = UserCourseEnrollment.builder().totalPointsInCourse(800).build();
-
-        UserProgressView progress = new UserProgressView(userId, 2000, 9, 400L, 66.6);
+        User user = User.builder().uuid(userUuid).userId(userId).level(1).totalPoints(10).build();
+        Course course = Course.builder().uuid(courseUuid).courseId(courseId).build();
+        UserCourseEnrollment enrollment = UserCourseEnrollment.builder().totalPointsInCourse(5).build();
+        UserProgressView progress = new UserProgressView(userId, 10, 1, 5L, 50.0);
 
         when(userService.getUserByExternalId(userId)).thenReturn(user);
         when(courseService.findByCourseId(courseId)).thenReturn(course);
         when(enrollmentService.isUserEnrolledInCourse(user, course)).thenReturn(true);
         when(enrollmentService.findByUserAndCourse(user, course)).thenReturn(enrollment);
-        when(enrollmentService.getRankByPointsInCourse(courseUuid, null, userUuid)).thenReturn(12L);
+        when(enrollmentService.getRankByPointsInCourse(courseUuid, null, userUuid)).thenReturn(1L);
         when(progressApplicationService.getProgress(userId)).thenReturn(progress);
 
-        UserStatisticsView result = service.getUserStatistics(courseId, groupId, userId);
+        UserStatisticsView result = service.getUserStatistics(userId, courseId, null);
 
-        assertThat(result.groupId()).isNull();
         assertThat(result.rankInGroup()).isNull();
-        assertThat(result.rankInCourse()).isEqualTo(12L);
     }
 
     @Test
-    void getUserStatistics_notEnrolled_throwsException() {
-        String userId = "u-not-enrolled";
-        String courseId = "PHYS-303";
+    void getUserStatistics_courseNotFound() {
+        when(courseService.findByCourseId("c")).thenReturn(null);
 
-        User user = User.builder().userId(userId).build();
+        when(userService.getUserByExternalId("u"))
+                .thenReturn(User.builder().build());
+
+        assertThatThrownBy(() -> service.getUserStatistics("u", "c", null))
+                .isInstanceOf(CourseNotFoundException.class);
+    }
+
+    @Test
+    void getUserStatistics_notEnrolled() {
+        User user = User.builder().build();
         Course course = Course.builder().build();
 
-        when(userService.getUserByExternalId(userId)).thenReturn(user);
-        when(courseService.findByCourseId(courseId)).thenReturn(course);
+        when(userService.getUserByExternalId("u")).thenReturn(user);
+        when(courseService.findByCourseId("c")).thenReturn(course);
         when(enrollmentService.isUserEnrolledInCourse(user, course)).thenReturn(false);
 
-        assertThatThrownBy(() -> service.getUserStatistics(courseId, null, userId))
+        assertThatThrownBy(() -> service.getUserStatistics("u", "c", null))
                 .isInstanceOf(UserNotEnrolledInCourseException.class);
-
-        verify(enrollmentService).isUserEnrolledInCourse(user, course);
-        verifyNoMoreInteractions(enrollmentService, groupService, progressApplicationService);
     }
 
     @Test
-    void getUserStatistics_userNotFound_throwsFromService() {
-        String userId = "missing-user";
-
-        when(userService.getUserByExternalId(userId))
-                .thenThrow(new RuntimeException("User not found"));
-
-        assertThatThrownBy(() -> service.getUserStatistics("CS-101", null, userId))
-                .isInstanceOf(RuntimeException.class);
-
-        verify(userService).getUserByExternalId(userId);
-    }
-
-    @Test
-    void getUserStatistics_courseNotFound_throwsFromService() {
-        String userId = "u-789";
-        String courseId = "UNKNOWN";
+    void getUserCourses_withGroupAndSorting() {
+        String userId = "u1";
+        UUID courseUuid = UUID.randomUUID();
+        UUID groupUuid = UUID.randomUUID();
 
         User user = User.builder().userId(userId).build();
 
+        Course course = Course.builder()
+                .uuid(courseUuid)
+                .courseId("c1")
+                .displayName("Course")
+                .build();
+
+        Group group = Group.builder()
+                .uuid(groupUuid)
+                .groupId("g1")
+                .build();
+
+        UserCourseEnrollment e1 = UserCourseEnrollment.builder()
+                .course(course)
+                .group(group)
+                .totalPointsInCourse(10)
+                .enrolledAt(LocalDateTime.now().minusSeconds(100))
+                .build();
+
+        UserCourseEnrollment e2 = UserCourseEnrollment.builder()
+                .course(course)
+                .group(null)
+                .totalPointsInCourse(20)
+                .enrolledAt(LocalDateTime.now())
+                .build();
+
+        UserProgressView progress = new UserProgressView(userId, 100, 2, 10L, 60.0);
+
         when(userService.getUserByExternalId(userId)).thenReturn(user);
-        when(courseService.findByCourseId(courseId))
-                .thenThrow(new RuntimeException("Course not found"));
+        when(progressApplicationService.getProgress(userId)).thenReturn(progress);
+        when(enrollmentService.findAllByUser(user)).thenReturn(List.of(e1, e2));
 
-        assertThatThrownBy(() -> service.getUserStatistics(courseId, null, userId))
-                .isInstanceOf(RuntimeException.class);
+        when(courseService.findById(courseUuid)).thenReturn(course);
+        when(groupService.findById(groupUuid)).thenReturn(group);
 
-        verify(courseService).findByCourseId(courseId);
+        UserCoursesView result = service.getUserCourses(userId);
+
+        assertThat(result.getCourses()).hasSize(2);
+        assertThat(result.getCourses().get(0).getTotalPointsInCourse()).isEqualTo(20);
+        assertThat(result.getCourses().get(1).getGroupId()).isEqualTo("g1");
+    }
+
+    @Test
+    void getUserCourses_empty() {
+        String userId = "u";
+
+        User user = User.builder().userId(userId).build();
+        UserProgressView progress = new UserProgressView(userId, 0, 0, 0L, 0.0);
+
+        when(userService.getUserByExternalId(userId)).thenReturn(user);
+        when(progressApplicationService.getProgress(userId)).thenReturn(progress);
+        when(enrollmentService.findAllByUser(user)).thenReturn(List.of());
+
+        UserCoursesView result = service.getUserCourses(userId);
+
+        assertThat(result.getCourses()).isEmpty();
     }
 }

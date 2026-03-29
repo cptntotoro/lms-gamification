@@ -36,10 +36,14 @@ public class UserAdminApplicationServiceImpl implements UserAdminApplicationServ
     }
 
     @Override
-    public Page<UserAdminView> findAll(Pageable pageable) {
-        log.debug("Админ запросил список пользователей: page={}, size={}",
-                pageable.getPageNumber(), pageable.getPageSize());
-        return userService.findAll(pageable)
+    public Page<UserAdminView> findAll(String courseId, String groupId, Pageable pageable) {
+        log.debug("Админ запросил список пользователей: courseId={}, groupId={}, page={}, size={}",
+                courseId, groupId, pageable.getPageNumber(), pageable.getPageSize());
+
+        String normalizedCourseId = (courseId == null || courseId.trim().isEmpty()) ? null : courseId.trim();
+        String normalizedGroupId = (groupId == null || groupId.trim().isEmpty()) ? null : groupId.trim();
+
+        return userService.findAll(normalizedCourseId, normalizedGroupId, pageable)
                 .map(this::toUserAdminView);
     }
 

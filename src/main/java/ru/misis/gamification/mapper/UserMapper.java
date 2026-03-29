@@ -1,6 +1,7 @@
 package ru.misis.gamification.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
 import ru.misis.gamification.dto.user.response.UserDto;
 import ru.misis.gamification.dto.user.response.UserGlobalCourseGroupDto;
@@ -43,7 +44,12 @@ public interface UserMapper {
      * Смаппить модель прогресса пользователя в DTO
      *
      * @param progress Модель прогресса пользователя
-     * @return DTO
+     * @return DTO пользователя с глобальными данными + опционально по курсу/группе
      */
+    @Mapping(target = "courseId", ignore = true)
+    @Mapping(target = "groupId", ignore = true)
+    @Mapping(target = "pointsInCourse", ignore = true)
+    @Mapping(target = "rankInCourse", ignore = true)
+    @Mapping(target = "rankInGroup", ignore = true)
     UserGlobalCourseGroupDto toUserGlobalCourseGroupDto(UserProgressView progress);
 }

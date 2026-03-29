@@ -20,8 +20,10 @@ public interface UserAdminApplicationService {
     /**
      * Получить страницу моделей пользователя для администратора
      *
+     * @param courseId Идентификатор курса из LMS
+     * @param groupId  Идентификатор группы из LMS
      * @param pageable Параметры пагинации и сортировки
      * @return Страница моделей пользователя для администратора
      */
-    Page<UserAdminView> findAll(Pageable pageable);
+    Page<UserAdminView> findAll(String courseId, String groupId, Pageable pageable);
 }
