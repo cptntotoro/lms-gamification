@@ -25,8 +25,6 @@ import ru.misis.gamification.mapper.TransactionMapper;
 import ru.misis.gamification.model.TransactionSummary;
 import ru.misis.gamification.service.application.transaction.TransactionHistoryApplicationService;
 
-// TODO: /api/v1/transactions/users/{userId} – возвращает историю транзакций пользователя с пагинацией
-
 @PreAuthorize("hasRole('ADMIN')")
 @Slf4j
 @RestController
@@ -57,7 +55,7 @@ public class TransactionAdminController {
             @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав."),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
-    @GetMapping("/{userId}/transactions")
+    @GetMapping("/users/{userId}")
     public ResponseEntity<TransactionPageDto> getUserTransactions(
             @Parameter(description = "Идентификатор пользователя из LMS", example = "user123")
             @PathVariable String userId,

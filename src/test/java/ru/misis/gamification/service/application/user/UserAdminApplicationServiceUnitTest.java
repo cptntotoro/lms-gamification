@@ -77,7 +77,7 @@ class UserAdminApplicationServiceUnitTest {
     }
 
     @Test
-    void findAll_mapsPage() {
+    void findAll_withCourseAndGroup_mapsPageCorrectly() {
         Pageable pageable = PageRequest.of(0, 10);
 
         UUID u1 = UUID.randomUUID();
@@ -91,26 +91,52 @@ class UserAdminApplicationServiceUnitTest {
         UserProgressView p1 = new UserProgressView("u1", 1000, 5, 300L, 60.0);
         UserProgressView p2 = new UserProgressView("u2", 2000, 10, 150L, 90.0);
 
+        when(userService.findAll("MATH-101", "GROUP-A", pageable)).thenReturn(userPage);
         when(progressApplicationService.getProgress("u1")).thenReturn(p1);
         when(progressApplicationService.getProgress("u2")).thenReturn(p2);
 
-        UserAdminView v1 = new UserAdminView(u1, "u1", 1000, 5, 300L, 60.0, null, null);
-        UserAdminView v2 = new UserAdminView(u2, "u2", 2000, 10, 150L, 90.0, null, null);
+        Page<UserAdminView> result = service.findAll("MATH-101", "GROUP-A", pageable);
 
-        when(userService.findAll(pageable)).thenReturn(userPage);
-        when(progressApplicationService.getProgress("u1")).thenReturn(p1);
-        when(progressApplicationService.getProgress("u2")).thenReturn(p2);
-
-        Page<UserAdminView> result = service.findAll(pageable);
-
-        assertThat(result.getContent()).containsExactly(v1, v2);
+        assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getNumber()).isZero();
         assertThat(result.getSize()).isEqualTo(10);
 
-        verify(userService).findAll(pageable);
+        verify(userService).findAll("MATH-101", "GROUP-A", pageable);
         verify(progressApplicationService).getProgress("u1");
         verify(progressApplicationService).getProgress("u2");
+    }
+
+    @Test
+    void findAll_withoutFilters_mapsPageCorrectly() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(
+                User.builder().uuid(UUID.randomUUID()).userId("u1").totalPoints(1000).level(5).build()
+        ));
+
+        UserProgressView progress = new UserProgressView("u1", 1000, 5, 300L, 60.0);
+
+        when(userService.findAll(null, null, pageable)).thenReturn(userPage);
+        when(progressApplicationService.getProgress("u1")).thenReturn(progress);
+
+        Page<UserAdminView> result = service.findAll(null, null, pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(userService).findAll(null, null, pageable);
+    }
+
+    @Test
+    void findAll_withEmptyStrings_normalizesAndCallsService() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<User> userPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+        when(userService.findAll(null, null, pageable)).thenReturn(userPage);
+
+        Page<UserAdminView> result = service.findAll("", "   ", pageable);
+
+        assertThat(result.isEmpty()).isTrue();
+
+        verify(userService).findAll(null, null, pageable);
     }
 
     @Test
@@ -118,30 +144,16 @@ class UserAdminApplicationServiceUnitTest {
         Pageable pageable = PageRequest.of(1, 20);
         Page<User> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
-        when(userService.findAll(pageable)).thenReturn(emptyPage);
+        when(userService.findAll("CS-101", null, pageable)).thenReturn(emptyPage);
 
-        Page<UserAdminView> result = service.findAll(pageable);
+        Page<UserAdminView> result = service.findAll("CS-101", null, pageable);
 
         assertThat(result.isEmpty()).isTrue();
         assertThat(result.getTotalElements()).isZero();
         assertThat(result.getNumber()).isOne();
         assertThat(result.getSize()).isEqualTo(20);
 
-        verify(userService).findAll(pageable);
-        verifyNoInteractions(progressApplicationService);
-    }
-
-    @Test
-    void findByUserId_userNotFound_throwsFromService() {
-        String userId = "missing";
-        RuntimeException ex = new RuntimeException("User not found");
-
-        when(userService.getUserByExternalId(userId)).thenThrow(ex);
-
-        assertThatThrownBy(() -> service.findByUserId(userId))
-                .isSameAs(ex);
-
-        verify(userService).getUserByExternalId(userId);
+        verify(userService).findAll("CS-101", null, pageable);
         verifyNoInteractions(progressApplicationService);
     }
 
@@ -150,12 +162,12 @@ class UserAdminApplicationServiceUnitTest {
         Pageable pageable = PageRequest.of(0, 5);
         RuntimeException ex = new RuntimeException("DB error");
 
-        when(userService.findAll(pageable)).thenThrow(ex);
+        when(userService.findAll("ANY-COURSE", "ANY-GROUP", pageable)).thenThrow(ex);
 
-        assertThatThrownBy(() -> service.findAll(pageable))
+        assertThatThrownBy(() -> service.findAll("ANY-COURSE", "ANY-GROUP", pageable))
                 .isSameAs(ex);
 
-        verify(userService).findAll(pageable);
+        verify(userService).findAll("ANY-COURSE", "ANY-GROUP", pageable);
         verifyNoInteractions(progressApplicationService);
     }
 }

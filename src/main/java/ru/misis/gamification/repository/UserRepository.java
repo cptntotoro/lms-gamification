@@ -1,6 +1,8 @@
 package ru.misis.gamification.repository;
 
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -53,4 +55,29 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     @Query("SELECT u.uuid FROM User u WHERE u.userId = :userId")
     Optional<UUID> findUuidByUserId(@Param("userId") String userId);
+
+    /**
+     * Получить список пользователей с фильтрацией по курсу и группе
+     * <p>
+     * Если courseId = null — возвращаются все пользователи (без привязки к курсам).
+     * Если courseId указан, но groupId = null — все пользователи курса (все группы).
+     * Если указаны оба — пользователи конкретной группы в курсе.
+     *
+     * @param courseId Идентификатор курса из LMS
+     * @param groupId  Идентификатор группы из LMS
+     * @param pageable Параметры пагинации и сортировки
+     * @return страница пользователей
+     */
+    @Query("""
+            SELECT u
+            FROM User u
+            LEFT JOIN UserCourseEnrollment e ON e.user = u
+            LEFT JOIN e.course c
+            LEFT JOIN e.group g
+            WHERE (:courseId IS NULL OR c.courseId = :courseId)
+              AND (:groupId IS NULL OR g.groupId = :groupId)
+            """)
+    Page<User> findAll(@Param("courseId") String courseId,
+                       @Param("groupId") String groupId,
+                       Pageable pageable);
 }

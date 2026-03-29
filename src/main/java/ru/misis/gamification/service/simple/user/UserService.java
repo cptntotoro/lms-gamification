@@ -31,9 +31,7 @@ public interface UserService {
      * @return Пользователь (существующий или только что созданный)
      * @throws ConstraintViolationException если userId == null или пустая строка
      */
-    User createIfNotExists(String userId,
-                           String courseId,
-                           String groupId);
+    User createIfNotExists(String userId, String courseId, String groupId);
 
     /**
      * Получить пользователя по идентификатору из LMS
@@ -58,11 +56,13 @@ public interface UserService {
     /**
      * Получить страницу всех пользователей с поддержкой пагинации и сортировки
      *
+     * @param courseId Идентификатор курса из LMS
+     * @param groupId  Идентификатор группы из LMS
      * @param pageable Параметры пагинации и сортировки
      * @return Страница пользователей
      * @throws ConstraintViolationException если pageable == null
      */
-    Page<User> findAll(Pageable pageable);
+    Page<User> findAll(String courseId, String groupId, Pageable pageable);
 
     /**
      * Получить UUID пользователя по идентификатору пользователя из LMS
@@ -90,7 +90,7 @@ public interface UserService {
      * @param uuid UUID пользователя
      * @return Пользователь
      * @throws UserNotFoundException                           если пользователь не найден
-     * @throws jakarta.validation.ConstraintViolationException если userId == null или пустая строка
+     * @throws ConstraintViolationException если userId == null или пустая строка
      */
     User getByUuid(UUID uuid) throws UserNotFoundException;
 }
