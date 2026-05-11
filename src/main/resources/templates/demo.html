@@ -3,58 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Лидерборд курса</title>
+    <title>Демо-панель геймификации</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/leaderboard.css}">
+    <style>
+        /* Дополнительные стили для новых элементов */
+        .form-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #4a5568;
+            margin-bottom: 4px;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            background: white;
+        }
+        .event-log {
+            background: #1e293b;
+            color: #e2e8f0;
+            font-family: monospace;
+            font-size: 13px;
+            padding: 12px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-item {
+            padding: 4px 0;
+            border-bottom: 1px solid #334155;
+        }
+        .log-error {
+            color: #f87171;
+        }
+        .log-success {
+            color: #4ade80;
+        }
+        .log-warning {
+            color: #fbbf24;
+        }
+        .btn-secondary {
+            background: #475569;
+        }
+        .btn-secondary:hover {
+            background: #334155;
+        }
+        .btn-danger {
+            background: #dc2626;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        .actions-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
 
 <div th:replace="~{fragments/header :: header}"></div>
 
 <div class="container">
-    <h1 class="page-title">Демо панель</h1>
+    <h1 class="page-title">🎮 Демо-панель геймификации</h1>
 
+    <!-- Контекст курса и группы -->
     <div class="card">
-        <h2>Сценарии</h2>
+        <h2>📚 Контекст курса и группы</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="courseSelect">Курс (ID)</label>
+                <select id="courseSelect">
+                    <option value="">-- Загрузка курсов --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="groupIdInput">Группа (ID, опционально)</label>
+                <input type="text" id="groupIdInput" placeholder="например, M-21-2">
+            </div>
+        </div>
+        <p class="help-text">Выберите курс, чтобы лидерборд и профиль показывали данные именно по нему.</p>
+    </div>
 
+    <!-- Отправка событий -->
+    <div class="card">
+        <h2>📤 Отправка событий (эмуляция LMS)</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="eventTypeSelect">Тип события</label>
+                <select id="eventTypeSelect">
+                    <option value="">-- Загрузка типов --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="eventIdInput">ID события (eventId)</label>
+                <input type="text" id="eventIdInput" placeholder="auto или укажите свой">
+            </div>
+        </div>
         <div class="actions-bar">
-            <button class="btn btn-primary" onclick="createEventType()">Создать тип события</button>
-            <button class="btn btn-primary" onclick="sendQuiz()">Отправить Quiz</button>
-            <button class="btn btn-primary" onclick="sendHomework()">Отправить Homework</button>
+            <button class="btn btn-primary" id="sendEventBtn">✅ Отправить событие</button>
+            <button class="btn btn-secondary" id="sendDuplicateBtn">🔄 Отправить дубликат (последний eventId)</button>
+            <button class="btn btn-danger" id="sendInvalidTypeBtn">❌ Неверный тип события</button>
+            <button class="btn btn-danger" id="sendEmptyEventIdBtn">⚠️ Пустой eventId</button>
+        </div>
+        <p class="help-text">Событие будет отправлено на <code>/api/v1/event</code> от имени выбранного пользователя. <br>
+            При успешном начислении очков виджет обновится автоматически.</p>
+    </div>
+
+    <!-- Лог событий -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>📋 Лог запросов и ответов</h2>
+            <button id="clearLogBtn" class="btn btn-secondary" style="background: #64748b;">Очистить лог</button>
+        </div>
+        <div id="eventLog" class="event-log">
+            <div class="log-item">[--:--:--] Готов к демонстрации. Выберите пользователя и курс.</div>
         </div>
     </div>
 
-    <div class="card" style="margin-top:20px;">
-        <h2>LMS Simulator</h2>
-
-        <button class="btn btn-primary" onclick="sendEvent('quiz')">Quiz</button>
-        <button class="btn btn-primary" onclick="sendEvent('attendance')">Attendance</button>
-        <button class="btn btn-primary" onclick="sendEvent('project')">Project</button>
+    <!-- Старые кнопки (оставлены для совместимости) -->
+    <div class="card">
+        <h2>🔧 Утилиты администратора</h2>
+        <div class="actions-bar">
+            <button class="btn btn-primary" onclick="createEventType()">Создать тип события (DEMO_TYPE)</button>
+        </div>
     </div>
-</div>
-
-<div class="card" style="margin-top:20px;">
-    <h2>Лог событий</h2>
-    <div id="eventLog" class="event-log"></div>
 </div>
 
 <script th:src="@{/js/demo.js}"></script>
 <script>
     window.GamificationWidgetConfig = {
-        // Базовый URL вашего сервера геймификации (обязательно)
         apiBaseUrl: "http://localhost:8080",
-
-        // ID текущего пользователя из LMS (обязательно)
-        userId: localStorage.getItem("demoUserId") || "student001",                                 // <-- ЗАМЕНИТЕ НА РЕАЛЬНЫЙ ID
-
-        // Частота обновления виджета в миллисекундах (опционально, по умолчанию 5000)
+        userId: localStorage.getItem("demoUserId") || "student001",
         updateIntervalMs: 5000,
-
-        // // Дополнительные HTTP-заголовки (опционально). Например, для JWT-токена.
-        // // Если ваш API требует авторизации через заголовок X-User-Id, его тоже можно передать здесь.
         headers: {
-            "X-User-Id": localStorage.getItem("demoUserId") || "student001",      // Тот же ID, что и в userId
-            "X-Role": "STUDENT"         // Если API требует роль (опционально)
+            "X-User-Id": localStorage.getItem("demoUserId") || "student001",
+            "X-Role": localStorage.getItem("demoRole") || "ADMIN"
         }
     };
 </script>
