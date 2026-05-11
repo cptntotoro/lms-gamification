@@ -39,6 +39,26 @@
 </div>
 
 <script th:src="@{/js/demo.js}"></script>
+<script>
+    window.GamificationWidgetConfig = {
+        // Базовый URL вашего сервера геймификации (обязательно)
+        apiBaseUrl: "http://localhost:8080",
+
+        // ID текущего пользователя из LMS (обязательно)
+        userId: localStorage.getItem("demoUserId") || "student001",                                 // <-- ЗАМЕНИТЕ НА РЕАЛЬНЫЙ ID
+
+        // Частота обновления виджета в миллисекундах (опционально, по умолчанию 5000)
+        updateIntervalMs: 5000,
+
+        // // Дополнительные HTTP-заголовки (опционально). Например, для JWT-токена.
+        // // Если ваш API требует авторизации через заголовок X-User-Id, его тоже можно передать здесь.
+        headers: {
+            "X-User-Id": localStorage.getItem("demoUserId") || "student001",      // Тот же ID, что и в userId
+            "X-Role": "STUDENT"         // Если API требует роль (опционально)
+        }
+    };
+</script>
+<script th:src="@{/js/gamification-widget.js}"></script>
 
 </body>
 </html>
