@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лидерборд курса</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/leaderboard.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="container">
+    <h1 class="page-title">Демо панель</h1>
+
+    <div class="card">
+        <h2>Сценарии</h2>
+
+        <div class="actions-bar">
+            <button class="btn btn-primary" onclick="createEventType()">Создать тип события</button>
+            <button class="btn btn-primary" onclick="sendQuiz()">Отправить Quiz</button>
+            <button class="btn btn-primary" onclick="sendHomework()">Отправить Homework</button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <h2>LMS Simulator</h2>
+
+        <button class="btn btn-primary" onclick="sendEvent('quiz')">Quiz</button>
+        <button class="btn btn-primary" onclick="sendEvent('attendance')">Attendance</button>
+        <button class="btn btn-primary" onclick="sendEvent('project')">Project</button>
+    </div>
+</div>
+
+<div class="card" style="margin-top:20px;">
+    <h2>Лог событий</h2>
+    <div id="eventLog" class="event-log"></div>
+</div>
+
+<script th:src="@{/js/demo.js}"></script>
+
+</body>
+</html>

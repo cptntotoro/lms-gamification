@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="demo-header" th:fragment="header">
+    <div class="demo-header-inner">
+        <div class="demo-badge"><a href="/demo">DEMO MODE</a></div>
+
+        <div class="demo-controls">
+            <select id="demoRole" class="demo-select">
+                <option value="ADMIN">ADMIN</option>
+                <option value="TEACHER">TEACHER</option>
+                <option value="STUDENT">STUDENT</option>
+            </select>
+
+            <select id="demoUser" class="demo-select">
+                <option value="student001">student001</option>
+                <option value="student004">student004 (топ)</option>
+                <option value="student007">student007 (лидер)</option>
+                <option value="student012">student012 (prog лидер)</option>
+            </select>
+        </div>
+
+        <div class="demo-nav">
+            <a href="/demo">Demo</a>
+
+            <a href="/demo/admin/event-types">Event Types</a>
+            <a href="/demo/admin/users">Admin Users</a>
+
+            <a href="#" onclick="goToProfile()">Profile</a>
+            <a href="#" onclick="goToLeaderboard()">Leaderboard</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

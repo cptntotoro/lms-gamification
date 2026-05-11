@@ -5,6 +5,8 @@ function openCreateModal() {
     document.getElementById('modalId').value = '';
     document.getElementById('typeCode').disabled = false;
     document.getElementById('eventTypeModal').style.display = 'block';
+
+    logEvent("ADMIN → открыта форма создания типа события");
 }
 
 // Открытие модалки для редактирования — данные берём из строки таблицы
@@ -31,6 +33,7 @@ function openEditModal(btn) {
     document.getElementById('active').checked = active;
 
     document.getElementById('eventTypeModal').style.display = 'block';
+    logEvent(`ADMIN → редактирует тип "${displayName}"`);
 }
 
 function closeModal() {
@@ -42,11 +45,13 @@ async function deactivateType(btn) {
     if (!confirm('Деактивировать тип события?')) return;
 
     try {
-        const response = await fetch(`/api/admin/event-types/${id}`, {method: 'DELETE'});
+        const response = await api(`/api/admin/event-types/${id}`, {method: 'DELETE'});
         if (!response.ok) throw new Error('Ошибка деактивации');
+        logEvent(`ADMIN → деактивировал тип события (id=${id})`);
         location.reload();
     } catch (error) {
-        alert('Не удалось деактивировать: ' + error.message);
+        logEvent(`❌ Ошибка: ${error.message}`);
+        alert('Ошибка: ' + error.message);
     }
 }
 
@@ -54,17 +59,18 @@ async function saveEventType() {
     const form = document.getElementById('eventTypeForm');
     const id = document.getElementById('modalId').value;
     const isEdit = !!id;
-    const url = isEdit ? `/api/admin/event-types/${id}` : '/api/admin/event-types';
-    const method = isEdit ? 'PUT' : 'POST';
 
     const data = {
         displayName: form.displayName.value.trim(),
         points: parseInt(form.points.value),
-        maxDailyPoints: form.maxDailyPoints.value ? parseInt(form.maxDailyPoints.value) : null,
-        active: form.active.checked
+        maxDailyPoints: form.maxDailyPoints.value
+            ? parseInt(form.maxDailyPoints.value)
+            : null
     };
 
-    if (!isEdit) {
+    if (isEdit) {
+        data.active = form.active.checked;
+    } else {
         data.typeCode = form.typeCode.value.trim();
         if (!data.typeCode) {
             alert('Укажите код типа события');
@@ -73,18 +79,27 @@ async function saveEventType() {
     }
 
     try {
-        const response = await fetch(url, {
+        const response = await api(url, {
             method,
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         });
 
         if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.message || 'Ошибка сохранения');
+            let errorText = 'Ошибка сохранения';
+
+            try {
+                const err = await response.json();
+                errorText = err.message || err.error || JSON.stringify(err);
+            } catch (e) {
+                errorText = response.statusText;
+            }
+
+            throw new Error(errorText);
         }
 
         closeModal();
+        logEvent(`ADMIN → ${isEdit ? 'обновил' : 'создал'} тип "${data.displayName}"`);
         location.reload();
     } catch (error) {
         alert('Ошибка: ' + error.message);
@@ -94,4 +109,17 @@ async function saveEventType() {
 window.onclick = function (event) {
     const modal = document.getElementById('eventTypeModal');
     if (event.target === modal) closeModal();
+}
+
+function logEvent(message) {
+    const logContainer = document.getElementById('eventLog');
+    if (!logContainer) return;
+
+    const time = new Date().toLocaleTimeString();
+
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    item.textContent = `[${time}] ${message}`;
+
+    logContainer.prepend(item);
 }
