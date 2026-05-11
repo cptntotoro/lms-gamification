@@ -26,16 +26,19 @@ function api(url, options = {}) {
         ...options, headers: {
             "Content-Type": "application/json",
             "X-User-Id": demoUserId,
-            "X-User-Role": demoRole, ...(options.headers || {})
+            "X-Role": demoRole, ...(options.headers || {})
         }
     });
 }
 
 function sendEvent(type) {
     fetch('/api/v1/event', {
-        method: 'POST', headers: {
-            "Content-Type": "application/json"
-        }, body: JSON.stringify({
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            token: '33dsfasdffs2123sfdfsdfsdf'
+        },
+        body: JSON.stringify({
             userId: demoUserId, eventType: type, eventId: "demo-" + Date.now()
         })
     }).then(() => alert("Событие отправлено"))
