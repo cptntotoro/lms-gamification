@@ -9,6 +9,8 @@
 </head>
 <body>
 
+<div th:replace="~{fragments/header :: header}"></div>
+
 <div class="container">
     <div th:if="${user}" class="profile-card">
         <div class="profile-header">

@@ -59,9 +59,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/analytics/**").hasRole("ADMIN")
 
                         // --- Документация и мониторинг ---
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**").hasRole("ADMIN")
-                        .requestMatchers("/v3/api-docs/**").hasRole("ADMIN")
-                        .requestMatchers("/api/actuator/**").hasRole("ADMIN")
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/actuator/**").permitAll()
 
                         // Остальное пока открыто (можно ужесточить позже)
                         .anyRequest().permitAll()
