@@ -38,7 +38,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/me/**").hasAnyRole("STUDENT", "TEACHER", "METHODIST", "ADMIN")
 
                         // Эндпоинт приёма событий от LMS
-                        // TODO: дополнительная проверка подписи
                         .requestMatchers("/api/v1/event").permitAll()
 
                         // --- API для аутентифицированных пользователей (STUDENT, TEACHER, METHODIST, ADMIN) ---

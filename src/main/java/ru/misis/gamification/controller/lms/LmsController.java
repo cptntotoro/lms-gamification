@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.lms.request.LmsEventRequestDto;
 import ru.misis.gamification.dto.lms.response.LmsEventResponseDto;
+import ru.misis.gamification.interceptor.TokenCheck;
 import ru.misis.gamification.service.application.awarding.LmsEventProcessorApplicationService;
 
 /**
@@ -45,6 +46,7 @@ public class LmsController {
             @ApiResponse(responseCode = "409", description = "Событие уже было обработано (дубликат)"),
             @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     })
+    @TokenCheck
     public ResponseEntity<LmsEventResponseDto> processUserEvent(@RequestBody @Valid LmsEventRequestDto lmsEventRequestDto) {
         log.info("Получен запрос от LMS: userId={}, eventId={}, eventType={}",
                 lmsEventRequestDto.getUserId(), lmsEventRequestDto.getEventId(), lmsEventRequestDto.getEventType());
