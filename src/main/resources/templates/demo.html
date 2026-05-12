@@ -7,44 +7,45 @@
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/leaderboard.css}">
     <style>
-        /* Дополнительные стили для новых элементов */
+        /* Дополнительные стили только для демо-страницы (не конфликтуют с общими) */
         .form-row {
             display: flex;
-            gap: 16px;
+            gap: 20px;
             flex-wrap: wrap;
-            margin-bottom: 16px;
-            align-items: flex-end;
+            margin-bottom: 20px;
         }
-        .form-group {
+        .form-row .form-group {
             flex: 1;
-            min-width: 150px;
+            min-width: 180px;
+            margin-bottom: 0;
         }
-        .form-group label {
-            display: block;
+        .help-text {
             font-size: 0.85rem;
-            color: #4a5568;
-            margin-bottom: 4px;
+            color: #64748b;
+            margin-top: 12px;
         }
-        .form-group select, .form-group input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            background: white;
+        .btn-secondary {
+            background: #475569;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #334155;
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
         }
         .event-log {
-            background: #1e293b;
-            color: #e2e8f0;
-            font-family: monospace;
-            font-size: 13px;
-            padding: 12px;
-            border-radius: 8px;
             max-height: 300px;
-            overflow-y: auto;
         }
         .log-item {
-            padding: 4px 0;
+            padding: 6px 0;
             border-bottom: 1px solid #334155;
+            font-family: monospace;
+            font-size: 0.85rem;
         }
         .log-error {
             color: #f87171;
@@ -55,23 +56,8 @@
         .log-warning {
             color: #fbbf24;
         }
-        .btn-secondary {
-            background: #475569;
-        }
-        .btn-secondary:hover {
-            background: #334155;
-        }
-        .btn-danger {
-            background: #dc2626;
-        }
-        .btn-danger:hover {
-            background: #b91c1c;
-        }
-        .actions-bar {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 10px;
+        .log-info {
+            color: #94a3b8;
         }
     </style>
 </head>
@@ -88,13 +74,13 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="courseSelect">Курс (ID)</label>
-                <select id="courseSelect">
+                <select id="courseSelect" class="demo-select">
                     <option value="">-- Загрузка курсов --</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="groupIdInput">Группа (ID, опционально)</label>
-                <input type="text" id="groupIdInput" placeholder="например, M-21-2">
+                <input type="text" id="groupIdInput" placeholder="например, M-21-2" class="demo-select">
             </div>
         </div>
         <p class="help-text">Выберите курс, чтобы лидерборд и профиль показывали данные именно по нему.</p>
@@ -106,58 +92,67 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="eventTypeSelect">Тип события</label>
-                <select id="eventTypeSelect">
+                <select id="eventTypeSelect" class="demo-select">
                     <option value="">-- Загрузка типов --</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="eventIdInput">ID события (eventId)</label>
-                <input type="text" id="eventIdInput" placeholder="auto или укажите свой">
+                <input type="text" id="eventIdInput" placeholder="auto или укажите свой" class="demo-select">
             </div>
         </div>
-        <div class="actions-bar">
+        <div class="actions-bar" style="justify-content: flex-start; gap: 10px;">
             <button class="btn btn-primary" id="sendEventBtn">✅ Отправить событие</button>
-            <button class="btn btn-secondary" id="sendDuplicateBtn">🔄 Отправить дубликат (последний eventId)</button>
-            <button class="btn btn-danger" id="sendInvalidTypeBtn">❌ Неверный тип события</button>
+            <button class="btn btn-secondary" id="sendDuplicateBtn">🔄 Отправить дубликат</button>
+            <button class="btn btn-danger" id="sendInvalidTypeBtn">❌ Неверный тип</button>
             <button class="btn btn-danger" id="sendEmptyEventIdBtn">⚠️ Пустой eventId</button>
         </div>
-        <p class="help-text">Событие будет отправлено на <code>/api/v1/event</code> от имени выбранного пользователя. <br>
+        <p class="help-text">Событие будет отправлено на <code>/api/v1/event</code> от имени выбранного пользователя.<br>
             При успешном начислении очков виджет обновится автоматически.</p>
     </div>
 
     <!-- Лог событий -->
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>📋 Лог запросов и ответов</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="margin: 0;">📋 Лог запросов и ответов</h2>
             <button id="clearLogBtn" class="btn btn-secondary" style="background: #64748b;">Очистить лог</button>
         </div>
         <div id="eventLog" class="event-log">
-            <div class="log-item">[--:--:--] Готов к демонстрации. Выберите пользователя и курс.</div>
+            <div class="log-item log-info">[--:--:--] Готов к демонстрации. Выберите пользователя и курс.</div>
         </div>
     </div>
 
-    <!-- Старые кнопки (оставлены для совместимости) -->
+    <!-- Утилиты администратора -->
     <div class="card">
         <h2>🔧 Утилиты администратора</h2>
-        <div class="actions-bar">
+        <div class="actions-bar" style="justify-content: flex-start;">
             <button class="btn btn-primary" onclick="createEventType()">Создать тип события (DEMO_TYPE)</button>
         </div>
     </div>
 </div>
 
 <script th:src="@{/js/demo.js}"></script>
-<script>
-    window.GamificationWidgetConfig = {
-        apiBaseUrl: "http://localhost:8080",
-        userId: localStorage.getItem("demoUserId") || "student001",
-        updateIntervalMs: 5000,
-        headers: {
-            "X-User-Id": localStorage.getItem("demoUserId") || "student001",
-            "X-Role": localStorage.getItem("demoRole") || "ADMIN"
-        }
-    };
-</script>
 <script th:src="@{/js/gamification-widget.js}"></script>
+<script>
+    function getConfig() {
+        return {
+            apiBaseUrl: "http://localhost:8080",
+            userId: localStorage.getItem("demoUserId") || "student001",
+            updateIntervalMs: 5000,
+            headers: {
+                "X-User-Id": localStorage.getItem("demoUserId") || "student001",
+                "X-Role": localStorage.getItem("demoRole") || "ADMIN"
+            }
+        };
+    }
+    window.initGamificationWidget(getConfig());
+    document.addEventListener('userChanged', () => {
+        window.initGamificationWidget(getConfig());
+    });
 
+    document.addEventListener('roleChanged', () => {
+        window.initGamificationWidget(getConfig());
+    });
+</script>
 </body>
 </html>

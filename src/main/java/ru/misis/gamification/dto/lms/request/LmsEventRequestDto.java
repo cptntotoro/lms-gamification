@@ -28,7 +28,7 @@ public class LmsEventRequestDto {
     /**
      * Идентификатор события из LMS
      */
-    @NotBlank(message = "userId не может быть пустым")
+    @NotBlank(message = "eventId не может быть пустым")
     @Schema(description = "Уникальный идентификатор события из LMS (защита от дублей)",
             example = "event-uuid-001")
     private String eventId;

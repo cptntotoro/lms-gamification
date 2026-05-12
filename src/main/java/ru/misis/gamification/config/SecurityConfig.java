@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/me/**").hasAnyRole("STUDENT", "TEACHER", "METHODIST", "ADMIN")
 
                         // Эндпоинт приёма событий от LMS
-                        .requestMatchers("/api/v1/event").permitAll()
+                        .requestMatchers("/api/v1/event").hasAnyRole("TEACHER", "ADMIN")
 
                         // --- API для аутентифицированных пользователей (STUDENT, TEACHER, METHODIST, ADMIN) ---
                         // Получение данных пользователя (с проверкой владельца в самом контроллере через @PreAuthorize)
