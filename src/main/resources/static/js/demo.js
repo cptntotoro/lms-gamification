@@ -85,7 +85,7 @@ async function loadUserCourses() {
 // Загрузка активных типов событий (админский эндпоинт)
 async function loadEventTypes() {
     try {
-        const response = await apiCall(`/api/admin/event-types?page=0&size=100`);
+        const response = await apiCall(`/demo/admin/event-types/all-types?page=0&size=100`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
@@ -123,16 +123,26 @@ async function sendEvent(eventType, eventId) {
         log('❌ Не указан тип события', 'error');
         return;
     }
-    if (!eventId || eventId.trim() === '') {
-        log('❌ Не указан eventId', 'error');
-        return;
-    }
 
-    const payload = {
+    let payload = {
         userId: demoUserId,
         eventType: eventType,
         eventId: eventId
     };
+
+    if(!!currentCourseId) {
+        payload = {
+            ...payload,
+            courseId: currentCourseId
+        }
+    }
+
+    if(!!currentGroupId) {
+        payload = {
+            ...payload,
+            groupId: currentGroupId
+        }
+    }
 
     log(`➡️ Отправка события: ${eventType} / ${eventId}`, 'info');
     try {
@@ -264,6 +274,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             demoRole = e.target.value;
             localStorage.setItem("demoRole", demoRole);
             log(`Переключение роли → ${demoRole}`, 'info');
+            document.dispatchEvent(new Event("roleChanged"));
             // Роль влияет на заголовки, но курсы перезагружать не обязательно
         });
     }
@@ -273,6 +284,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             demoUserId = e.target.value;
             localStorage.setItem("demoUserId", demoUserId);
             log(`Выбран пользователь → ${demoUserId}`, 'info');
+            document.dispatchEvent(new Event("userChanged"));
             // Перезагрузить курсы и типы событий (зависит от userId)
             await loadUserCourses();
             // Обновить заголовки для виджета (он сам читает localStorage)
