@@ -1,36 +1,4 @@
-// ======================== ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ API ========================
-/**
- * Универсальная функция для запросов к API
- * @param {string} url - относительный или абсолютный путь
- * @param {Object} options - параметры fetch (method, body, headers и т.д.)
- * @returns {Promise<Response>} - fetch ответ
- */
-async function api(url, options = {}) {
-    // Базовые заголовки по умолчанию
-    const defaultHeaders = {
-        'Content-Type': 'application/json',
-        "X-User-Id": localStorage.getItem("demoUserId") || "student001",
-        "X-Role": localStorage.getItem("demoRole") || "ADMIN",
-    };
-
-    const config = {
-        ...options,
-        headers: {
-            ...defaultHeaders,
-            ...options.headers,
-        },
-    };
-
-    try {
-        const response = await fetch(url, config);
-        return response;
-    } catch (error) {
-        console.error('API fetch error:', error);
-        throw new Error('Сетевая ошибка: ' + error.message);
-    }
-}
-
-// ======================== ОТКРЫТИЕ / ЗАКРЫТИЕ МОДАЛКИ ========================
+// ======================== РАБОТА С МОДАЛКОЙ ========================
 function openCreateModal() {
     document.getElementById('modalTitle').textContent = 'Создать тип события';
     document.getElementById('eventTypeForm').reset();
@@ -58,7 +26,7 @@ async function openEditModal(btn) {
     };
 
     try {
-        const response = await api(`/api/admin/event-types/${id}`, {
+        const response = await window.GamificationAPI.apiRequest(`/api/admin/event-types/${id}`, {
             method: 'GET',
             headers: {'Content-Type': 'application/json'},
         });
@@ -90,7 +58,7 @@ async function deactivateType(btn) {
     if (!confirm('Деактивировать тип события?')) return;
 
     try {
-        const response = await api(`/api/admin/event-types/${id}`, { method: 'DELETE' });
+        const response = await window.GamificationAPI.apiRequest(`/api/admin/event-types/${id}`, { method: 'DELETE' });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || `Ошибка ${response.status}`);
@@ -157,7 +125,7 @@ async function saveEventType() {
     }
 
     try {
-        const response = await api(url, {
+        const response = await window.GamificationAPI.apiRequest(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
