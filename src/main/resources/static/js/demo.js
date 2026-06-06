@@ -40,7 +40,7 @@ async function apiCall(url, options = {}) {
     const headers = {
         "Content-Type": "application/json",
         "X-User-Id": demoUserId,
-        "X-Role": demoRole,
+        "X-Role": options.demoRole || demoRole,
         "token": "asdasd2123sadadad21asdasd",
         ...(options.headers || {})
     };
@@ -247,6 +247,109 @@ function goToLeaderboard() {
 }
 
 // ============================
+// ФУНКЦИИ для загрузки списка пользователей и ручного ввода
+// ============================
+async function loadUsersList() {
+    const userSelect = document.getElementById('demoUser');
+    if (!userSelect) return;
+
+    try {
+        const response = await apiCall(`/api/admin/users?page=0&size=1000`, {demoRole: 'ADMIN'});
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const pageData = await response.json();
+        const users = pageData.content || [];
+
+        const currentUserId = demoUserId;
+
+        userSelect.innerHTML = '';
+        users.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.userId;
+            option.textContent = `${user.userId} (${user.totalPoints} XP, lvl ${user.level})`;
+            if (user.userId === currentUserId) {
+                option.selected = true;
+            }
+            userSelect.appendChild(option);
+        });
+
+        if (currentUserId && !users.some(u => u.userId === currentUserId)) {
+            const option = document.createElement('option');
+            option.value = currentUserId;
+            option.textContent = `${currentUserId} (вне списка)`;
+            option.selected = true;
+            userSelect.appendChild(option);
+        }
+
+        log(`Загружено пользователей: ${users.length}`, 'success');
+    } catch (error) {
+        console.error('Ошибка загрузки списка пользователей:', error);
+        log(`Не удалось загрузить список пользователей: ${error.message}`, 'error');
+        userSelect.innerHTML = '<option value="">-- нет данных --</option>';
+    }
+}
+
+function onUserSelectChange() {
+    const userSelect = document.getElementById('demoUser');
+    if (!userSelect) return;
+    const newUserId = userSelect.value;
+    if (!newUserId) return;
+
+    demoUserId = newUserId;
+    localStorage.setItem("demoUserId", demoUserId);
+    document.getElementById("manualUserId").value = demoUserId;
+    log(`Выбран пользователь → ${demoUserId}`, 'info');
+    document.dispatchEvent(new Event("userChanged"));
+
+    loadUserCourses().catch(e => log(`Ошибка загрузки курсов: ${e.message}`, 'error'));
+    if (window.GamificationWidgetConfig) {
+        window.GamificationWidgetConfig.userId = demoUserId;
+        window.GamificationWidgetConfig.headers["X-User-Id"] = demoUserId;
+        if (window.initGamificationWidget) window.initGamificationWidget(window.GamificationWidgetConfig);
+    }
+}
+
+function setManualUserId() {
+    const manualInput = document.getElementById('manualUserId');
+    let newUserId = manualInput.value.trim();
+    if (!newUserId) {
+        log('❌ Введите непустой UserId', 'error');
+        return;
+    }
+
+    demoUserId = newUserId;
+    localStorage.setItem("demoUserId", demoUserId);
+    log(`Установлен пользователь (ручной ввод) → ${demoUserId}`, 'info');
+
+    const userSelect = document.getElementById('demoUser');
+    if (userSelect) {
+        let optionExists = false;
+        for (let i = 0; i < userSelect.options.length; i++) {
+            if (userSelect.options[i].value === newUserId) {
+                userSelect.selectedIndex = i;
+                optionExists = true;
+                break;
+            }
+        }
+        if (!optionExists && userSelect.options.length > 0) {
+            const opt = document.createElement('option');
+            opt.value = newUserId;
+            opt.textContent = `${newUserId} (вручную)`;
+            opt.selected = true;
+            userSelect.appendChild(opt);
+        }
+    }
+
+    document.dispatchEvent(new Event("userChanged"));
+    loadUserCourses().catch(e => log(`Ошибка загрузки курсов: ${e.message}`, 'error'));
+    if (window.GamificationWidgetConfig) {
+        window.GamificationWidgetConfig.userId = demoUserId;
+        window.GamificationWidgetConfig.headers["X-User-Id"] = demoUserId;
+        if (window.initGamificationWidget) window.initGamificationWidget(window.GamificationWidgetConfig);
+    }
+}
+
+// ============================
 // Инициализация и обработчики событий DOM
 // ============================
 document.addEventListener("DOMContentLoaded", async () => {
@@ -264,54 +367,86 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('sendEmptyEventIdBtn').addEventListener('click', sendEmptyEventId);
     document.getElementById('clearLogBtn').addEventListener('click', clearLog);
 
-    // Переключение роли/пользователя из header – уже есть события в старом коде, но нужно переопределить их, чтобы обновлять курсы
+    // Переключение роли/пользователя из header – расширяем существующие
     const roleSelect = document.getElementById("demoRole");
     const userSelect = document.getElementById("demoUser");
 
     if (roleSelect) {
         roleSelect.value = demoRole;
-        roleSelect.addEventListener("change", (e) => {
+        roleSelect.addEventListener("change", async (e) => {
             demoRole = e.target.value;
             localStorage.setItem("demoRole", demoRole);
             log(`Переключение роли → ${demoRole}`, 'info');
+            await loadUsersList(); // перезагружаем список пользователей (скрыть/показать)
             document.dispatchEvent(new Event("roleChanged"));
-            // Роль влияет на заголовки, но курсы перезагружать не обязательно
         });
     }
+
     if (userSelect) {
-        userSelect.value = demoUserId;
-        userSelect.addEventListener("change", async (e) => {
-            demoUserId = e.target.value;
-            localStorage.setItem("demoUserId", demoUserId);
-            log(`Выбран пользователь → ${demoUserId}`, 'info');
-            document.dispatchEvent(new Event("userChanged"));
-            // Перезагрузить курсы и типы событий (зависит от userId)
-            await loadUserCourses();
-            // Обновить заголовки для виджета (он сам читает localStorage)
-            if (window.GamificationWidgetConfig) {
-                window.GamificationWidgetConfig.userId = demoUserId;
-                window.GamificationWidgetConfig.headers["X-User-Id"] = demoUserId;
+        // Загрузим список пользователей и установим начальное значение
+        await loadUsersList();
+        // Если после загрузки значение не совпадает с текущим demoUserId – синхронизируем
+        if (userSelect.value !== demoUserId && userSelect.options.length > 0) {
+            // пытаемся найти опцию с нужным значением
+            let found = false;
+            for (let i = 0; i < userSelect.options.length; i++) {
+                if (userSelect.options[i].value === demoUserId) {
+                    userSelect.selectedIndex = i;
+                    found = true;
+                    break;
+                }
             }
+            if (!found && demoUserId) {
+                const opt = document.createElement('option');
+                opt.value = demoUserId;
+                opt.textContent = `${demoUserId} (вне списка)`;
+                opt.selected = true;
+                userSelect.appendChild(opt);
+            }
+        } else if (userSelect.options.length === 0) {
+            // если нет опций, добавим текущего пользователя как заглушку
+            const opt = document.createElement('option');
+            opt.value = demoUserId;
+            opt.textContent = demoUserId;
+            opt.selected = true;
+            userSelect.appendChild(opt);
+        }
+
+        userSelect.addEventListener("change", onUserSelectChange);
+    }
+
+    // Ручной ввод
+    const setUserIdBtn = document.getElementById("setUserIdBtn");
+    const manualInput = document.getElementById("manualUserId");
+    if (setUserIdBtn) {
+        setUserIdBtn.addEventListener("click", setManualUserId);
+    }
+    if (manualInput) {
+        manualInput.value = demoUserId;
+        manualInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") setManualUserId();
         });
     }
 
     // При смене курса обновляем currentCourseId
-    courseSelect.addEventListener('change', onCourseChange);
+    if (courseSelect) courseSelect.addEventListener('change', onCourseChange);
 
-    // Загрузить данные
+    // Загрузить данные (курсы, типы событий)
     await loadUserCourses();
     await loadEventTypes();
 
     // Восстановить группу из localStorage, если есть
     const savedGroup = localStorage.getItem('demoGroupId');
-    if (savedGroup) groupInput.value = savedGroup;
-    groupInput.addEventListener('change', () => {
-        localStorage.setItem('demoGroupId', groupInput.value);
-        currentGroupId = groupInput.value;
-    });
+    if (savedGroup && groupInput) groupInput.value = savedGroup;
+    if (groupInput) {
+        groupInput.addEventListener('change', () => {
+            localStorage.setItem('demoGroupId', groupInput.value);
+            currentGroupId = groupInput.value;
+        });
+    }
 
     // Значение eventId по умолчанию – пусто (будет auto генерироваться)
-    eventIdInput.placeholder = "auto";
+    if (eventIdInput) eventIdInput.placeholder = "auto";
     log('Демо-панель готова. Выберите курс и тип события.', 'success');
 });
 
