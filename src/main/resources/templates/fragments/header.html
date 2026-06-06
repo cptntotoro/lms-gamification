@@ -16,12 +16,12 @@
                 <option value="STUDENT">STUDENT</option>
             </select>
 
-            <select id="demoUser" class="demo-select">
-                <option value="student001">student001</option>
-                <option value="student004">student004 (топ)</option>
-                <option value="student007">student007 (лидер)</option>
-                <option value="student012">student012 (prog лидер)</option>
-            </select>
+            <!-- Динамический select пользователей -->
+            <select id="demoUser" class="demo-select"></select>
+
+            <!-- Ручной ввод UserId -->
+            <input type="text" id="manualUserId" placeholder="введите UserId" class="demo-select" style="width: 150px;">
+            <button id="setUserIdBtn" class="btn" style="padding: 6px 12px; background: #6366f1; color: white; border: none; border-radius: 8px;">Set</button>
         </div>
 
         <div class="demo-nav">
