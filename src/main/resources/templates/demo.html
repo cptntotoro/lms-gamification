@@ -130,20 +130,11 @@
         </div>
     </div>
 </div>
-
 <script th:src="@{/js/demo.js}"></script>
 <script th:src="@{/js/gamification-widget.js}"></script>
 <script>
     function getConfig() {
-        return {
-            apiBaseUrl: "http://localhost:8080",
-            userId: localStorage.getItem("demoUserId") || "student001",
-            updateIntervalMs: 5000,
-            headers: {
-                "X-User-Id": localStorage.getItem("demoUserId") || "student001",
-                "X-Role": localStorage.getItem("demoRole") || "ADMIN"
-            }
-        };
+        return window.GamificationAPI.getWidgetConfig();
     }
     window.initGamificationWidget(getConfig());
     document.addEventListener('userChanged', () => {

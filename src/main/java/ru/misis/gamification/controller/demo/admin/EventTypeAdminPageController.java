@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import ru.misis.gamification.mapper.EventTypeMapper;
 import ru.misis.gamification.model.EventTypeSummary;
 import ru.misis.gamification.service.application.eventtype.EventTypeAdminApplicationService;
 
+@PreAuthorize("hasRole('ADMIN') || hasRole('TEACHER')")
 @Tag(name = "Admin - Типы событий (страницы)", description = "HTML-страницы управления типами событий")
 @Controller
 @RequestMapping("/demo/admin/event-types")

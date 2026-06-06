@@ -1,0 +1,136 @@
+/**
+ * Скрипт для демо-хедера:
+ * - Загружает список пользователей через API
+ * - Управляет выбором роли и пользователя
+ * - Синхронизирует состояние с localStorage
+ * - Генерирует события userChanged и roleChanged
+ */
+
+(function() {
+    // Дожидаемся полной загрузки DOM
+    document.addEventListener("DOMContentLoaded", async () => {
+        // Элементы DOM
+        const roleSelect = document.getElementById("demoRole");
+        const userSelect = document.getElementById("demoUser");
+        const manualUserIdInput = document.getElementById("manualUserId");
+        const setUserIdBtn = document.getElementById("setUserIdBtn");
+
+        // Проверяем, что мы на странице, где есть эти элементы (т.е. хедер присутствует)
+        if (!roleSelect || !userSelect) {
+            // Если нет элементов хедера – выходим (не демо-страница)
+            return;
+        }
+
+        // Функция загрузки списка пользователей (только для ADMIN)
+        async function loadUsersList() {
+            try {
+                // Запрос к админскому API с явным указанием роли ADMIN
+                const response = await window.GamificationAPI.apiRequest("/api/admin/users?page=0&size=1000", {
+                    useAdminRole: true
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const pageData = await response.json();
+                const users = pageData.content || [];
+
+                const currentUserId = window.GamificationAPI.getCurrentUserId();
+
+                // Очищаем и заполняем select
+                userSelect.innerHTML = "";
+                users.forEach(user => {
+                    const option = document.createElement("option");
+                    option.value = user.userId;
+                    option.textContent = `${user.userId} (${user.totalPoints} XP, lvl ${user.level})`;
+                    if (user.userId === currentUserId) {
+                        option.selected = true;
+                    }
+                    userSelect.appendChild(option);
+                });
+
+                // Если текущий пользователь не найден в списке – добавляем опцию с ним
+                if (currentUserId && !users.some(u => u.userId === currentUserId)) {
+                    const option = document.createElement("option");
+                    option.value = currentUserId;
+                    option.textContent = `${currentUserId} (вне списка)`;
+                    option.selected = true;
+                    userSelect.appendChild(option);
+                }
+
+                console.log(`[Header] Загружено пользователей: ${users.length}`);
+            } catch (error) {
+                console.error("[Header] Ошибка загрузки списка пользователей:", error);
+                userSelect.innerHTML = '<option value="">-- ошибка загрузки --</option>';
+            }
+        }
+
+        // При изменении роли
+        function onRoleChange() {
+            const newRole = roleSelect.value;
+            window.GamificationAPI.setCurrentRole(newRole);
+            // Перезагружаем список пользователей (роль влияет на видимость, но запрос всё равно делаем с ADMIN)
+            loadUsersList().catch(e => console.error(e));
+            // Диспатчим событие для других скриптов (виджет, demo-панель)
+            document.dispatchEvent(new Event("roleChanged"));
+        }
+
+        // При изменении пользователя через select
+        function onUserSelectChange() {
+            const newUserId = userSelect.value;
+            if (!newUserId) return;
+            window.GamificationAPI.setCurrentUserId(newUserId);
+            if (manualUserIdInput) manualUserIdInput.value = newUserId;
+            document.dispatchEvent(new Event("userChanged"));
+        }
+
+        // Ручной ввод userId
+        function setManualUserId() {
+            const newUserId = manualUserIdInput.value.trim();
+            if (!newUserId) {
+                console.warn("[Header] Пустой userId");
+                return;
+            }
+            window.GamificationAPI.setCurrentUserId(newUserId);
+            // Синхронизируем select
+            let optionExists = false;
+            for (let i = 0; i < userSelect.options.length; i++) {
+                if (userSelect.options[i].value === newUserId) {
+                    userSelect.selectedIndex = i;
+                    optionExists = true;
+                    break;
+                }
+            }
+            if (!optionExists) {
+                const option = document.createElement("option");
+                option.value = newUserId;
+                option.textContent = `${newUserId} (вручную)`;
+                option.selected = true;
+                userSelect.appendChild(option);
+            }
+            document.dispatchEvent(new Event("userChanged"));
+        }
+
+        // Инициализация значений из localStorage
+        const savedRole = window.GamificationAPI.getCurrentRole();
+        const savedUserId = window.GamificationAPI.getCurrentUserId();
+        roleSelect.value = savedRole;
+        if (manualUserIdInput) manualUserIdInput.value = savedUserId;
+
+        // Загружаем список пользователей и навешиваем обработчики
+        await loadUsersList();
+
+        // Обработчики событий
+        roleSelect.addEventListener("change", onRoleChange);
+        userSelect.addEventListener("change", onUserSelectChange);
+        if (setUserIdBtn) setUserIdBtn.addEventListener("click", setManualUserId);
+        if (manualUserIdInput) {
+            manualUserIdInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") setManualUserId();
+            });
+        }
+
+        // После первичной загрузки диспатчим событие, чтобы виджет/панель обновились
+        document.dispatchEvent(new Event("userChanged"));
+        document.dispatchEvent(new Event("roleChanged"));
+    });
+})();
