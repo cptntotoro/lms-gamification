@@ -41,32 +41,43 @@ function openCreateModal() {
     logEvent('ADMIN → открыта форма создания типа события');
 }
 
-function openEditModal(btn) {
-    const row = btn.closest('tr');
-    const cells = row.querySelectorAll('td');
+async function openEditModal(btn) {
+    let data;
+    const id = btn.getAttribute('data-id');
 
-    const typeCode = cells[0].textContent.trim();
-    const displayName = cells[1].textContent.trim();
-    const points = cells[2].textContent.trim();
-    let maxDaily = cells[3].textContent.trim();
-    const activeText = cells[4].textContent.trim();
+    const getFromLine = () => {
+        const row = btn.closest('tr');
+        const cells = row.querySelectorAll('td');
+        return  {
+            typeCode: cells[0].textContent.trim(),
+            displayName: cells[1].textContent.trim(),
+            points: cells[2].textContent.trim(),
+            maxDailyPoints: cells[3].textContent.trim() === 'Без лимита' ? '' : cells[3].textContent.trim(),
+            active: cells[4].textContent.trim() === 'Активен'
+        }
+    };
 
-    // Преобразуем "Без лимита" в пустую строку для поля ввода
-    maxDaily = maxDaily === 'Без лимита' ? '' : maxDaily;
-
-    const active = activeText === 'Активен';
+    try {
+        const response = await api(`/api/admin/event-types/${id}`, {
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'},
+        });
+        data = !response.ok ? getFromLine() : await response.json();
+    } catch (e) {
+        data = getFromLine();
+    }
 
     document.getElementById('modalTitle').textContent = 'Редактировать тип события';
-    document.getElementById('modalId').value = btn.getAttribute('data-id');
-    document.getElementById('typeCode').value = typeCode;
+    document.getElementById('modalId').value = id;
+    document.getElementById('typeCode').value = data.typeCode;
     document.getElementById('typeCode').disabled = true; // код менять нельзя
-    document.getElementById('displayName').value = displayName;
-    document.getElementById('points').value = points;
-    document.getElementById('maxDailyPoints').value = maxDaily;
-    document.getElementById('active').checked = active;
+    document.getElementById('displayName').value = data.displayName;
+    document.getElementById('points').value = data.points;
+    document.getElementById('maxDailyPoints').value = data.maxDailyPoints;
+    document.getElementById('active').checked = data.active;
 
     document.getElementById('eventTypeModal').style.display = 'block';
-    logEvent(`ADMIN → редактирует тип "${displayName}" (id=${btn.getAttribute('data-id')})`);
+    logEvent(`ADMIN → редактирует тип "${data.displayName}" (id=${id})`);
 }
 
 function closeModal() {
