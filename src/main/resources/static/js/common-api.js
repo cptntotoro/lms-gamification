@@ -37,16 +37,16 @@
      * @param {string} url - URL (абсолютный или относительный)
      * @param {Object} options - параметры fetch (method, body, headers и т.д.)
      * @param {Object} options.overrideHeaders - дополнительные заголовки (переопределяют стандартные)
-     * @param {boolean} options.useAdminRole - если true, в заголовке X-Role будет "ADMIN" независимо от текущей роли
+     * @param {Object} options.role - роль от имени которой выполняется запрос
      * @returns {Promise<Response>}
      */
     async function apiRequest(url, options = {}) {
-        const { overrideHeaders = {}, useAdminRole = false, ...fetchOptions } = options;
+        const { overrideHeaders = {}, role = 'ADMIN', ...fetchOptions } = options;
 
         const headers = {
             "Content-Type": "application/json",
             "X-User-Id": getCurrentUserId(),
-            "X-Role": useAdminRole ? "ADMIN" : getCurrentRole(),
+            "X-Role": role,
             "token": AUTH_TOKEN,
             ...overrideHeaders
         };
@@ -76,7 +76,7 @@
             updateIntervalMs: 5000,
             headers: {
                 "X-User-Id": getCurrentUserId(),
-                "X-Role": getCurrentRole(),
+                "X-Role": 'STUDENT',
                 "token": AUTH_TOKEN
             }
         };

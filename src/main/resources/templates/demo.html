@@ -68,7 +68,7 @@
 <div class="container">
     <h1 class="page-title">🎮 Демо-панель геймификации</h1>
 
-    <!-- Контекст курса и группы -->
+    <!-- Контекст курса и группы + выбор роли для запроса -->
     <div class="card">
         <h2>📚 Контекст курса и группы</h2>
         <div class="form-row">
@@ -81,6 +81,14 @@
             <div class="form-group">
                 <label for="groupIdInput">Группа (ID, опционально)</label>
                 <input type="text" id="groupIdInput" placeholder="например, M-21-2" class="demo-select">
+            </div>
+            <div class="form-group">
+                <label for="demoRoleSelect">Роль (для демо)</label>
+                <select id="demoRoleSelect" class="demo-select">
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="TEACHER">TEACHER</option>
+                    <option value="STUDENT">STUDENT</option>
+                </select>
             </div>
         </div>
         <p class="help-text">Выберите курс, чтобы лидерборд и профиль показывали данные именно по нему.</p>
@@ -121,14 +129,6 @@
             <div class="log-item log-info">[--:--:--] Готов к демонстрации. Выберите пользователя и курс.</div>
         </div>
     </div>
-
-    <!-- Утилиты администратора -->
-    <div class="card">
-        <h2>🔧 Утилиты администратора</h2>
-        <div class="actions-bar" style="justify-content: flex-start;">
-            <button class="btn btn-primary" onclick="createEventType()">Создать тип события (DEMO_TYPE)</button>
-        </div>
-    </div>
 </div>
 <script th:src="@{/js/demo.js}"></script>
 <script th:src="@{/js/gamification-widget.js}"></script>
@@ -138,10 +138,6 @@
     }
     window.initGamificationWidget(getConfig());
     document.addEventListener('userChanged', () => {
-        window.initGamificationWidget(getConfig());
-    });
-
-    document.addEventListener('roleChanged', () => {
         window.initGamificationWidget(getConfig());
     });
 </script>
