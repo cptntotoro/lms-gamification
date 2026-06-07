@@ -1,3 +1,86 @@
+// ======================== ЗАГРУЗКА И ОТОБРАЖЕНИЕ ТАБЛИЦЫ ========================
+async function loadEventTypesTable() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorMessageDiv = document.getElementById('errorMessage');
+    const tableContainer = document.getElementById('tableContainer');
+    const tbody = document.getElementById('eventTypesTableBody');
+
+    try {
+        loadingIndicator.style.display = 'block';
+        errorMessageDiv.style.display = 'none';
+        tableContainer.style.display = 'none';
+
+        const response = await window.GamificationAPI.apiRequest('/demo/admin/event-types/all-types?page=0&size=1000', {
+            method: 'GET'
+        });
+
+        if (!response.ok) {
+            if (response.status === 403) {
+                throw new Error('Недостаточно прав для просмотра типов событий. Требуются роли ADMIN или TEACHER.');
+            }
+            throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
+        }
+
+        const pageData = await response.json();
+        const types = pageData.content || [];
+
+        if (types.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="no-data">Типы событий отсутствуют</td></tr>';
+        } else {
+            let html = '';
+            types.forEach(type => {
+                const maxDailyPointsText = type.maxDailyPoints ? type.maxDailyPoints : 'Без лимита';
+                const statusText = type.active ? 'Активен' : 'Отключён';
+                const statusClass = type.active ? 'status-active' : 'status-inactive';
+                html += `
+                    <tr>
+                        <td>${escapeHtml(type.typeCode)}</td>
+                        <td>${escapeHtml(type.displayName)}</td>
+                        <td>${type.points}</td>
+                        <td>${escapeHtml(maxDailyPointsText)}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                        <td class="actions-cell">
+                            <button class="icon-btn edit" data-id="${type.uuid}" onclick="openEditModal(this)" title="Редактировать тип события">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button class="icon-btn deactivate" data-id="${type.uuid}" onclick="deactivateType(this)" title="Деактивировать тип события">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 11l5 5m0-5l-5 5M6 18l12-12"></path>
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        tableContainer.style.display = 'block';
+        loadingIndicator.style.display = 'none';
+        logEvent('Список типов событий загружен');
+    } catch (error) {
+        console.error('Ошибка загрузки типов событий:', error);
+        loadingIndicator.style.display = 'none';
+        errorMessageDiv.style.display = 'block';
+        errorMessageDiv.innerHTML = `<strong>Ошибка:</strong> ${error.message}`;
+        logEvent(`❌ Ошибка загрузки: ${error.message}`, 'error');
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.toString().replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
 // ======================== РАБОТА С МОДАЛКОЙ ========================
 function openCreateModal() {
     document.getElementById('modalTitle').textContent = 'Создать тип события';
@@ -64,7 +147,8 @@ async function deactivateType(btn) {
             throw new Error(errorData.message || `Ошибка ${response.status}`);
         }
         logEvent(`ADMIN → деактивировал тип события (id=${id})`);
-        location.reload(); // или можно удалить строку из таблицы без перезагрузки
+        // Перезагружаем таблицу без перезагрузки страницы
+        await loadEventTypesTable();
     } catch (error) {
         logEvent(`❌ Ошибка: ${error.message}`);
         alert('Ошибка: ' + error.message);
@@ -146,7 +230,8 @@ async function saveEventType() {
 
         closeModal();
         logEvent(`ADMIN → ${isEdit ? 'обновил' : 'создал'} тип "${displayName}"`);
-        location.reload();
+        // Перезагружаем таблицу
+        await loadEventTypesTable();
     } catch (error) {
         logEvent(`❌ Ошибка: ${error.message}`);
         alert('Ошибка: ' + error.message);
@@ -158,15 +243,17 @@ window.onclick = function (event) {
     if (event.target === modal) closeModal();
 };
 
-function logEvent(message) {
-    const logContainer = document.getElementById('eventLog');
-    if (!logContainer) return;
-
-    const time = new Date().toLocaleTimeString();
-
-    const item = document.createElement('div');
-    item.className = 'log-item';
-    item.textContent = `[${time}] ${message}`;
-
-    logContainer.prepend(item);
+function logEvent(message, type = 'info') {
+    // Можно оставить для отладки в консоли
+    console.log(`[${new Date().toLocaleTimeString()}] ${message}`);
 }
+
+// Загружаем таблицу при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    loadEventTypesTable();
+});
+
+// При смене пользователя/роли обновляем таблицу
+document.addEventListener('userChanged', () => {
+    loadEventTypesTable();
+});
