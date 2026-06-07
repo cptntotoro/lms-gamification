@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профили пользователей</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .profiles-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .user-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .user-header {
+            background: #f8fafc;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .user-id {
+            font-family: monospace;
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        .enrollments-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .enrollments-table th,
+        .enrollments-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .enrollments-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #475569;
+        }
+        .event-link {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .event-link:hover {
+            text-decoration: underline;
+        }
+        .empty-message {
+            padding: 24px;
+            text-align: center;
+            color: #64748b;
+        }
+        .badge-group {
+            background: #eef2ff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+        .actions-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="profiles-container">
+    <h1 class="page-title">👥 Профили пользователей (курсы и группы)</h1>
+    <div id="profilesLoading" class="text-center" style="padding: 40px;">Загрузка...</div>
+    <div id="profilesContent" style="display: none;"></div>
+</div>
+
+<script th:src="@{/js/profiles.js}"></script>
+</body>
+</html>
