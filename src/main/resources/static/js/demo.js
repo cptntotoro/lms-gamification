@@ -10,7 +10,7 @@ let availableEventTypes = [];          // активные типы событи
 let lastSentEventId = null;            // для дублирования
 
 // Элементы DOM
-let courseSelect, groupInput, eventTypeSelect, eventIdInput, logContainer;
+let courseSelect, groupInput, eventTypeSelect, eventIdInput, logContainer, roleSelect;
 
 // ============================
 // Вспомогательные функции
@@ -71,9 +71,7 @@ async function loadUserCourses() {
 // Загрузка типов событий
 async function loadEventTypes() {
     try {
-        const response = await window.GamificationAPI.apiRequest(`/demo/admin/event-types/all-types?page=0&size=100`, {
-            useAdminRole: true
-        });
+        const response = await window.GamificationAPI.apiRequest(`/demo/admin/event-types/all-types?page=0&size=100`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const page = await response.json();
         availableEventTypes = page.content.filter(t => t.active);
@@ -122,7 +120,8 @@ async function sendEvent(eventType, eventId) {
     try {
         const response = await window.GamificationAPI.apiRequest('/api/v1/event', {
             method: 'POST',
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            role: roleSelect.value
         });
         const data = await response.json();
 
@@ -220,9 +219,13 @@ function goToLeaderboard() {
     window.location.href = url;
 }
 
-// ============================
-// Инициализация и обработчики событий DOM
-// ============================
+// Обработчик смены роли (только на demo-странице)
+function onRoleSelectChange() {
+    const newRole = roleSelect.value;
+    window.GamificationAPI.setCurrentRole(newRole);
+    log(`Роль изменена на ${newRole}`, 'info');
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     // Найти элементы
     courseSelect = document.getElementById('courseSelect');
@@ -230,6 +233,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     eventTypeSelect = document.getElementById('eventTypeSelect');
     eventIdInput = document.getElementById('eventIdInput');
     logContainer = document.getElementById('eventLog');
+    roleSelect = document.getElementById('demoRoleSelect');
 
     // Кнопки
     document.getElementById('sendEventBtn').addEventListener('click', sendFromUI);
@@ -240,7 +244,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (courseSelect) courseSelect.addEventListener('change', onCourseChange);
 
-    // Загрузить данные (курсы, типы событий)
+    // Инициализация выбора роли
+    if (roleSelect) {
+        roleSelect.value = window.GamificationAPI.getCurrentRole();
+        roleSelect.addEventListener('change', onRoleSelectChange);
+    }
+
     await loadUserCourses();
     await loadEventTypes();
 
@@ -263,25 +272,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         loadUserCourses().catch(e => log(`Ошибка загрузки курсов: ${e.message}`, 'error'));
     });
 });
-
-// Экспорт функций для глобального доступа (некоторые вызываются из onclick в HTML)
-window.createEventType = async function() {
-    await window.GamificationAPI.apiRequest('/api/admin/event-types', {
-        method: 'POST',
-        body: JSON.stringify({
-            typeCode: "demo_type_" + Date.now(),
-            displayName: "Demo тип (авто)",
-            points: 70
-        })
-    }).then(res => {
-        if (res.ok) {
-            log('✅ Создан новый тип события (демо)', 'success');
-            loadEventTypes(); // обновить список
-        } else {
-            log('❌ Ошибка при создании типа', 'error');
-        }
-    }).catch(e => log(`Ошибка: ${e.message}`, 'error'));
-};
 
 window.goToProfile = goToProfile;
 window.goToLeaderboard = goToLeaderboard;

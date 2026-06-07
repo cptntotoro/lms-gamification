@@ -1,9 +1,9 @@
 /**
  * Скрипт для демо-хедера:
  * - Загружает список пользователей через API
- * - Управляет выбором роли и пользователя
+ * - Управляет выбором пользователя
  * - Синхронизирует состояние с localStorage
- * - Генерирует события userChanged и roleChanged
+ * - Генерирует событие userChanged
  */
 
 (function() {
@@ -15,19 +15,16 @@
         const manualUserIdInput = document.getElementById("manualUserId");
         const setUserIdBtn = document.getElementById("setUserIdBtn");
 
-        // Проверяем, что мы на странице, где есть эти элементы (т.е. хедер присутствует)
-        if (!roleSelect || !userSelect) {
-            // Если нет элементов хедера – выходим (не демо-страница)
+        if (!userSelect) {
+            // На страницах без хедера выходим
             return;
         }
 
-        // Функция загрузки списка пользователей (только для ADMIN)
+        // Функция загрузки списка пользователей
         async function loadUsersList() {
             try {
                 // Запрос к админскому API с явным указанием роли ADMIN
-                const response = await window.GamificationAPI.apiRequest("/api/admin/users?page=0&size=1000", {
-                    useAdminRole: true
-                });
+                const response = await window.GamificationAPI.apiRequest("/api/admin/users?page=0&size=1000");
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -64,17 +61,6 @@
             }
         }
 
-        // При изменении роли
-        function onRoleChange() {
-            const newRole = roleSelect.value;
-            window.GamificationAPI.setCurrentRole(newRole);
-            // Перезагружаем список пользователей (роль влияет на видимость, но запрос всё равно делаем с ADMIN)
-            loadUsersList().catch(e => console.error(e));
-            // Диспатчим событие для других скриптов (виджет, demo-панель)
-            document.dispatchEvent(new Event("roleChanged"));
-        }
-
-        // При изменении пользователя через select
         function onUserSelectChange() {
             const newUserId = userSelect.value;
             if (!newUserId) return;
@@ -111,16 +97,13 @@
         }
 
         // Инициализация значений из localStorage
-        const savedRole = window.GamificationAPI.getCurrentRole();
         const savedUserId = window.GamificationAPI.getCurrentUserId();
-        roleSelect.value = savedRole;
         if (manualUserIdInput) manualUserIdInput.value = savedUserId;
 
         // Загружаем список пользователей и навешиваем обработчики
         await loadUsersList();
 
         // Обработчики событий
-        roleSelect.addEventListener("change", onRoleChange);
         userSelect.addEventListener("change", onUserSelectChange);
         if (setUserIdBtn) setUserIdBtn.addEventListener("click", setManualUserId);
         if (manualUserIdInput) {
@@ -131,6 +114,5 @@
 
         // После первичной загрузки диспатчим событие, чтобы виджет/панель обновились
         document.dispatchEvent(new Event("userChanged"));
-        document.dispatchEvent(new Event("roleChanged"));
     });
 })();
