@@ -51,6 +51,8 @@ public class LeaderboardEntryView {
      */
     private Boolean isCurrentUser;
 
+    private String courseDisplayName;
+
     /**
      * Конструктор для создания строки лидерборда без указания флага текущего пользователя.
      * <p>
@@ -65,7 +67,7 @@ public class LeaderboardEntryView {
      * @param rank           Позиция (ранг) пользователя в текущем лидерборде
      */
     public LeaderboardEntryView(UUID userUuid, String userId, Integer pointsInCourse,
-                                Integer globalLevel, Long rank) {
-        this(userUuid, userId, pointsInCourse, globalLevel, rank, false);
+                                Integer globalLevel, Long rank, String courseDisplayName) {
+        this(userUuid, userId, pointsInCourse, globalLevel, rank, false, courseDisplayName);
     }
 }

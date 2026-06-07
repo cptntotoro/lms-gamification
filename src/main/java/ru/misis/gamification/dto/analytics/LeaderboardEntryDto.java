@@ -52,14 +52,18 @@ public class LeaderboardEntryDto {
     @Schema(description = "Флаг текущего пользователя (true если запись принадлежит запрашивающему)")
     private Boolean isCurrentUser;
 
+    @Schema(description = "Полное наименование курса")
+    private String courseDisplayName;
+
     public LeaderboardEntryDto() {
     }
 
-    public LeaderboardEntryDto(UUID userUuid, String userId, Integer pointsInCourse, Integer globalLevel, Long rank) {
+    public LeaderboardEntryDto(UUID userUuid, String userId, Integer pointsInCourse, Integer globalLevel, Long rank, String courseDisplayName) {
         this.userUuid = userUuid;
         this.userId = userId;
         this.pointsInCourse = pointsInCourse;
         this.globalLevel = globalLevel;
         this.rank = rank;
+        this.courseDisplayName = courseDisplayName;
     }
 }

@@ -104,7 +104,8 @@ public class LeaderboardApplicationServiceImpl implements LeaderboardApplication
                         currentUserPoints,
                         user.getLevel(),
                         currentUserRank,
-                        true
+                        true,
+                        enrollment.getCourse().getDisplayName()
                 );
             }
         } catch (CourseNotFoundException | UserNotFoundException e) {

@@ -56,7 +56,8 @@ class LeaderboardApplicationServiceUnitTest {
         UUID courseUuid = UUID.randomUUID();
         when(courseService.getCourseUuidByExternalId("CS-101")).thenReturn(courseUuid);
 
-        LeaderboardEntryView entry = new LeaderboardEntryView(UUID.randomUUID(), "u1", 500, 5, 1L, false);
+        LeaderboardEntryView entry = new LeaderboardEntryView(UUID.randomUUID(), "u1", 500, 5, 1L, false,
+                "courseName");
         Page<LeaderboardEntryView> page = new PageImpl<>(List.of(entry), PageRequest.of(0, 10), 1);
         when(enrollmentService.findLeaderboardByCourseAndGroup(eq(courseUuid), isNull(), any(Pageable.class))).thenReturn(page);
 
@@ -104,7 +105,8 @@ class LeaderboardApplicationServiceUnitTest {
 
         when(enrollmentService.getRankByPointsInCourse(eq(courseUuid), isNull(), eq(userUuid))).thenReturn(3L);
 
-        LeaderboardEntryView top1 = new LeaderboardEntryView(UUID.randomUUID(), "top1", 1200, 6, 1L, false);
+        LeaderboardEntryView top1 = new LeaderboardEntryView(UUID.randomUUID(), "top1", 1200, 6, 1L, false,
+                "courseName");
         Page<LeaderboardEntryView> topPage = new PageImpl<>(List.of(top1), PageRequest.of(0, 5), 10);
         when(enrollmentService.findLeaderboardByCourseAndGroup(eq(courseUuid), isNull(), any(Pageable.class))).thenReturn(topPage);
 

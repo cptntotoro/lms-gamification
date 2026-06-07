@@ -295,7 +295,7 @@
                             const leaderboardContainer = tabContents.leaderboard;
                             if (leaderboardContainer) {
                                 const headerEl = leaderboardContainer.querySelector(".widget-leaderboard-header");
-                                if (headerEl) headerEl.textContent = `Лидерборд курса: ${cname}`;
+                                if (headerEl) headerEl.textContent = `🏅 Лидерборд курса: ${cname}`;
                             }
                         });
                     }
@@ -319,7 +319,7 @@
             const currentUserRank = leaderboardData.currentUserRank;
             const currentUserPoints = leaderboardData.currentUserPoints;
 
-            let html = `<div class="widget-leaderboard-header">🏅 Лидерборд курса</div>`;
+            let html = `<div class="widget-leaderboard-header">🏅 Лидерборд курса: ${leaderboardData.currentUserEntry.courseDisplayName}</div>`;
 
             html += `<div class="widget-current-user-stats">
                         <div>👤 Ваше место: ${currentUserRank !== null && currentUserRank !== undefined ? currentUserRank : "—"}</div>

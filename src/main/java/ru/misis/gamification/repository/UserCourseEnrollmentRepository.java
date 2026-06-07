@@ -49,7 +49,8 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
                 u.userId,
                 uce.totalPointsInCourse,
                 u.level,
-                ROW_NUMBER() OVER (ORDER BY uce.totalPointsInCourse DESC)
+                ROW_NUMBER() OVER (ORDER BY uce.totalPointsInCourse DESC),
+                uce.course.displayName
             )
             FROM UserCourseEnrollment uce
             JOIN uce.user u

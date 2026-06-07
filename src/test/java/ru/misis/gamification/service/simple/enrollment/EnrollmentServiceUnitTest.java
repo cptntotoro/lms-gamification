@@ -95,7 +95,8 @@ class EnrollmentServiceUnitTest {
         UUID groupUuid = UUID.randomUUID();
         Pageable pageable = PageRequest.of(0, 20);
 
-        LeaderboardEntryView entry = new LeaderboardEntryView(UUID.randomUUID(), "user1", 100, 5, 1L, false);
+        LeaderboardEntryView entry = new LeaderboardEntryView(UUID.randomUUID(), "user1", 100, 5, 1L, false,
+                "courseName");
         Page<LeaderboardEntryView> expectedPage = new PageImpl<>(List.of(entry), pageable, 1);
 
         when(repository.findLeaderboardByCourseAndGroup(courseUuid, groupUuid, pageable))
