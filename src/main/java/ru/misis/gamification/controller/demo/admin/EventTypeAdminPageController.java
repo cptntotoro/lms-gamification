@@ -20,36 +20,23 @@ import ru.misis.gamification.mapper.EventTypeMapper;
 import ru.misis.gamification.model.EventTypeSummary;
 import ru.misis.gamification.service.application.eventtype.EventTypeAdminApplicationService;
 
-@PreAuthorize("hasRole('ADMIN') || hasRole('TEACHER')")
 @Tag(name = "Admin - Типы событий (страницы)", description = "HTML-страницы управления типами событий")
 @Controller
 @RequestMapping("/demo/admin/event-types")
 @RequiredArgsConstructor
 public class EventTypeAdminPageController {
 
-    /**
-     * Фасадный сервис управления типами событий для администратора
-     */
     private final EventTypeAdminApplicationService eventTypeAdminService;
-
-    /**
-     * Маппер типов событий
-     */
     private final EventTypeMapper eventTypeMapper;
 
     @Operation(summary = "Страница управления типами событий")
     @GetMapping
-    public String getEventTypesPage(Pageable pageable, Model model) {
-        Page<EventTypeSummary> eventTypeSummaries = eventTypeAdminService.findAll(pageable);
-        Page<EventTypeDto> page = eventTypeSummaries.map(eventTypeMapper::toEventTypeDto);
-
-        model.addAttribute("page", page);
-        model.addAttribute("types", page.getContent());
-
+    public String getEventTypesPage() {
         return "admin/event-types";
     }
 
     @GetMapping("/all-types")
+    @PreAuthorize("hasRole('ADMIN') || hasRole('TEACHER')")
     @Operation(
             summary = "Получить список всех типов событий с пагинацией",
             description = "Возвращает страницу типов событий с возможностью сортировки и фильтрации"
