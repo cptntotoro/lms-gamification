@@ -36,9 +36,9 @@ public class UserAdminPageController {
     private final UserMapper userMapper;
 
     @GetMapping
-    @Operation(summary = "Административная панель", description = "Отображает админ-панель (требуется авторизация)")
-    public String admin() {
-        return "admin";
+    @Operation(summary = "Страница со списком пользователей, их курсов и групп")
+    public String profilesPage() {
+        return "admin/profiles";
     }
 
     @Operation(
