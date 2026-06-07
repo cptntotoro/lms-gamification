@@ -32,7 +32,8 @@ class LeaderboardMapperTest {
                 850,
                 5,
                 3L,
-                true
+                true,
+                "courseName"
         );
 
         LeaderboardEntryDto dto = mapper.toLeaderboardEntryDto(view);
@@ -55,7 +56,8 @@ class LeaderboardMapperTest {
                 "user-xyz",
                 420,
                 4,
-                7L
+                7L,
+                "courseName"
         );  // без явного isCurrentUser → false
 
         LeaderboardEntryDto dto = mapper.toLeaderboardEntryDto(view);
@@ -79,8 +81,10 @@ class LeaderboardMapperTest {
         UUID u2 = UUID.randomUUID();
 
         List<LeaderboardEntryView> entries = List.of(
-                new LeaderboardEntryView(u1, "alice", 1000, 6, 1L, false),
-                new LeaderboardEntryView(u2, "bob", 800, 5, 2L, false)
+                new LeaderboardEntryView(u1, "alice", 1000, 6, 1L, false,
+                        "courseName"),
+                new LeaderboardEntryView(u2, "bob", 800, 5, 2L, false,
+                        "courseName")
         );
 
         LeaderboardPageView view = new LeaderboardPageView(
@@ -149,7 +153,8 @@ class LeaderboardMapperTest {
         UUID currentUuid = UUID.randomUUID();
 
         List<LeaderboardEntryView> top = List.of(
-                new LeaderboardEntryView(u1, "alice", 1200, 7, 1L, false)
+                new LeaderboardEntryView(u1, "alice", 1200, 7, 1L, false,
+                        "courseName")
         );
 
         LeaderboardEntryView current = new LeaderboardEntryView(
@@ -158,7 +163,8 @@ class LeaderboardMapperTest {
                 950,
                 6,
                 4L,
-                true
+                true,
+                "courseName"
         );
 
         UserCourseGroupLeaderboardView view = new UserCourseGroupLeaderboardView(
@@ -205,7 +211,8 @@ class LeaderboardMapperTest {
     @Test
     void toUserCourseGroupLeaderboardDto_withoutCurrentUser_mapsCorrectly() {
         List<LeaderboardEntryView> top = List.of(
-                new LeaderboardEntryView(UUID.randomUUID(), "alice", 1000, 6, 1L, false)
+                new LeaderboardEntryView(UUID.randomUUID(), "alice", 1000, 6, 1L, false,
+                        "courseName")
         );
 
         UserCourseGroupLeaderboardView view = new UserCourseGroupLeaderboardView(
