@@ -194,31 +194,6 @@ function getDemoState() {
     };
 }
 
-function goToProfile() {
-    const { userId, courseId, groupId } = getDemoState();
-    if (!courseId) {
-        log('❌ Не выбран курс. Выберите курс из списка.', 'error');
-        return;
-    }
-    const url = `/demo/users/${userId}?courseId=${encodeURIComponent(courseId)}&groupId=${groupId || ''}`;
-    window.location.href = url;
-}
-
-function goToLeaderboard() {
-    const { role, userId, courseId, groupId } = getDemoState();
-    if (!courseId) {
-        log('❌ Не выбран курс. Выберите курс из списка.', 'error');
-        return;
-    }
-    let url;
-    if (role === 'STUDENT') {
-        url = `/demo/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?groupId=${groupId || ''}`;
-    } else {
-        url = `/demo/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?groupId=${groupId || ''}&size=20`;
-    }
-    window.location.href = url;
-}
-
 // Обработчик смены роли (только на demo-странице)
 function onRoleSelectChange() {
     const newRole = roleSelect.value;
