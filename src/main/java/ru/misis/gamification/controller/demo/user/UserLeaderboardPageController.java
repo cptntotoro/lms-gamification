@@ -41,6 +41,11 @@ public class UserLeaderboardPageController {
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 100;
 
+    @GetMapping
+    public String leaderboardPage() {
+        return "leaderboard";
+    }
+
     @Operation(
             summary = "Персонализированный лидерборд по курсу (и опционально группе)",
             description = """

@@ -116,7 +116,7 @@
         document.dispatchEvent(new Event("userChanged"));
     });
 
-    // Добавляем глобальные функции навигации для всех страниц
+    // Глобальные функции навигации для всех страниц
     window.goToProfile = function() {
         const userId = window.GamificationAPI.getCurrentUserId();
         if (userId) {
@@ -126,18 +126,8 @@
         }
     };
 
-    function goToLeaderboard() {
-        const { role, userId, courseId, groupId } = getDemoState();
-        if (!courseId) {
-            log('❌ Не выбран курс. Выберите курс из списка.', 'error');
-            return;
-        }
-        let url;
-        if (role === 'STUDENT') {
-            url = `/demo/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?groupId=${groupId || ''}`;
-        } else {
-            url = `/demo/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?groupId=${groupId || ''}&size=20`;
-        }
-        window.location.href = url;
-    }
+    window.goToLeaderboard = function() {
+        // Открываем страницу лидерборда с возможностью выбора курса/группы
+        window.location.href = '/demo/leaderboard';
+    };
 })();
