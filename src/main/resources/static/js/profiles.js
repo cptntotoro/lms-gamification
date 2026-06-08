@@ -6,8 +6,7 @@
         try {
             const role = window.GamificationAPI.getCurrentRole();
             const response = await window.GamificationAPI.apiRequest('/api/admin/users/with-courses', {
-                method: 'GET',
-                role: role
+                method: 'GET'
             });
             if (!response.ok) {
                 throw new Error(`Ошибка HTTP ${response.status}`);

@@ -50,7 +50,11 @@ async function loadUserCourses() {
         availableCourses.forEach(course => {
             const option = document.createElement('option');
             option.value = course.courseId;
-            option.textContent = `${course.courseId} (${course.totalPointsInCourse || 0} очков)`;
+            let text = `${course.courseId} (${course.totalPointsInCourse || 0} очков)`;
+            if (course.groupId && course.groupId !== '—') {
+                text += ` • группа ${course.groupId}`;
+            }
+            option.textContent = text;
             courseSelect.appendChild(option);
         });
 

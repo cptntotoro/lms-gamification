@@ -37,8 +37,7 @@
     async function loadUserCourses() {
         try {
             const response = await window.GamificationAPI.apiRequest('/api/admin/users/with-courses', {
-                method: 'GET',
-                role: 'ADMIN'
+                method: 'GET'
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const users = await response.json();
@@ -106,7 +105,6 @@
             if (groupId) url += `&groupId=${encodeURIComponent(groupId)}`;
             const response = await window.GamificationAPI.apiRequest(url, {
                 method: 'GET',
-                role: 'ADMIN',
                 overrideHeaders: {
                     'X-User-Id': userId  // важно: подменяем заголовок на просматриваемого пользователя
                 }
