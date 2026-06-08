@@ -61,8 +61,7 @@
         if (!userId) return [];
         try {
             const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/users/${userId}/courses`, {
-                method: 'GET',
-                role: 'ADMIN'
+                method: 'GET'
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
@@ -123,7 +122,6 @@
 
             const response = await window.GamificationAPI.apiRequest(url, {
                 method: 'GET',
-                role: 'ADMIN',
                 overrideHeaders: { 'X-User-Id': userId }
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
