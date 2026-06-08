@@ -115,4 +115,29 @@
         // После первичной загрузки диспатчим событие, чтобы виджет/панель обновились
         document.dispatchEvent(new Event("userChanged"));
     });
+
+    // Добавляем глобальные функции навигации для всех страниц
+    window.goToProfile = function() {
+        const userId = window.GamificationAPI.getCurrentUserId();
+        if (userId) {
+            window.location.href = `/demo/admin/users/${encodeURIComponent(userId)}`;
+        } else {
+            console.warn('Не удалось определить пользователя для перехода в профиль');
+        }
+    };
+
+    function goToLeaderboard() {
+        const { role, userId, courseId, groupId } = getDemoState();
+        if (!courseId) {
+            log('❌ Не выбран курс. Выберите курс из списка.', 'error');
+            return;
+        }
+        let url;
+        if (role === 'STUDENT') {
+            url = `/demo/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?groupId=${groupId || ''}`;
+        } else {
+            url = `/demo/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?groupId=${groupId || ''}&size=20`;
+        }
+        window.location.href = url;
+    }
 })();
