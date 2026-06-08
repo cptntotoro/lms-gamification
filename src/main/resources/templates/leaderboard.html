@@ -6,114 +6,109 @@
     <title>Лидерборд курса</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/leaderboard.css}">
+    <style>
+        /* Дополнительные стили для полоски с текущим пользователем */
+        .current-user-bar {
+            background: #eef2ff;
+            border-radius: 16px;
+            padding: 12px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            border: 1px solid #c7d2fe;
+        }
+        .current-user-label {
+            font-weight: 600;
+            color: #1e40af;
+        }
+        .current-user-id {
+            font-family: monospace;
+            background: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .selector-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+        }
+        .selector-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .selector-row .form-group {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 0;
+        }
+        .selector-row .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #475569;
+        }
+        .loading-overlay {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        .leaderboard-wrapper {
+            transition: all 0.2s;
+        }
+    </style>
 </head>
 <body>
 
 <div th:replace="~{fragments/header :: header}"></div>
 
 <div class="container">
-    <h1 class="page-title">Лидерборд курса</h1>
+    <h1 class="page-title">🏆 Лидерборд курса</h1>
 
-    <!-- Полоска с информацией о курсе -->
-    <div class="course-meta">
-        <div class="meta-item">
-            <span class="meta-label">Курс</span>
-            <span class="meta-value" th:text="${courseId}"></span>
-        </div>
-        <div class="meta-item" th:if="${groupId}">
-            <span class="meta-label">Группа</span>
-            <span class="meta-value" th:text="${groupId}"></span>
-        </div>
-        <div class="meta-item" th:unless="${groupId}">
-            <span class="meta-label">Группа</span>
-            <span class="meta-value">Все группы</span>
-        </div>
+    <!-- Отображение текущего пользователя -->
+    <div class="current-user-bar" id="currentUserBar">
+        <span class="current-user-label">Просмотр для пользователя:</span>
+        <span class="current-user-id" id="currentUserIdDisplay">—</span>
     </div>
 
-    <div class="leaderboard-wrapper card" th:if="${leaderboard}">
-
-        <div th:if="${leaderboard.topEntries?.isEmpty()}" class="empty-state">
-            <div class="empty-icon">🏆</div>
-            <p class="empty-text">Пока никто не набрал очков на этом курсе</p>
-        </div>
-
-        <div th:unless="${leaderboard.topEntries?.isEmpty()}">
-            <div class="table-responsive">
-                <table class="leaderboard-table">
-                    <thead>
-                    <tr>
-                        <th class="col-rank text-center" scope="col">Место</th>
-                        <th class="col-participant text-center" scope="col">Участник</th>
-                        <th class="col-points text-center" scope="col">Очки</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="entry, iter : ${leaderboard.topEntries}"
-                        th:classappend="${entry.rank == leaderboard.currentUserRank} ? 'is-current-user'"
-                        th:attr="data-rank=${entry.rank}">
-
-                        <td class="cell-rank text-center">
-                            <span th:classappend="|
-                                ${iter.index == 0} ? 'medal-gold' :
-                                ${iter.index == 1} ? 'medal-silver' :
-                                ${iter.index == 2} ? 'medal-bronze' : ''
-                            |">
-                                <span th:switch="${iter.index}">
-                                    <span th:case="0">🥇</span>
-                                    <span th:case="1">🥈</span>
-                                    <span th:case="2">🥉</span>
-                                    <span th:case="*">[[${entry.rank}]]</span>
-                                </span>
-                            </span>
-                        </td>
-
-                        <td class="cell-participant">
-                            <div class="participant">
-                                <div class="participant-avatar"
-                                     th:text="${#strings.substring(entry.userId ?: '??', 0, 2)?.toUpperCase()}"></div>
-                                <div class="participant-info">
-                                    <div class="participant-name">
-                                        <span th:text="${entry.userId ?: '—'}"></span>
-                                    </div>
-                                    <div class="participant-level" th:if="${entry.globalLevel != null}">
-                                        Уровень <strong>[[${entry.globalLevel}]]</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-
-                        <td class="cell-points">[[${entry.pointsInCourse}]]</td>
-                    </tr>
-                    </tbody>
-                </table>
+    <!-- Блок выбора курса и группы -->
+    <div class="selector-panel">
+        <div class="selector-row">
+            <div class="form-group">
+                <label for="leaderboardCourseSelect">Курс *</label>
+                <select id="leaderboardCourseSelect" class="demo-select" required>
+                    <option value="">-- Загрузка курсов --</option>
+                </select>
             </div>
-
-            <!-- Пагинация -->
-            <nav class="pagination" th:if="${leaderboard.totalPages > 1}" aria-label="Пагинация лидерборда">
-                <a th:href="@{/me/leaderboard/course/{courseId}/groups/{groupId}(courseId=${courseId},groupId=${groupId},page=${leaderboard.pageNumber - 1},size=${leaderboard.pageSize})}"
-                   th:classappend="${!leaderboard.hasPrevious} ? 'disabled'"
-                   aria-label="Предыдущая страница"
-                   th:unless="${!leaderboard.hasPrevious}">« Предыдущая</a>
-
-                <span th:each="i : ${#numbers.sequence(0, leaderboard.totalPages - 1)}">
-                    <a th:href="@{/me/leaderboard/course/{courseId}/groups/{groupId}(courseId=${courseId},groupId=${groupId},page=${i},size=${leaderboard.pageSize})}"
-                       th:classappend="${i == leaderboard.pageNumber} ? 'active'"
-                       th:text="${i + 1}"
-                       aria-label="'Страница ' + ${i + 1}"></a>
-                </span>
-
-                <a th:href="@{/me/leaderboard/course/{courseId}/groups/{groupId}(courseId=${courseId},groupId=${groupId},page=${leaderboard.pageNumber + 1},size=${leaderboard.pageSize})}"
-                   th:classappend="${!leaderboard.hasNext} ? 'disabled'"
-                   aria-label="Следующая страница"
-                   th:unless="${!leaderboard.hasNext}">Следующая »</a>
-            </nav>
+            <div class="form-group">
+                <label for="leaderboardGroupInput">Группа (опционально)</label>
+                <input type="text" id="leaderboardGroupInput" placeholder="например, M-21-2" class="demo-select">
+            </div>
+            <div>
+                <button id="loadLeaderboardBtn" class="btn btn-primary">Показать лидерборд</button>
+            </div>
+        </div>
+        <div class="help-text" style="margin-top: 12px; font-size: 0.85rem;">
+            Выберите курс, чтобы увидеть рейтинг участников. Группу можно не указывать — будет показан общий лидерборд курса.
         </div>
     </div>
 
-    <div class="error-message" th:if="${leaderboard == null}">
-        Не удалось загрузить лидерборд
+    <!-- Контейнер для лидерборда -->
+    <div id="leaderboardContainer">
+        <div class="loading-overlay">Выберите курс и нажмите «Показать лидерборд»</div>
     </div>
 </div>
 
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/leaderboard.js}"></script>
 </body>
 </html>
