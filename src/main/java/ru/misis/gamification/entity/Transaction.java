@@ -31,6 +31,7 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_transactions_user_uuid", columnList = "user_uuid"),
                 @Index(name = "idx_transactions_course_uuid", columnList = "course_uuid"),
+                @Index(name = "idx_transactions_group_uuid", columnList = "group_uuid"),
                 @Index(name = "idx_transactions_event_type_uuid", columnList = "event_type_uuid"),
                 @Index(name = "idx_transactions_event_id", columnList = "event_id"),
                 @Index(name = "idx_transactions_created_at", columnList = "created_at DESC"),
@@ -66,6 +67,14 @@ public class Transaction {
     @JoinColumn(name = "course_uuid")
     @Comment("Ссылка на курс (для аналитики)")
     private Course course;
+
+    /**
+     * Группа
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_uuid")
+    @Comment("Ссылка на группу (для аналитики)")
+    private Group group;
 
     /**
      * Идентификатор события из LMS

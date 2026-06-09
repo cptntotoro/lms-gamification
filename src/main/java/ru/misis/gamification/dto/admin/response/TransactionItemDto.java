@@ -54,4 +54,16 @@ public class TransactionItemDto {
      */
     @Schema(description = "Дата и время начисления", example = "2026-02-19T15:30:00")
     private LocalDateTime createdAt;
+
+    /**
+     * Идентификатор курса из LMS
+     */
+    @Schema(description = "Идентификатор курса из LMS", example = "MATH-101", nullable = true)
+    private String courseId;
+
+    /**
+     * Идентификатор группы из LMS
+     */
+    @Schema(description = "Идентификатор группы из LMS", example = "M-21-1", nullable = true)
+    private String groupId;
 }

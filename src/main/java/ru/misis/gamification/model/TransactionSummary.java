@@ -12,6 +12,8 @@ import java.util.UUID;
  * @param points      Количество очков
  * @param description Описание
  * @param createdAt   Дата и время создания
+ * @param courseId    Идентификатор курса из LMS
+ * @param groupId     Идентификатор группы из LMS
  */
 public record TransactionSummary(
         UUID uuid,
@@ -19,6 +21,8 @@ public record TransactionSummary(
         String eventId,
         Integer points,
         String description,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String courseId,
+        String groupId
 ) {
 }
