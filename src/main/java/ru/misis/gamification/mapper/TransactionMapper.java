@@ -49,5 +49,7 @@ public interface TransactionMapper {
      * @return Модель транзакции
      */
     @Mapping(target = "userId", source = "user.userId")
+    @Mapping(target = "courseId", source = "course.courseId")
+    @Mapping(target = "groupId", source = "group.groupId")
     TransactionSummary toTransactionSummary(Transaction transaction);
 }

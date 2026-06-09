@@ -108,7 +108,6 @@ FROM users u
 WHERE u.user_id IN ('student011', 'student012', 'student007', 'student004')
 ON CONFLICT ON CONSTRAINT unique_user_course DO NOTHING;
 
-
 -- 6. Транзакции
 
 -- Очищаем, если запускаем повторно
@@ -119,6 +118,7 @@ FROM transactions;
 INSERT INTO transactions (uuid,
                           user_uuid,
                           course_uuid,
+                          group_uuid,
                           event_id,
                           event_type_uuid,
                           points,
@@ -127,6 +127,7 @@ INSERT INTO transactions (uuid,
 SELECT gen_random_uuid(),
        e.user_uuid,
        e.course_uuid,
+       e.group_uuid,
        'demo-ev-' || md5(random()::text || clock_timestamp()::text),
        et.uuid,
        -- очки: стараемся держать в разумных пределах типа события

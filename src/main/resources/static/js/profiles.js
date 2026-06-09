@@ -30,12 +30,15 @@
         let html = '';
         for (const user of users) {
             const enrollments = user.enrollments || [];
+            // Ссылка на транзакции пользователя
+            const transactionsLink = `<a class="transactions-link" href="/demo/transactions?userId=${encodeURIComponent(user.userId)}">📜 Транзакции</a>`;
             html += `
                 <div class="user-card">
                     <div class="user-header">
                         <span>👤</span>
                         <span class="user-id">${escapeHtml(user.userId)}</span>
                         <span style="font-size:0.85rem; font-weight:normal;">(${enrollments.length} ${declension(enrollments.length, 'курс', 'курса', 'курсов')})</span>
+                        ${transactionsLink}
                     </div>
                     <div style="overflow-x: auto;">
                         <table class="enrollments-table">

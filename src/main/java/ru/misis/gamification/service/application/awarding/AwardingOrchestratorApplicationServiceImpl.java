@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.EventType;
+import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.model.AwardResultView;
@@ -14,12 +15,14 @@ import ru.misis.gamification.model.AwardResultViews;
 import ru.misis.gamification.service.application.enrollment.EnrollmentApplicationService;
 import ru.misis.gamification.service.simple.course.CourseService;
 import ru.misis.gamification.service.simple.eventtype.EventTypeService;
+import ru.misis.gamification.service.simple.group.GroupService;
 import ru.misis.gamification.service.simple.progress.LevelCalculatorService;
 import ru.misis.gamification.service.simple.transaction.TransactionService;
 import ru.misis.gamification.service.simple.user.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +55,11 @@ public class AwardingOrchestratorApplicationServiceImpl implements AwardingOrche
      * Сервис управления курсами
      */
     private final CourseService courseService;
+
+    /**
+     * Сервис управления группами
+     */
+    private final GroupService groupService;
 
     /**
      * Фасадный сервис управления зачислениями пользователей на курсы и в группы
@@ -93,9 +101,16 @@ public class AwardingOrchestratorApplicationServiceImpl implements AwardingOrche
             course = courseService.findByCourseId(courseId);
         }
 
+        Group group = null;
+        if (groupId != null && !groupId.trim().isEmpty() && course != null) {
+            UUID groupUuid = groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId);
+            group = groupService.findById(groupUuid);
+        }
+
         Transaction tx = Transaction.builder()
                 .user(user)
                 .course(course)
+                .group(group)
                 .eventType(eventType)
                 .eventId(eventId)
                 .points(points)

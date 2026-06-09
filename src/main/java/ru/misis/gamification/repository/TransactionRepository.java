@@ -26,20 +26,21 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     boolean existsByEventId(String eventId);
 
     /**
-     * Получить страницу транзакций по идентификатору пользователя из LMS
+     * Получить страницу транзакций по идентификатору пользователя с join fetch для курса и группы
      *
      * @param userUuid UUID пользователя
      * @param pageable Параметры пагинации и сортировки
      * @return Страница транзакций
      */
-    Page<Transaction> findByUserUuidOrderByCreatedAtDesc(UUID userUuid, Pageable pageable);
+    @Query("SELECT t FROM Transaction t " +
+            "LEFT JOIN FETCH t.course " +
+            "LEFT JOIN FETCH t.group " +
+            "WHERE t.user.uuid = :userUuid " +
+            "ORDER BY t.createdAt DESC")
+    Page<Transaction> findByUserUuidOrderByCreatedAtDesc(@Param("userUuid") UUID userUuid, Pageable pageable);
 
     /**
      * Получить сумму очков, начисленных пользователю по конкретному типу события за указанный день
-     * <p>
-     * Учитываются только транзакции, созданные в этот день (по дате без времени).
-     * Если записей нет — возвращается 0.
-     * </p>
      *
      * @param userUuid      UUID пользователя
      * @param eventTypeUuid UUID типа события

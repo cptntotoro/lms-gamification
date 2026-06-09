@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История транзакций</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/transactions.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="container">
+    <h1 class="page-title">📜 История транзакций</h1>
+
+    <!-- Информация о пользователе -->
+    <div id="userInfoBlock" class="user-info-block">
+        <div class="user-info-card">
+            <span class="user-info-label">👤 Пользователь:</span>
+            <span id="currentUserIdSpan" class="user-id-value">—</span>
+        </div>
+    </div>
+
+    <!-- Панель управления пагинацией и фильтрами -->
+    <div class="transactions-controls">
+        <div class="controls-row">
+            <div class="form-group">
+                <label for="pageSizeSelect">Записей на странице:</label>
+                <select id="pageSizeSelect" class="demo-select">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sortDirSelect">Сортировка по дате:</label>
+                <select id="sortDirSelect" class="demo-select">
+                    <option value="desc" selected>Сначала новые</option>
+                    <option value="asc">Сначала старые</option>
+                </select>
+            </div>
+            <button id="refreshBtn" class="btn btn-primary">Обновить</button>
+        </div>
+    </div>
+
+    <!-- Контейнер для таблицы и пагинации -->
+    <div id="transactionsContent">
+        <div id="loadingIndicator" class="text-center" style="padding: 40px;">Загрузка...</div>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="tableContainer" style="display: none;">
+            <div class="table-container">
+                <table class="data-table transactions-table">
+                    <thead>
+                    <tr>
+                        <th>Дата и время</th>
+                        <th>ID события (eventId)</th>
+                        <th>Курс</th>
+                        <th>Группа</th>
+                        <th>Очки</th>
+                        <th>Описание</th>
+                    </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                    <!-- строки будут добавлены динамически -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="paginationContainer" class="pagination"></div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/transactions.js}"></script>
+</body>
+</html>

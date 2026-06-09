@@ -1,0 +1,91 @@
+.user-info-block {
+    margin-bottom: 24px;
+}
+
+.user-info-card {
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: inline-block;
+    border: 1px solid #e2e8f0;
+}
+
+.user-info-label {
+    font-weight: 600;
+    color: #475569;
+    margin-right: 12px;
+}
+
+.user-id-value {
+    font-family: monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    background: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.transactions-controls {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #e2e8f0;
+}
+
+.controls-row {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.controls-row .form-group {
+    margin-bottom: 0;
+}
+
+.controls-row .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.transactions-table th,
+.transactions-table td {
+    padding: 12px 16px;
+}
+
+.transactions-table td:first-child,
+.transactions-table th:first-child {
+    width: 180px;
+}
+
+.transactions-table td:nth-child(2) {
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.transactions-table td:nth-child(5) {
+    font-weight: 700;
+    color: #10b981;
+    text-align: center;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+.access-denied {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    margin: 40px 0;
+}
