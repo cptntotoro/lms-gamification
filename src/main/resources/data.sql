@@ -43,13 +43,13 @@ VALUES (gen_random_uuid(), 'student001', 0, 1, NOW(), NOW()),
        (gen_random_uuid(), 'student011', 0, 1, NOW(), NOW()),
        (gen_random_uuid(), 'student012', 0, 1, NOW(), NOW());
 
--- 5. Зачисления — фиксированные значения очков по курсу (временные, будут перезаписаны позже)
+-- 5. Зачисления (создаём для всех студентов)
 INSERT INTO user_course_enrollments (uuid, user_uuid, course_uuid, group_uuid, total_points_in_course, enrolled_at)
 SELECT gen_random_uuid(),
        u.uuid,
        c.uuid,
        g.uuid,
-       0, -- временно 0, потом обновим суммой транзакций
+       0,
        NOW() - interval '1 month' *
     CASE
     WHEN u.user_id ~ '00[1-4]' THEN 2
@@ -69,7 +69,7 @@ WHERE (u.user_id ~ '^student00[1-8]' AND c.course_id = 'MATH-101')
    OR (u.user_id ~ '^student009|^student01[0-2]' AND c.course_id = 'PROG-202')
 ON CONFLICT ON CONSTRAINT unique_user_course DO NOTHING;
 
--- Дополнительные зачисления на HIST-303 (несколько человек)
+-- Дополнительные зачисления на HIST-303
 INSERT INTO user_course_enrollments (uuid, user_uuid, course_uuid, group_uuid, total_points_in_course, enrolled_at)
 SELECT gen_random_uuid(),
        u.uuid,
@@ -83,30 +83,55 @@ FROM users u
 WHERE u.user_id IN ('student011', 'student012', 'student007', 'student004')
 ON CONFLICT ON CONSTRAINT unique_user_course DO NOTHING;
 
--- 6. Генерация транзакций (случайные очки, сумма по каждому курсу будет скорректирована позже)
+-- 6. Генерация транзакций (без использования DO, только обычные SQL-запросы)
 DELETE FROM transactions;
 
+-- Для каждого пользователя (кроме трёх нулевых) создаём от 8 до 15 транзакций
+-- с очками, соответствующими типам событий из таблицы event_types
 INSERT INTO transactions (uuid, user_uuid, course_uuid, group_uuid, event_id, event_type_uuid, points, description, created_at)
-SELECT gen_random_uuid(),
-       e.user_uuid,
-       e.course_uuid,
-       e.group_uuid,
-       'demo-ev-' || md5(random()::text || clock_timestamp()::text),
-       et.uuid,
-       floor(random() * 80 + 20)::int,  -- очки от 20 до 100
-    et.display_name || ' — ' ||
+SELECT
+    gen_random_uuid(),
+    t.user_uuid,
+    t.course_uuid,
+    t.group_uuid,
+    'demo-ev-' || md5(random()::text || clock_timestamp()::text),
+    t.event_type_uuid,
+    t.points,
+    t.event_display_name || ' — ' ||
     CASE (random() * 4)::int
-           WHEN 0 THEN 'отлично!'
-           WHEN 1 THEN 'хорошо'
-           WHEN 2 THEN 'на твёрдую четвёрку'
-           ELSE 'удовлетворительно'
+        WHEN 0 THEN 'отлично!'
+        WHEN 1 THEN 'хорошо'
+        WHEN 2 THEN 'на твёрдую четвёрку'
+        ELSE 'удовлетворительно'
 END,
-       NOW() - (random() * 90)::int * interval '1 day'
-FROM user_course_enrollments e
-         CROSS JOIN event_types et
-         CROSS JOIN generate_series(1, 5 + floor(random() * 10)::int) -- 5-15 транзакций на зачисление
-WHERE e.total_points_in_course = 0  -- все свежесозданные зачисления
-ORDER BY e.user_uuid, e.course_uuid, random()
+    NOW() - (random() * 90)::int * interval '1 day'
+FROM (
+    SELECT
+        u.uuid AS user_uuid,
+        e.course_uuid,
+        e.group_uuid,
+        et.uuid AS event_type_uuid,
+        et.points,
+        et.display_name AS event_display_name,
+        -- нумеруем строки для каждого пользователя, чтобы ограничить количество транзакций
+        ROW_NUMBER() OVER (PARTITION BY u.uuid ORDER BY random()) AS rn
+    FROM users u
+    -- берём одно случайное зачисление для пользователя (чтобы не плодить на все курсы)
+    CROSS JOIN LATERAL (
+        SELECT course_uuid, group_uuid
+        FROM user_course_enrollments
+        WHERE user_uuid = u.uuid
+        ORDER BY random()
+        LIMIT 1
+    ) e
+    CROSS JOIN event_types et
+    -- генерируем до 20 кандидатов на пользователя (из них отфильтруем нужное количество)
+    CROSS JOIN generate_series(1, 20) AS gs
+    WHERE u.user_id NOT IN ('student010', 'student011', 'student012')
+) t
+WHERE t.rn BETWEEN 1 AND (8 + floor(random() * 8)::int)  -- от 8 до 15 транзакций на пользователя
+ORDER BY t.user_uuid, random()
+-- лимит на случай если что-то пошло не так (но обычно не срабатывает)
 LIMIT 200;
 
 -- 7. Корректировка суммы очков в зачислениях: делаем её равной сумме очков транзакций для каждого зачисления
