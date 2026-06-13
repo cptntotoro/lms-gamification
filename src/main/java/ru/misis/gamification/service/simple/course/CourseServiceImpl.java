@@ -10,6 +10,7 @@ import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.exception.CourseNotFoundException;
 import ru.misis.gamification.repository.CourseRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -44,4 +45,8 @@ public class CourseServiceImpl implements CourseService {
         return courseRepository.findById(courseUuid).orElseThrow(() -> new CourseNotFoundException(courseUuid));
     }
 
+    @Override
+    public List<Course> getAllCourses() {
+        return courseRepository.findAll();
+    }
 }

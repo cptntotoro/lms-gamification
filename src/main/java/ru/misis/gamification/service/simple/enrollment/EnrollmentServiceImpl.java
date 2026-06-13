@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.entity.Course;
+import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
 import ru.misis.gamification.exception.UserCourseEnrollmentNotFoundException;
@@ -59,5 +60,10 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     @Override
     public List<UserCourseEnrollment> findAllByUser(User user) {
         return repository.findAllByUser(user);
+    }
+
+    @Override
+    public boolean isUserInGroup(User user, Group group) {
+        return repository.existsByUserAndCourseAndGroup(user, group.getCourse(), group);
     }
 }

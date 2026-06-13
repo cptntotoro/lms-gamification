@@ -2,15 +2,16 @@
 // Глобальные переменные состояния
 // ============================
 
-let availableCourses = [];            // список курсов пользователя {courseId, groupId?}
+let availableCourses = [];            // список всех курсов {courseId, enrolled, totalPointsInCourse}
+let availableGroups = [];             // список групп выбранного курса {groupId, member}
 let currentCourseId = null;           // выбранный курс
-let currentGroupId = null;             // введённая группа (строка)
+let currentGroupId = null;            // выбранная группа (строка)
 
 let availableEventTypes = [];          // активные типы событий с сервера
 let lastSentEventId = null;            // для дублирования
 
 // Элементы DOM
-let courseSelect, groupInput, eventTypeSelect, eventIdInput, logContainer, roleSelect;
+let courseSelect, groupSelect, eventTypeSelect, eventIdInput, logContainer, roleSelect;
 
 // ============================
 // Вспомогательные функции
@@ -33,16 +34,16 @@ function clearLog() {
     log('Лог очищен', 'info');
 }
 
-// Загрузка курсов пользователя (через эндпоинт /api/v1/leaderboard/users/{userId}/courses)
-async function loadUserCourses() {
+// Загрузка ВСЕХ курсов системы с признаком записи пользователя
+async function loadAllCourses() {
     try {
         const userId = window.GamificationAPI.getCurrentUserId();
-        const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/users/${userId}/courses`);
+        const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/all?userId=${encodeURIComponent(userId)}`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         const data = await response.json();
-        availableCourses = data.courses || [];
+        availableCourses = data;
         log(`Загружено курсов: ${availableCourses.length}`, 'success');
 
         // Заполнить выпадающий список курсов
@@ -50,25 +51,87 @@ async function loadUserCourses() {
         availableCourses.forEach(course => {
             const option = document.createElement('option');
             option.value = course.courseId;
-            let text = `${course.courseId} (${course.totalPointsInCourse || 0} очков)`;
-            if (course.groupId && course.groupId !== '—') {
-                text += ` • группа ${course.groupId}`;
+            let text = `${course.courseId}${course.displayName ? ' (' + course.displayName + ')' : ''}`;
+            if (course.enrolled) {
+                text += ` ✓ (${course.totalPointsInCourse || 0} очков)`;
+                option.style.fontWeight = 'bold';
+                option.style.backgroundColor = '#e6f7e6';
+            } else {
+                text += ` (не записан)`;
             }
             option.textContent = text;
             courseSelect.appendChild(option);
         });
+        // Добавляем опцию добавления нового курса
+        const addCourseOption = document.createElement('option');
+        addCourseOption.value = '__ADD_NEW_COURSE__';
+        addCourseOption.textContent = '➕ Добавить новый курс';
+        addCourseOption.style.fontStyle = 'italic';
+        addCourseOption.style.color = '#2563eb';
+        courseSelect.appendChild(addCourseOption);
 
-        // Если был выбран курс ранее – попробовать восстановить (по localStorage)
+        // Восстановить сохранённый курс из localStorage
         const savedCourse = localStorage.getItem('demoCourseId');
         if (savedCourse && availableCourses.some(c => c.courseId === savedCourse)) {
             courseSelect.value = savedCourse;
         } else if (availableCourses.length > 0) {
-            courseSelect.value = availableCourses[0].courseId;
+            // предвыбираем первый записанный курс, если есть
+            const firstEnrolled = availableCourses.find(c => c.enrolled);
+            courseSelect.value = firstEnrolled ? firstEnrolled.courseId : availableCourses[0].courseId;
         }
-        onCourseChange(); // обновить текущий курс
+        await onCourseChange(); // загрузит группы для выбранного курса
     } catch (error) {
         log(`Ошибка загрузки курсов: ${error.message}`, 'error');
         courseSelect.innerHTML = '<option value="">-- Ошибка загрузки --</option>';
+    }
+}
+
+// Загрузка групп для выбранного курса с членством пользователя
+async function loadGroupsForCourse(courseId) {
+    if (!courseId) return [];
+    try {
+        const userId = window.GamificationAPI.getCurrentUserId();
+        const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        log(`Ошибка загрузки групп: ${error.message}`, 'error');
+        return [];
+    }
+}
+
+// Заполнить селектор групп
+function populateGroupSelect(groups, preselectedGroupId) {
+    groupSelect.innerHTML = '<option value="">-- Все группы --</option>';
+    if (groups.length === 0) {
+        groupSelect.innerHTML = '<option value="">-- Нет групп --</option>';
+    } else {
+        groups.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group.groupId;
+            let text = `${group.groupId}${group.displayName ? ' (' + group.displayName + ')' : ''}`;
+            if (group.member) {
+                text += ` ✓`;
+                option.style.fontWeight = 'bold';
+                option.style.backgroundColor = '#e6f7e6';
+            }
+            option.textContent = text;
+            groupSelect.appendChild(option);
+        });
+    }
+    // Добавляем опцию добавления новой группы
+    const addGroupOption = document.createElement('option');
+    addGroupOption.value = '__ADD_NEW_GROUP__';
+    addGroupOption.textContent = '➕ Добавить новую группу';
+    addGroupOption.style.fontStyle = 'italic';
+    addGroupOption.style.color = '#2563eb';
+    groupSelect.appendChild(addGroupOption);
+
+    if (preselectedGroupId && groups.some(g => g.groupId === preselectedGroupId)) {
+        groupSelect.value = preselectedGroupId;
+    } else {
+        groupSelect.value = '';
     }
 }
 
@@ -95,13 +158,53 @@ async function loadEventTypes() {
 }
 
 // Обработка смены курса
-function onCourseChange() {
-    currentCourseId = courseSelect.value;
-    if (currentCourseId) {
-        localStorage.setItem('demoCourseId', currentCourseId);
-        log(`Выбран курс: ${currentCourseId}`, 'info');
+async function onCourseChange() {
+    const newCourseId = courseSelect.value;
+    if (newCourseId === '__ADD_NEW_COURSE__') {
+        const newCourseInput = prompt('Введите идентификатор нового курса:');
+        if (newCourseInput && newCourseInput.trim()) {
+            // Добавляем новый курс в селектор временно
+            const newOption = document.createElement('option');
+            newOption.value = newCourseInput.trim();
+            newOption.textContent = `${newCourseInput.trim()} (новый)`;
+            newOption.style.fontWeight = 'bold';
+            newOption.style.backgroundColor = '#ffffcc';
+            const addOption = courseSelect.querySelector('option[value="__ADD_NEW_COURSE__"]');
+            courseSelect.insertBefore(newOption, addOption);
+            courseSelect.value = newCourseInput.trim();
+            currentCourseId = newCourseInput.trim();
+            // Загружаем группы (скорее всего пусто)
+            availableGroups = await loadGroupsForCourse(currentCourseId);
+            populateGroupSelect(availableGroups, null);
+        } else {
+            // восстанавливаем предыдущее значение
+            const savedCourse = localStorage.getItem('demoCourseId');
+            if (savedCourse && availableCourses.some(c => c.courseId === savedCourse)) {
+                courseSelect.value = savedCourse;
+            } else if (availableCourses.length > 0) {
+                courseSelect.value = availableCourses[0].courseId;
+            } else {
+                courseSelect.value = '';
+            }
+            currentCourseId = courseSelect.value;
+            if (currentCourseId) {
+                availableGroups = await loadGroupsForCourse(currentCourseId);
+                populateGroupSelect(availableGroups, null);
+            }
+        }
     } else {
-        localStorage.removeItem('demoCourseId');
+        currentCourseId = newCourseId;
+        if (currentCourseId) {
+            localStorage.setItem('demoCourseId', currentCourseId);
+            log(`Выбран курс: ${currentCourseId}`, 'info');
+            // Загружаем группы для этого курса
+            availableGroups = await loadGroupsForCourse(currentCourseId);
+            const savedGroup = localStorage.getItem('demoGroupId');
+            populateGroupSelect(availableGroups, savedGroup);
+        } else {
+            localStorage.removeItem('demoCourseId');
+            groupSelect.innerHTML = '<option value="">-- Все группы --</option>';
+        }
     }
 }
 
@@ -118,7 +221,7 @@ async function sendEvent(eventType, eventId) {
         eventId: eventId
     };
     if (currentCourseId) payload.courseId = currentCourseId;
-    if (currentGroupId) payload.groupId = currentGroupId;
+    if (currentGroupId && currentGroupId !== '__ADD_NEW_GROUP__') payload.groupId = currentGroupId;
 
     log(`➡️ Отправка события: ${eventType} / ${eventId}`, 'info');
     try {
@@ -193,8 +296,8 @@ function getDemoState() {
     return {
         role: window.GamificationAPI.getCurrentRole(),
         userId: window.GamificationAPI.getCurrentUserId(),
-        courseId: currentCourseId || (availableCourses.length ? availableCourses[0].courseId : 'DEMO_COURSE'),
-        groupId: groupInput.value.trim() || null
+        courseId: currentCourseId || (availableCourses.length ? availableCourses.find(c => c.enrolled)?.courseId || availableCourses[0].courseId : 'DEMO_COURSE'),
+        groupId: groupSelect.value === '__ADD_NEW_GROUP__' ? '' : (groupSelect.value || null)
     };
 }
 
@@ -208,7 +311,7 @@ function onRoleSelectChange() {
 document.addEventListener("DOMContentLoaded", async () => {
     // Найти элементы
     courseSelect = document.getElementById('courseSelect');
-    groupInput = document.getElementById('groupIdInput');
+    groupSelect = document.getElementById('groupIdSelect');
     eventTypeSelect = document.getElementById('eventTypeSelect');
     eventIdInput = document.getElementById('eventIdInput');
     logContainer = document.getElementById('eventLog');
@@ -222,6 +325,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('clearLogBtn').addEventListener('click', clearLog);
 
     if (courseSelect) courseSelect.addEventListener('change', onCourseChange);
+    if (groupSelect) groupSelect.addEventListener('change', () => {
+        if (groupSelect.value === '__ADD_NEW_GROUP__') {
+            // Проверка выбора группы
+            let selectedGroup = groupSelect.value;
+            const newGroup = prompt('Введите идентификатор новой группы:');
+            if (newGroup && newGroup.trim()) {
+                selectedGroup = newGroup.trim();
+                // Добавляем временно в селектор
+                const newOption = document.createElement('option');
+                newOption.value = selectedGroup;
+                newOption.textContent = `${selectedGroup} (новая)`;
+                newOption.style.fontWeight = 'bold';
+                newOption.style.backgroundColor = '#ffffcc';
+                const addOption = groupSelect.querySelector('option[value="__ADD_NEW_GROUP__"]');
+                groupSelect.insertBefore(newOption, addOption);
+                groupSelect.value = selectedGroup;
+            } else {
+                selectedGroup = '';
+                groupSelect.value = '';
+            }
+        } else {
+            currentGroupId = groupSelect.value;
+            if (currentGroupId) localStorage.setItem('demoGroupId', currentGroupId);
+            else localStorage.removeItem('demoGroupId');
+        }
+    });
 
     // Инициализация выбора роли
     if (roleSelect) {
@@ -229,17 +358,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         roleSelect.addEventListener('change', onRoleSelectChange);
     }
 
-    await loadUserCourses();
+    await loadAllCourses();
     await loadEventTypes();
 
-    // Восстановить группу из localStorage, если есть
+    // Восстановить группу из localStorage, если есть (после загрузки групп)
     const savedGroup = localStorage.getItem('demoGroupId');
-    if (savedGroup && groupInput) groupInput.value = savedGroup;
-    if (groupInput) {
-        groupInput.addEventListener('change', () => {
-            localStorage.setItem('demoGroupId', groupInput.value);
-            currentGroupId = groupInput.value;
-        });
+    if (savedGroup && groupSelect) {
+        // Отложим установку, т.к. группы могут быть ещё не загружены
+        setTimeout(() => {
+            if (groupSelect.querySelector(`option[value="${savedGroup}"]`)) {
+                groupSelect.value = savedGroup;
+                currentGroupId = savedGroup;
+            }
+        }, 100);
     }
 
     // Значение eventId по умолчанию – пусто (будет auto генерироваться)
@@ -248,7 +379,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // При смене пользователя (из header.js) перезагружаем курсы
     document.addEventListener('userChanged', () => {
-        loadUserCourses().catch(e => log(`Ошибка загрузки курсов: ${e.message}`, 'error'));
+        loadAllCourses().catch(e => log(`Ошибка загрузки курсов: ${e.message}`, 'error'));
     });
 });
 

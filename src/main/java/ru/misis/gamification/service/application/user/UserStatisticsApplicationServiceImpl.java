@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import ru.misis.gamification.dto.user.response.CourseWithEnrollmentDto;
+import ru.misis.gamification.dto.user.response.GroupWithMembershipDto;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
@@ -21,7 +23,9 @@ import ru.misis.gamification.service.simple.group.GroupService;
 import ru.misis.gamification.service.simple.user.UserService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -116,6 +120,44 @@ public class UserStatisticsApplicationServiceImpl implements UserStatisticsAppli
                 .progressPercent(progress.progressPercent())
                 .courses(courses)
                 .build();
+    }
+
+    @Override
+    public List<CourseWithEnrollmentDto> getAllCoursesWithEnrollmentStatus(String userId) {
+        User user = userService.getUserByExternalId(userId);
+        List<Course> allCourses = courseService.getAllCourses();
+        return allCourses.stream()
+                .map(course -> {
+                    boolean enrolled = enrollmentService.isUserEnrolledInCourse(user, course);
+                    Integer points = 0;
+                    if (enrolled) {
+                        UserCourseEnrollment enrollment = enrollmentService.findByUserAndCourse(user, course);
+                        points = enrollment.getTotalPointsInCourse();
+                    }
+                    return CourseWithEnrollmentDto.builder()
+                            .courseId(course.getCourseId())
+                            .displayName(course.getDisplayName())
+                            .enrolled(enrolled)
+                            .totalPointsInCourse(points)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GroupWithMembershipDto> getCourseGroupsWithMembership(String courseId, String userId) {
+        User user = userService.getUserByExternalId(userId);
+        List<Group> groups = groupService.getGroupsByCourseId(courseId);
+        return groups.stream()
+                .map(group -> {
+                    boolean member = enrollmentService.isUserInGroup(user, group);
+                    return GroupWithMembershipDto.builder()
+                            .groupId(group.getGroupId())
+                            .displayName(group.getDisplayName())
+                            .member(member)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
     private UserCourseSummary buildCourseSummary(UserCourseEnrollment enrollment) {

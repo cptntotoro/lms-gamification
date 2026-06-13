@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,4 +46,12 @@ public interface GroupRepository extends JpaRepository<Group, UUID> {
             @Param("groupId") String groupId,
             @Param("courseId") String courseId
     );
+
+    /**
+     * Получить все группы курса по идентификатору курса из LMS
+     *
+     * @param courseId идентификатор курса
+     * @return список групп
+     */
+    List<Group> findByCourseCourseId(String courseId);
 }
