@@ -4,7 +4,6 @@
 
     async function loadUsersWithCourses() {
         try {
-            const role = window.GamificationAPI.getCurrentRole();
             const response = await window.GamificationAPI.apiRequest('/api/admin/users/with-courses', {
                 method: 'GET'
             });

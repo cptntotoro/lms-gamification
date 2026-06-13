@@ -11,7 +11,7 @@ let availableEventTypes = [];          // активные типы событи
 let lastSentEventId = null;            // для дублирования
 
 // Элементы DOM
-let courseSelect, groupSelect, eventTypeSelect, eventIdInput, logContainer, roleSelect;
+let courseSelect, groupSelect, eventTypeSelect, eventIdInput, logContainer;
 
 // ============================
 // Вспомогательные функции
@@ -228,7 +228,6 @@ async function sendEvent(eventType, eventId) {
         const response = await window.GamificationAPI.apiRequest('/api/v1/event', {
             method: 'POST',
             body: JSON.stringify(payload),
-            role: roleSelect.value
         });
         const data = await response.json();
 
@@ -294,18 +293,10 @@ function sendEmptyEventId() {
 // ============================
 function getDemoState() {
     return {
-        role: window.GamificationAPI.getCurrentRole(),
         userId: window.GamificationAPI.getCurrentUserId(),
         courseId: currentCourseId || (availableCourses.length ? availableCourses.find(c => c.enrolled)?.courseId || availableCourses[0].courseId : 'DEMO_COURSE'),
         groupId: groupSelect.value === '__ADD_NEW_GROUP__' ? '' : (groupSelect.value || null)
     };
-}
-
-// Обработчик смены роли (только на demo-странице)
-function onRoleSelectChange() {
-    const newRole = roleSelect.value;
-    window.GamificationAPI.setCurrentRole(newRole);
-    log(`Роль изменена на ${newRole}`, 'info');
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -315,7 +306,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     eventTypeSelect = document.getElementById('eventTypeSelect');
     eventIdInput = document.getElementById('eventIdInput');
     logContainer = document.getElementById('eventLog');
-    roleSelect = document.getElementById('demoRoleSelect');
 
     // Кнопки
     document.getElementById('sendEventBtn').addEventListener('click', sendFromUI);
@@ -351,12 +341,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             else localStorage.removeItem('demoGroupId');
         }
     });
-
-    // Инициализация выбора роли
-    if (roleSelect) {
-        roleSelect.value = window.GamificationAPI.getCurrentRole();
-        roleSelect.addEventListener('change', onRoleSelectChange);
-    }
 
     await loadAllCourses();
     await loadEventTypes();

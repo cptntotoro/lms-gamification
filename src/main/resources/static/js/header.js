@@ -10,7 +10,6 @@
     // Дожидаемся полной загрузки DOM
     document.addEventListener("DOMContentLoaded", async () => {
         // Элементы DOM
-        const roleSelect = document.getElementById("demoRole");
         const userSelect = document.getElementById("demoUser");
         const manualUserIdInput = document.getElementById("manualUserId");
         const setUserIdBtn = document.getElementById("setUserIdBtn");
