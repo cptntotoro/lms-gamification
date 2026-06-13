@@ -102,22 +102,18 @@
             let text = `${course.courseId}${course.displayName ? ' (' + course.displayName + ')' : ''}`;
             if (course.enrolled) {
                 text += ` ✓ (${course.totalPointsInCourse || 0} очков)`;
+                option.className = 'option-enrolled';
             } else {
                 text += ` (не записан)`;
             }
             option.textContent = text;
-            if (course.enrolled) {
-                option.style.fontWeight = 'bold';
-                option.style.backgroundColor = '#e6f7e6';
-            }
             courseSelect.appendChild(option);
         });
-        // Добавляем опцию "➕ Добавить новый курс"
+        // Добавляем опцию "Добавить новый курс"
         const addOption = document.createElement('option');
         addOption.value = '__ADD_NEW_COURSE__';
-        addOption.textContent = '➕ Добавить новый курс';
-        addOption.style.fontStyle = 'italic';
-        addOption.style.color = '#2563eb';
+        addOption.textContent = 'Добавить новый курс';
+        addOption.className = 'option-add';
         courseSelect.appendChild(addOption);
 
         if (preselectedCourseId && courses.some(c => c.courseId === preselectedCourseId)) {
@@ -146,19 +142,17 @@
                 let text = `${group.groupId}${group.displayName ? ' (' + group.displayName + ')' : ''}`;
                 if (group.member) {
                     text += ` ✓`;
-                    option.style.fontWeight = 'bold';
-                    option.style.backgroundColor = '#e6f7e6';
+                    option.className = 'option-enrolled';
                 }
                 option.textContent = text;
                 groupSelect.appendChild(option);
             });
         }
-        // Добавляем опцию "➕ Добавить новую группу"
+        // Добавляем опцию "Добавить новую группу"
         const addOption = document.createElement('option');
         addOption.value = '__ADD_NEW_GROUP__';
-        addOption.textContent = '➕ Добавить новую группу';
-        addOption.style.fontStyle = 'italic';
-        addOption.style.color = '#2563eb';
+        addOption.textContent = 'Добавить новую группу';
+        addOption.className = 'option-add';
         groupSelect.appendChild(addOption);
 
         if (preselectedGroupId && groups.some(g => g.groupId === preselectedGroupId)) {
@@ -179,8 +173,7 @@
                     const newOption = document.createElement('option');
                     newOption.value = newCourseId.trim();
                     newOption.textContent = `${newCourseId.trim()} (новый)`;
-                    newOption.style.fontWeight = 'bold';
-                    newOption.style.backgroundColor = '#ffffcc';
+                    newOption.className = 'option-add';
                     // Вставляем перед опцией добавления
                     const addOption = courseSelect.querySelector('option[value="__ADD_NEW_COURSE__"]');
                     courseSelect.insertBefore(newOption, addOption);
@@ -225,8 +218,7 @@
                 const newOption = document.createElement('option');
                 newOption.value = groupId;
                 newOption.textContent = `${groupId} (новая)`;
-                newOption.style.fontWeight = 'bold';
-                newOption.style.backgroundColor = '#ffffcc';
+                newOption.className = 'option-add';
                 const addOption = groupSelect.querySelector('option[value="__ADD_NEW_GROUP__"]');
                 groupSelect.insertBefore(newOption, addOption);
                 groupSelect.value = groupId;
@@ -268,7 +260,7 @@
         const currentUserPoints = data.currentUserPoints;
 
         if (!topEntries.length && !currentUserRank) {
-            container.innerHTML = `<div class="empty-state"><div class="empty-icon">🏆</div><p class="empty-text">Пока никто не набрал очков на этом курсе</p></div>`;
+            container.innerHTML = `<div class="empty-state"><div class="empty-icon">XP</div><p class="empty-text">Пока никто не набрал очков на этом курсе</p></div>`;
             return;
         }
 
@@ -300,16 +292,15 @@
             const points = entry.pointsInCourse || 0;
             const isCurrent = entry.isCurrentUser === true;
             const medalClass = idx === 0 ? 'medal-gold' : (idx === 1 ? 'medal-silver' : (idx === 2 ? 'medal-bronze' : ''));
-            const medalSymbol = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : rank));
+            const medalSymbol = rank;
 
             html += `
                 <tr class="${isCurrent ? 'is-current-user' : ''}">
                     <td class="cell-rank text-center">
                         <span class="${medalClass}">${medalSymbol}</span>
                     </td>
-                    <td class="cell-participant">
+                    <td class="cell-participant text-center">
                         <div class="participant">
-                            <div class="participant-avatar">${escapeHtml(userIdDisplay.substring(0,1).toUpperCase())}</div>
                             <div class="participant-info">
                                 <div class="participant-name">${escapeHtml(userIdDisplay)}${isCurrent ? ' <span class="medal-you-badge">Вы</span>' : ''}</div>
                                 ${entry.globalLevel ? `<div class="participant-level">Уровень <strong>${entry.globalLevel}</strong></div>` : ''}

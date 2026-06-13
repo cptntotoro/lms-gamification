@@ -4,141 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Демо-панель геймификации</title>
+    <link rel="stylesheet" th:href="@{/css/colors.css}">
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/leaderboard.css}">
-    <style>
-        /* Дополнительные стили для демо-страницы */
-        .scenarios-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .scenario-btn {
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 40px;
-            padding: 8px 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .scenario-btn:hover {
-            background: #e2e8f0;
-            transform: translateY(-1px);
-        }
-        /* Модальное окно */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-        .modal-container {
-            background: white;
-            border-radius: 24px;
-            width: 90%;
-            max-width: 550px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 35px rgba(0,0,0,0.2);
-            padding: 24px;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .modal-header h3 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            color: #64748b;
-        }
-        .modal-field {
-            margin-bottom: 20px;
-        }
-        .modal-field label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #1e293b;
-        }
-        .modal-field input, .modal-field select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            font-size: 1rem;
-        }
-        .modal-field input:disabled, .modal-field select:disabled {
-            background: #f1f5f9;
-            color: #475569;
-        }
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 24px;
-        }
-        .event-log {
-            max-height: 300px;
-        }
-        .log-item {
-            padding: 6px 0;
-            border-bottom: 1px solid #334155;
-            font-family: monospace;
-            font-size: 0.85rem;
-        }
-        .log-error { color: #f87171; }
-        .log-success { color: #4ade80; }
-        .log-warning { color: #fbbf24; }
-        .log-info { color: #94a3b8; }
-    </style>
 </head>
 <body>
 
 <div th:replace="~{fragments/header :: header}"></div>
 
 <div class="container">
-    <h1 class="page-title">🎮 Демо-панель геймификации</h1>
+    <h1 class="page-title">Демо-панель геймификации</h1>
 
     <!-- Сценарии тестирования -->
     <div class="card">
-        <h2>📋 Сценарии тестирования</h2>
+        <h2>Сценарии тестирования</h2>
         <p class="help-text">Нажмите на любой сценарий — откроется форма для отправки события. Все поля будут предварительно настроены под выбранный кейс.</p>
         <div class="scenarios-grid">
-            <button class="scenario-btn" data-scenario="existing">1️⃣ Существующий пользователь, курс, группа</button>
-            <button class="scenario-btn" data-scenario="newUser">2️⃣ Новый пользователь + новый курс + новая группа</button>
-            <button class="scenario-btn" data-scenario="newCourse">3️⃣ Новый курс для существующего пользователя</button>
-            <button class="scenario-btn" data-scenario="duplicate">4️⃣ Дубликат eventId (ошибка)</button>
-            <button class="scenario-btn" data-scenario="emptyEventId">5️⃣ Пустой eventId (ошибка)</button>
-            <button class="scenario-btn" data-scenario="invalidType">6️⃣ Неверный тип события (ошибка)</button>
-            <button class="scenario-btn" data-scenario="invalidToken">7️⃣ Неверный токен (ошибка)</button>
+            <button class="scenario-btn btn btn-secondary" data-scenario="existing">1. Существующий пользователь, курс, группа</button>
+            <button class="scenario-btn btn btn-secondary" data-scenario="newUser">2. Новый пользователь + новый курс + новая группа</button>
+            <button class="scenario-btn btn btn-secondary" data-scenario="newCourse">3. Новый курс для существующего пользователя</button>
+            <button class="scenario-btn btn btn-secondary" data-scenario="duplicate">4. Дубликат eventId (ошибка)</button>
+            <button class="scenario-btn btn btn-secondary" data-scenario="emptyEventId">5. Пустой eventId (ошибка)</button>
+            <button class="scenario-btn btn btn-secondary" data-scenario="invalidType">6. Неверный тип события (ошибка)</button>
+            <button class="scenario-btn btn btn-secondary" data-scenario="invalidToken">7. Неверный токен (ошибка)</button>
         </div>
-        <p class="help-text">💡 После отправки успешного события ID события сохраняется для сценария «Дубликат».</p>
     </div>
 
     <!-- Лог событий -->
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h2 style="margin: 0;">📋 Лог запросов и ответов</h2>
-            <button id="clearLogBtn" class="btn btn-secondary" style="background: #64748b;">Очистить лог</button>
+            <h2 style="margin: 0;">Лог запросов и ответов</h2>
+            <button id="clearLogBtn" class="btn btn-secondary">Очистить лог</button>
         </div>
         <div id="eventLog" class="event-log">
             <div class="log-item log-info">[--:--:--] Готов к демонстрации. Выберите сценарий и отправьте событие.</div>

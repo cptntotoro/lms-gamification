@@ -94,7 +94,7 @@ function getLastEventId() {
 // Отправка события (общая)
 // ============================
 async function sendEvent(payload, tokenOverride = null) {
-    log(`➡️ Отправка: userId=${payload.userId}, eventType=${payload.eventType}, eventId=${payload.eventId}, course=${payload.courseId || '-'}, group=${payload.groupId || '-'}`, 'info');
+    log(`Отправка: userId=${payload.userId}, eventType=${payload.eventType}, eventId=${payload.eventId}, course=${payload.courseId || '-'}, group=${payload.groupId || '-'}`, 'info');
 
     try {
         const overrideHeaders = {};
@@ -109,19 +109,19 @@ async function sendEvent(payload, tokenOverride = null) {
         const data = await response.json();
 
         if (response.ok && data.status === 'success') {
-            log(`✅ Успех! Начислено ${data.pointsEarned} XP, всего очков: ${data.totalPoints}. ${data.levelUp ? '🎉 Уровень повышен!' : ''}`, 'success');
+            log(`Успех! Начислено ${data.pointsEarned} XP, всего очков: ${data.totalPoints}. ${data.levelUp ? 'Уровень повышен!' : ''}`, 'success');
             updateLastEventId(payload.eventId);
             return true;
         } else if (data.status === 'duplicate') {
-            log(`⚠️ Дубликат события: ${data.message}`, 'warning');
+            log(`Дубликат события: ${data.message}`, 'warning');
             updateLastEventId(payload.eventId);
             return false;
         } else {
-            log(`❌ Ошибка (${response.status}): ${data.message || JSON.stringify(data)}`, 'error');
+            log(`Ошибка (${response.status}): ${data.message || JSON.stringify(data)}`, 'error');
             return false;
         }
     } catch (error) {
-        log(`❌ Ошибка соединения: ${error.message}`, 'error');
+        log(`Ошибка соединения: ${error.message}`, 'error');
         return false;
     }
 }
@@ -156,7 +156,7 @@ async function openScenarioModal(scenario) {
 
     // Сценарий 1: существующий пользователь, курс, группа (выбор из селектов)
     if (scenario === 'existing') {
-        modalConfig.title = '📌 Отправка события (существующий пользователь)';
+        modalConfig.title = 'Отправка события (существующий пользователь)';
         modalConfig.fields = {
             userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
             course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
@@ -167,7 +167,7 @@ async function openScenarioModal(scenario) {
     }
     // Сценарий 2: новый пользователь + новый курс + новая группа (все поля инпуты)
     else if (scenario === 'newUser') {
-        modalConfig.title = '✨ Новый пользователь + новый курс + новая группа';
+        modalConfig.title = 'Новый пользователь + новый курс + новая группа';
         modalConfig.fields = {
             userId: { type: 'text', label: 'Новый пользователь', value: 'new_student_' + Date.now(), disabled: false },
             course: { type: 'text', label: 'Новый курс', value: 'COURSE_' + Date.now(), disabled: false },
@@ -178,7 +178,7 @@ async function openScenarioModal(scenario) {
     }
     // Сценарий 3: новый курс для существующего пользователя
     else if (scenario === 'newCourse') {
-        modalConfig.title = '🆕 Новый курс для существующего пользователя';
+        modalConfig.title = 'Новый курс для существующего пользователя';
         modalConfig.fields = {
             userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
             course: { type: 'text', label: 'Новый курс', value: 'NEW_COURSE_' + Date.now(), disabled: false },
@@ -191,10 +191,10 @@ async function openScenarioModal(scenario) {
     else if (scenario === 'duplicate') {
         const lastId = getLastEventId();
         if (!lastId) {
-            log('❌ Нет сохранённого eventId. Сначала отправьте любое успешное событие.', 'error');
+            log('Нет сохранённого eventId. Сначала отправьте любое успешное событие.', 'error');
             return;
         }
-        modalConfig.title = '🔄 Дубликат eventId (ожидается ошибка)';
+        modalConfig.title = 'Дубликат eventId (ожидается ошибка)';
         modalConfig.fields = {
             userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
             course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
@@ -205,7 +205,7 @@ async function openScenarioModal(scenario) {
     }
     // Сценарий 5: пустой eventId
     else if (scenario === 'emptyEventId') {
-        modalConfig.title = '⚠️ Пустой eventId (ожидается ошибка валидации)';
+        modalConfig.title = 'Пустой eventId (ожидается ошибка валидации)';
         modalConfig.fields = {
             userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
             course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
@@ -216,7 +216,7 @@ async function openScenarioModal(scenario) {
     }
     // Сценарий 6: неверный тип события
     else if (scenario === 'invalidType') {
-        modalConfig.title = '❌ Неверный тип события (ожидается ошибка)';
+        modalConfig.title = 'Неверный тип события (ожидается ошибка)';
         modalConfig.fields = {
             userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
             course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
@@ -227,7 +227,7 @@ async function openScenarioModal(scenario) {
     }
     // Сценарий 7: неверный токен
     else if (scenario === 'invalidToken') {
-        modalConfig.title = '🔑 Неверный токен (ожидается 401/403)';
+        modalConfig.title = 'Неверный токен (ожидается 401/403)';
         modalConfig.fields = {
             userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
             course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
@@ -347,7 +347,7 @@ async function openScenarioModal(scenario) {
         }
 
         if (!userId || !eventType) {
-            log('❌ Заполните обязательные поля: пользователь и тип события', 'error');
+            log('Заполните обязательные поля: пользователь и тип события', 'error');
             return;
         }
 

@@ -175,13 +175,13 @@
                 const level = globalData.level !== undefined ? globalData.level : 0;
                 floatingButton.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 6px;">
-                        <span>🏆</span>
+                        <span>XP</span>
                         <span style="font-weight: bold;">${points}</span>
                         <span style="font-size: 0.9em;">Lv${level}</span>
                     </div>
                 `;
             } else {
-                floatingButton.innerHTML = `<span>🏆</span>`;
+                floatingButton.innerHTML = `<span>XP</span>`;
             }
         }
 
@@ -190,7 +190,8 @@
             if (!popupPanel) return;
             const loaderDiv = popupPanel.querySelector(".widget-loader-overlay");
             if (loaderDiv) {
-                loaderDiv.style.display = loading ? "flex" : "none";
+                if (loading) loaderDiv.classList.remove('hide');
+                else loaderDiv.classList.add('hide');
             }
         }
 
@@ -200,7 +201,6 @@
             if (contentDiv) {
                 const errorDiv = document.createElement("div");
                 errorDiv.className = "widget-error";
-                errorDiv.style.cssText = "color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 6px; margin: 10px 0;";
                 errorDiv.innerText = msg;
                 const existing = contentDiv.querySelector(".widget-error");
                 if (existing) existing.remove();
@@ -232,15 +232,15 @@
             container.innerHTML = `
                 <div class="widget-stat-card">
                     <div class="widget-stat-row">
-                        <span class="widget-stat-label">🏆 Всего очков:</span>
+                        <span class="widget-stat-label">Всего очков:</span>
                         <span class="widget-stat-value">${totalPoints}</span>
                     </div>
                     <div class="widget-stat-row">
-                        <span class="widget-stat-label">⭐ Уровень:</span>
+                        <span class="widget-stat-label">Уровень:</span>
                         <span class="widget-stat-value">${level}</span>
                     </div>
                     <div class="widget-stat-row">
-                        <span class="widget-stat-label">📈 До след. уровня:</span>
+                        <span class="widget-stat-label">До следующего уровня:</span>
                         <span class="widget-stat-value">${pointsToNext} очков</span>
                     </div>
                     <div class="widget-progress-container">
@@ -271,9 +271,9 @@
                     <div class="widget-course-item" data-course-id="${courseIdVal}">
                         <div class="widget-course-title">${escapeHtml(displayName)}</div>
                         <div class="widget-course-details">
-                            <span>🎯 ${points} очков</span>
-                            <span>👥 ${escapeHtml(group)}</span>
-                            <span>📅 ${enrolledAt}</span>
+                            <span>${points} очков</span>
+                            <span>${escapeHtml(group)}</span>
+                            <span>Дата: ${enrolledAt}</span>
                         </div>
                         <button class="widget-view-leaderboard-btn" data-course-id="${courseIdVal}" data-course-name="${escapeHtml(displayName)}">Посмотреть лидерборд</button>
                     </div>
@@ -295,7 +295,7 @@
                             const leaderboardContainer = tabContents.leaderboard;
                             if (leaderboardContainer) {
                                 const headerEl = leaderboardContainer.querySelector(".widget-leaderboard-header");
-                                if (headerEl) headerEl.textContent = `🏅 Лидерборд курса: ${cname}`;
+                                if (headerEl) headerEl.textContent = `Лидерборд курса: ${cname}`;
                             }
                         });
                     }
@@ -319,11 +319,11 @@
             const currentUserRank = leaderboardData.currentUserRank;
             const currentUserPoints = leaderboardData.currentUserPoints;
 
-            let html = `<div class="widget-leaderboard-header">🏅 Лидерборд курса: ${leaderboardData.currentUserEntry.courseDisplayName}</div>`;
+            let html = `<div class="widget-leaderboard-header">Лидерборд курса: ${leaderboardData.currentUserEntry.courseDisplayName}</div>`;
 
             html += `<div class="widget-current-user-stats">
-                        <div>👤 Ваше место: ${currentUserRank !== null && currentUserRank !== undefined ? currentUserRank : "—"}</div>
-                        <div>⚡ Ваши очки на курсе: ${currentUserPoints !== null ? currentUserPoints : "—"}</div>
+                        <div>Ваше место: ${currentUserRank !== null && currentUserRank !== undefined ? currentUserRank : "—"}</div>
+                        <div>Ваши очки на курсе: ${currentUserPoints !== null ? currentUserPoints : "—"}</div>
                     </div>`;
 
             html += `<div class="widget-leaderboard-list"><table class="widget-leaderboard-table">
@@ -335,11 +335,11 @@
                 const level = entry.globalLevel || 0;
                 const isCurrent = entry.isCurrentUser === true;
                 html += `<tr class="${isCurrent ? 'widget-current-row' : ''}">
-                            <td>${rank}</td>
-                            <td>${escapeHtml(userIdDisplay)}${isCurrent ? ' (Вы)' : ''}</td>
-                            <td>${points}</td>
-                            <td>${level}</td>
-                        </tr>`;
+                              <td>${rank}</td>
+                              <td>${escapeHtml(userIdDisplay)}${isCurrent ? ' (Вы)' : ''}</td>
+                              <td>${points}</td>
+                              <td>${level}</td>
+                           </tr>`;
             });
             html += `</tbody></table></div>`;
             if (topEntries.length === 0) {
@@ -380,37 +380,26 @@
         function buildWidgetUI() {
             widgetContainer = document.createElement("div");
             widgetContainer.id = "gamification-widget-root";
-            widgetContainer.style.cssText = "position: fixed; bottom: 20px; right: 20px; z-index: 10000; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;";
+            widgetContainer.className = "gamification-widget-root";
             document.body.appendChild(widgetContainer);
 
             floatingButton = document.createElement("div");
-            floatingButton.style.cssText = `
-                width: 56px; height: 56px; background: linear-gradient(135deg, #4c6ef5, #3b5bdb);
-                border-radius: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer;
-                display: flex; align-items: center; justify-content: center; color: white;
-                font-size: 24px; transition: transform 0.2s; user-select: none;
-            `;
-            floatingButton.innerHTML = `<span>🏆</span>`;
+            floatingButton.className = "widget-floating-button";
+            floatingButton.innerHTML = `<span>XP</span>`;
             floatingButton.addEventListener("click", togglePopup);
-            floatingButton.addEventListener("mouseenter", () => floatingButton.style.transform = "scale(1.05)");
-            floatingButton.addEventListener("mouseleave", () => floatingButton.style.transform = "scale(1)");
             widgetContainer.appendChild(floatingButton);
 
             popupPanel = document.createElement("div");
-            popupPanel.style.cssText = `
-                position: absolute; bottom: 70px; right: 0; width: 360px; max-height: 500px;
-                background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-                display: none; flex-direction: column; overflow: hidden; border: 1px solid #e9ecef;
-            `;
+            popupPanel.className = "widget-popup-panel hide";
 
             const headerDiv = document.createElement("div");
-            headerDiv.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; font-weight: bold;";
-            headerDiv.innerHTML = `<span>🎮 Прогресс геймификации</span>
-                                    <button id="widget-close-btn" style="background: none; border: none; font-size: 20px; cursor: pointer;">✕</button>`;
+            headerDiv.className = "widget-popup-header";
+            headerDiv.innerHTML = `<span>Прогресс геймификации</span>
+                                    <button class="widget-close-btn">✕</button>`;
             popupPanel.appendChild(headerDiv);
 
             const tabsDiv = document.createElement("div");
-            tabsDiv.style.cssText = "display: flex; border-bottom: 1px solid #dee2e6; background: white;";
+            tabsDiv.className = "widget-tabs";
             const overviewBtn = createTabButton("overview", "Общий прогресс");
             const coursesBtn = createTabButton("courses", "Мои курсы");
             const leaderboardBtn = createTabButton("leaderboard", "Лидерборд курса");
@@ -420,29 +409,26 @@
             popupPanel.appendChild(tabsDiv);
 
             const contentContainer = document.createElement("div");
-            contentContainer.style.cssText = "flex: 1; overflow-y: auto; padding: 16px; min-height: 200px; max-height: 350px;";
+            contentContainer.className = "widget-content-container";
 
             const overviewContent = document.createElement("div");
-            overviewContent.className = "widget-tab-content";
+            overviewContent.className = "widget-tab-content hide";
             overviewContent.id = "widget-tab-overview";
             const coursesContent = document.createElement("div");
-            coursesContent.className = "widget-tab-content";
+            coursesContent.className = "widget-tab-content hide";
             coursesContent.id = "widget-tab-courses";
             const leaderboardContent = document.createElement("div");
-            leaderboardContent.className = "widget-tab-content";
+            leaderboardContent.className = "widget-tab-content hide";
             leaderboardContent.id = "widget-tab-leaderboard";
 
             [overviewContent, coursesContent, leaderboardContent].forEach(div => {
-                div.style.display = "none";
                 contentContainer.appendChild(div);
             });
             popupPanel.appendChild(contentContainer);
 
             const loaderOverlay = document.createElement("div");
-            loaderOverlay.className = "widget-loader-overlay";
-            loaderOverlay.style.cssText = "position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); display: none; align-items: center; justify-content: center; z-index: 10;";
-            loaderOverlay.innerHTML = `<div style="background: white; padding: 10px 20px; border-radius: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">Загрузка...</div>`;
-            popupPanel.style.position = "relative";
+            loaderOverlay.className = "widget-loader-overlay hide";
+            loaderOverlay.innerHTML = `<div class="widget-loader-spinner">Загрузка...</div>`;
             popupPanel.appendChild(loaderOverlay);
 
             widgetContainer.appendChild(popupPanel);
@@ -450,38 +436,9 @@
             tabButtons = { overview: overviewBtn, courses: coursesBtn, leaderboard: leaderboardBtn };
             tabContents = { overview: overviewContent, courses: coursesContent, leaderboard: leaderboardContent };
 
-            document.getElementById("widget-close-btn").addEventListener("click", () => {
+            popupPanel.querySelector(".widget-close-btn").addEventListener("click", () => {
                 closePopup();
             });
-
-            const styleSheet = document.createElement("style");
-            styleSheet.textContent = `
-                .widget-tab-content.active { display: block !important; }
-                .widget-tab-content { display: none; }
-                .widget-tab-active { background: #e9ecef; border-bottom: 2px solid #4c6ef5; color: #1e293b; font-weight: 600; }
-                .widget-stat-card { background: #f8fafc; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-                .widget-stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #e2e8f0; }
-                .widget-stat-label { color: #475569; }
-                .widget-stat-value { font-weight: bold; color: #0f172a; }
-                .widget-progress-container { position: relative; background: #e2e8f0; border-radius: 20px; height: 24px; margin-top: 12px; overflow: hidden; }
-                .widget-progress-bar { background: linear-gradient(90deg, #4c6ef5, #8b5cf6); height: 100%; width: 0%; border-radius: 20px; transition: width 0.3s; }
-                .widget-progress-text { position: absolute; top: 2px; left: 0; right: 0; text-align: center; font-size: 12px; font-weight: bold; color: #1e293b; }
-                .widget-course-item { background: #ffffff; border: 1px solid #e9ecef; border-radius: 12px; padding: 10px; margin-bottom: 12px; transition: box-shadow 0.2s; }
-                .widget-course-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-                .widget-course-title { font-weight: bold; margin-bottom: 6px; color: #0f172a; }
-                .widget-course-details { display: flex; gap: 12px; font-size: 12px; color: #5c6f87; flex-wrap: wrap; margin-bottom: 8px; }
-                .widget-view-leaderboard-btn { background: #eef2ff; border: none; border-radius: 20px; padding: 5px 12px; font-size: 12px; cursor: pointer; color: #4c6ef5; transition: background 0.2s; }
-                .widget-view-leaderboard-btn:hover { background: #dfe6ff; }
-                .widget-leaderboard-header { font-weight: bold; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #dee2e6; }
-                .widget-current-user-stats { background: #eef2ff; border-radius: 12px; padding: 10px; margin-bottom: 16px; font-size: 13px; }
-                .widget-leaderboard-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-                .widget-leaderboard-table th, .widget-leaderboard-table td { padding: 8px 4px; text-align: left; border-bottom: 1px solid #f1f3f5; }
-                .widget-leaderboard-table th { font-weight: 600; color: #495057; }
-                .widget-current-row { background-color: #f8f9fa; font-weight: 500; }
-                .widget-empty, .widget-loading { text-align: center; padding: 30px 16px; color: #6c757d; font-size: 14px; }
-                .widget-note { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 12px; }
-            `;
-            document.head.appendChild(styleSheet);
 
             activateTab("overview");
         }
@@ -489,7 +446,7 @@
         function createTabButton(tabId, label) {
             const btn = document.createElement("button");
             btn.innerText = label;
-            btn.style.cssText = "flex: 1; padding: 10px 0; background: none; border: none; cursor: pointer; font-size: 14px; transition: all 0.2s; color: #4b5563;";
+            btn.className = "widget-tab-btn";
             btn.addEventListener("click", () => {
                 if (activeTab === tabId) return;
                 activeTab = tabId;
@@ -511,14 +468,14 @@
 
         function openPopup() {
             if (!popupPanel) return;
-            popupPanel.style.display = "flex";
+            popupPanel.classList.remove('hide');
             isOpen = true;
             refreshAllData();
         }
 
         function closePopup() {
             if (!popupPanel) return;
-            popupPanel.style.display = "none";
+            popupPanel.classList.add('hide');
             isOpen = false;
         }
 
@@ -547,10 +504,10 @@
             if (widgetContainer && widgetContainer.parentNode) {
                 widgetContainer.parentNode.removeChild(widgetContainer);
             }
-            // Remove any injected styles (optional)
+            // Remove injected styles
             const styles = document.head.querySelectorAll('style');
             styles.forEach(style => {
-                if (style.textContent.includes('.widget-tab-content.active')) {
+                if (style.textContent.includes('.gamification-widget-root')) {
                     style.remove();
                 }
             });
@@ -559,26 +516,22 @@
 
     // Expose public API
     window.initGamificationWidget = function(providedConfig) {
-        // If a config object is provided, update the global config
         if (providedConfig) {
             window.GamificationWidgetConfig = providedConfig;
         }
         const config = window.GamificationWidgetConfig || {};
 
-        // Clean up existing widget if any
         if (window.__gamificationWidgetCleanup) {
             window.__gamificationWidgetCleanup();
             window.__gamificationWidgetCleanup = null;
         }
 
-        // Create new widget and store cleanup
         const cleanup = createWidget(config);
         if (cleanup) {
             window.__gamificationWidgetCleanup = cleanup;
         }
     };
 
-    // Auto-initialize on script load if config exists (for backward compatibility)
     if (window.GamificationWidgetConfig && window.GamificationWidgetConfig.apiBaseUrl && window.GamificationWidgetConfig.userId) {
         window.initGamificationWidget();
     }

@@ -6,9 +6,9 @@ async function loadEventTypesTable() {
     const tbody = document.getElementById('eventTypesTableBody');
 
     try {
-        loadingIndicator.style.display = 'block';
-        errorMessageDiv.style.display = 'none';
-        tableContainer.style.display = 'none';
+        loadingIndicator.classList.remove('hide');
+        errorMessageDiv.classList.add('hide');
+        tableContainer.classList.add('hide');
 
         const response = await window.GamificationAPI.apiRequest('/demo/admin/event-types/all-types?page=0&size=1000', {
             method: 'GET'
@@ -59,13 +59,13 @@ async function loadEventTypesTable() {
             tbody.innerHTML = html;
         }
 
-        tableContainer.style.display = 'block';
-        loadingIndicator.style.display = 'none';
+        tableContainer.classList.remove('hide');
+        loadingIndicator.classList.add('hide');
         logEvent('Список типов событий загружен');
     } catch (error) {
         console.error('Ошибка загрузки типов событий:', error);
-        loadingIndicator.style.display = 'none';
-        errorMessageDiv.style.display = 'block';
+        loadingIndicator.classList.add('hide');
+        errorMessageDiv.classList.remove('hide');
         errorMessageDiv.innerHTML = `<strong>Ошибка:</strong> ${error.message}`;
         logEvent(`❌ Ошибка загрузки: ${error.message}`, 'error');
     }
@@ -87,7 +87,7 @@ function openCreateModal() {
     document.getElementById('eventTypeForm').reset();
     document.getElementById('modalId').value = '';
     document.getElementById('typeCode').disabled = false;
-    document.getElementById('eventTypeModal').style.display = 'block';
+    document.getElementById('eventTypeModal').classList.remove('hide');
 
     logEvent('ADMIN → открыта форма создания типа события');
 }
@@ -127,12 +127,12 @@ async function openEditModal(btn) {
     document.getElementById('maxDailyPoints').value = data.maxDailyPoints;
     document.getElementById('active').checked = data.active;
 
-    document.getElementById('eventTypeModal').style.display = 'block';
+    document.getElementById('eventTypeModal').classList.remove('hide');
     logEvent(`ADMIN → редактирует тип "${data.displayName}" (id=${id})`);
 }
 
 function closeModal() {
-    document.getElementById('eventTypeModal').style.display = 'none';
+    document.getElementById('eventTypeModal').classList.add('hide');
 }
 
 // ======================== ДЕАКТИВАЦИЯ (DELETE) ========================

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>История транзакций</title>
+    <link rel="stylesheet" th:href="@{/css/colors.css}">
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/transactions.css}">
 </head>
@@ -12,12 +13,12 @@
 <div th:replace="~{fragments/header :: header}"></div>
 
 <div class="container">
-    <h1 class="page-title">📜 История транзакций</h1>
+    <h1 class="page-title">История транзакций</h1>
 
     <!-- Информация о пользователе -->
     <div id="userInfoBlock" class="user-info-block">
         <div class="user-info-card">
-            <span class="user-info-label">👤 Пользователь:</span>
+            <span class="user-info-label">Пользователь:</span>
             <span id="currentUserIdSpan" class="user-id-value">—</span>
         </div>
     </div>
@@ -48,8 +49,8 @@
     <!-- Контейнер для таблицы и пагинации -->
     <div id="transactionsContent">
         <div id="loadingIndicator" class="text-center" style="padding: 40px;">Загрузка...</div>
-        <div id="errorMessage" class="error-message" style="display: none;"></div>
-        <div id="tableContainer" style="display: none;">
+        <div id="errorMessage" class="error-message hide"></div>
+        <div id="tableContainer" class="hide">
             <div class="table-container">
                 <table class="data-table transactions-table">
                     <thead>

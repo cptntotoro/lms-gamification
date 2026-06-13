@@ -3,16 +3,16 @@
 }
 
 .user-info-card {
-    background: #f1f5f9;
-    border-radius: 12px;
+    background: var(--color-light);
+    border-radius: var(--radius-lg);
     padding: 12px 20px;
     display: inline-block;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
 }
 
 .user-info-label {
     font-weight: 600;
-    color: #475569;
+    color: var(--color-text-muted);
     margin-right: 12px;
 }
 
@@ -20,7 +20,7 @@
     font-family: monospace;
     font-size: 1.1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--color-dark);
     background: white;
     padding: 4px 12px;
     border-radius: 20px;
@@ -28,11 +28,11 @@
 
 .transactions-controls {
     background: white;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     padding: 20px;
     margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    border: 1px solid #e2e8f0;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
 }
 
 .controls-row {
@@ -50,7 +50,7 @@
     display: block;
     margin-bottom: 6px;
     font-weight: 500;
-    color: #475569;
+    color: var(--color-text-muted);
 }
 
 .transactions-table th,
@@ -70,22 +70,22 @@
 
 .transactions-table td:nth-child(5) {
     font-weight: 700;
-    color: #10b981;
+    color: var(--color-success);
     text-align: center;
 }
 
 .no-data {
     text-align: center;
     padding: 40px;
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 1.1rem;
 }
 
 .access-denied {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--color-danger-light);
+    color: var(--color-danger-dark);
     padding: 20px;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     text-align: center;
     margin: 40px 0;
 }
