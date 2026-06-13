@@ -6,11 +6,9 @@
 (function() {
     // Ключи localStorage
     const STORAGE_USER_ID = "demoUserId";
-    const STORAGE_ROLE = "demoRole";
 
     // Значения по умолчанию
     const DEFAULT_USER_ID = "student001";
-    const DEFAULT_ROLE = "ADMIN";
 
     // Токен для аутентификации (фиксированный для демо)
     const AUTH_TOKEN = "@%dCxrBAF7ozyF346l7$us0Vc31c5Z18";
@@ -22,14 +20,6 @@
 
     function setCurrentUserId(userId) {
         localStorage.setItem(STORAGE_USER_ID, userId);
-    }
-
-    function getCurrentRole() {
-        return localStorage.getItem(STORAGE_ROLE) || DEFAULT_ROLE;
-    }
-
-    function setCurrentRole(role) {
-        localStorage.setItem(STORAGE_ROLE, role);
     }
 
     /**
@@ -86,11 +76,8 @@
     window.GamificationAPI = {
         getCurrentUserId,
         setCurrentUserId,
-        getCurrentRole,
-        setCurrentRole,
         apiRequest,
         getWidgetConfig,
         STORAGE_USER_ID,
-        STORAGE_ROLE
     };
 })();
