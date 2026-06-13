@@ -13,7 +13,7 @@
     const DEFAULT_ROLE = "ADMIN";
 
     // Токен для аутентификации (фиксированный для демо)
-    const AUTH_TOKEN = "asdasd2123sadadad21asdasd";
+    const AUTH_TOKEN = "@%dCxrBAF7ozyF346l7$us0Vc31c5Z18";
 
     // --- Геттеры / сеттеры ---
     function getCurrentUserId() {

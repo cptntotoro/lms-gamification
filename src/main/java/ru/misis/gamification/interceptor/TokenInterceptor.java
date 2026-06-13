@@ -2,6 +2,7 @@ package ru.misis.gamification.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -9,6 +10,9 @@ import java.lang.reflect.Method;
 
 @Component
 public class TokenInterceptor implements HandlerInterceptor {
+
+    @Value("${lms.security.token}")
+    private String securityToken;
 
     @Override
     public boolean preHandle(HttpServletRequest request,
@@ -43,6 +47,6 @@ public class TokenInterceptor implements HandlerInterceptor {
     }
 
     private boolean validateToken(String token) {
-        return token != null && !token.isBlank() && token.contains("123");
+        return token != null && !token.isBlank() && token.equals(securityToken);
     }
 }
