@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.exception.GroupNotFoundException;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -47,4 +48,12 @@ public interface GroupService {
      * @throws ConstraintViolationException если groupUuid == null
      */
     Group findById(@NotNull(message = "{group.uuid.required}") UUID groupUuid);
+
+    /**
+     * Получить все группы курса по идентификатору курса из LMS
+     *
+     * @param courseId Идентификатор курса
+     * @return список групп
+     */
+    List<Group> getGroupsByCourseId(@NotBlank(message = "{course.id.required}") String courseId);
 }

@@ -17,12 +17,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboardDto;
+import ru.misis.gamification.dto.user.response.CourseWithEnrollmentDto;
+import ru.misis.gamification.dto.user.response.GroupWithMembershipDto;
 import ru.misis.gamification.dto.user.response.UserCoursesResponseDto;
 import ru.misis.gamification.mapper.LeaderboardMapper;
 import ru.misis.gamification.model.UserCourseGroupLeaderboardView;
 import ru.misis.gamification.model.UserCoursesView;
 import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicationService;
 import ru.misis.gamification.service.application.user.UserStatisticsApplicationService;
+
+import java.util.List;
 
 /**
  * REST-контроллер для получения списка всех курсов пользователя с глобальной статистикой.
@@ -84,6 +88,37 @@ public class UserCoursesController {
                 .build();
 
         return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * Новый эндпоинт для получения всех курсов системы с отметкой, записан ли на них пользователь.
+     */
+    @Operation(
+            summary = "Список всех курсов системы с признаком записи пользователя",
+            description = "Возвращает все курсы, существующие в системе, с указанием, зачислен ли на них указанный пользователь."
+    )
+    @GetMapping("/courses/all")
+    public ResponseEntity<List<CourseWithEnrollmentDto>> getAllCoursesWithEnrollmentStatus(
+            @RequestParam @NotBlank String userId) {
+        log.debug("REST запрос всех курсов с признаком записи для userId={}", userId);
+        List<CourseWithEnrollmentDto> courses = userStatisticsApplicationService.getAllCoursesWithEnrollmentStatus(userId);
+        return ResponseEntity.ok(courses);
+    }
+
+    /**
+     * Новый эндпоинт для получения всех групп курса с отметкой, состоит ли в них пользователь.
+     */
+    @Operation(
+            summary = "Список всех групп курса с признаком членства пользователя",
+            description = "Возвращает все группы, существующие для указанного курса, с указанием, состоит ли в них пользователь."
+    )
+    @GetMapping("/courses/{courseId}/groups")
+    public ResponseEntity<List<GroupWithMembershipDto>> getCourseGroupsWithMembership(
+            @PathVariable @NotBlank String courseId,
+            @RequestParam @NotBlank String userId) {
+        log.debug("REST запрос групп курса {} с признаком членства для userId={}", courseId, userId);
+        List<GroupWithMembershipDto> groups = userStatisticsApplicationService.getCourseGroupsWithMembership(courseId, userId);
+        return ResponseEntity.ok(groups);
     }
 
 

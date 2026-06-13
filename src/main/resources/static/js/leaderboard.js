@@ -9,7 +9,8 @@
 
 (function() {
     let currentUserId = null;               // ID текущего пользователя
-    let coursesList = [];                   // список курсов пользователя {courseId, groupId, pointsInCourse}
+    let coursesList = [];                   // список всех курсов {courseId, enrolled, totalPointsInCourse}
+    let groupsList = [];                    // список групп для выбранного курса {groupId, member}
     let urlCourseId = null;                 // ID курса из URL
     let urlGroupId = null;                  // ID группы из URL
     let urlUserId = null;                   // ID пользователя из URL
@@ -17,7 +18,7 @@
     // DOM-элементы
     const userDisplaySpan = document.getElementById('currentUserIdDisplay');
     const courseSelect = document.getElementById('leaderboardCourseSelect');
-    const groupInput = document.getElementById('leaderboardGroupInput');
+    const groupSelect = document.getElementById('leaderboardGroupSelect');
     const loadBtn = document.getElementById('loadLeaderboardBtn');
     const container = document.getElementById('leaderboardContainer');
 
@@ -56,23 +57,39 @@
         if (userDisplaySpan) userDisplaySpan.textContent = userId || '—';
     }
 
-    // Загрузить курсы для заданного userId
-    async function loadUserCourses(userId) {
+    // Загрузить ВСЕ курсы для заданного userId (с признаком enrolled)
+    async function loadAllCourses(userId) {
         if (!userId) return [];
         try {
-            const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/users/${userId}/courses`, {
+            const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/all?userId=${encodeURIComponent(userId)}`, {
                 method: 'GET'
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
-            return data.courses || [];
+            return data; // массив CourseWithEnrollmentDto
         } catch (error) {
             console.error('Ошибка загрузки курсов:', error);
             return [];
         }
     }
 
-    // Заполнить select курсов и, опционально, предвыбрать курс
+    // Загрузить группы для курса с членством пользователя
+    async function loadGroupsForCourse(courseId, userId) {
+        if (!courseId || !userId) return [];
+        try {
+            const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`, {
+                method: 'GET'
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            return data; // массив GroupWithMembershipDto
+        } catch (error) {
+            console.error('Ошибка загрузки групп:', error);
+            return [];
+        }
+    }
+
+    // Заполнить select курсов, отметить записанные, добавить опцию "Добавить новый"
     function populateCourseSelect(courses, preselectedCourseId) {
         courseSelect.innerHTML = '<option value="">-- Выберите курс --</option>';
         if (courses.length === 0) {
@@ -82,31 +99,142 @@
         courses.forEach(course => {
             const option = document.createElement('option');
             option.value = course.courseId;
-            let text = `${course.courseId} (${course.totalPointsInCourse || 0} очков)`;
-            if (course.groupId && course.groupId !== '—') {
-                text += ` • группа ${course.groupId}`;
+            let text = `${course.courseId}${course.displayName ? ' (' + course.displayName + ')' : ''}`;
+            if (course.enrolled) {
+                text += ` ✓ (${course.totalPointsInCourse || 0} очков)`;
+            } else {
+                text += ` (не записан)`;
             }
             option.textContent = text;
+            if (course.enrolled) {
+                option.style.fontWeight = 'bold';
+                option.style.backgroundColor = '#e6f7e6';
+            }
             courseSelect.appendChild(option);
         });
+        // Добавляем опцию "➕ Добавить новый курс"
+        const addOption = document.createElement('option');
+        addOption.value = '__ADD_NEW_COURSE__';
+        addOption.textContent = '➕ Добавить новый курс';
+        addOption.style.fontStyle = 'italic';
+        addOption.style.color = '#2563eb';
+        courseSelect.appendChild(addOption);
+
         if (preselectedCourseId && courses.some(c => c.courseId === preselectedCourseId)) {
             courseSelect.value = preselectedCourseId;
             return true;
-        } else if (courses.length > 0) {
-            courseSelect.value = courses[0].courseId;
+        } else if (courses.length > 0 && courses.some(c => c.enrolled)) {
+            // предвыбираем первый записанный курс, если есть
+            const firstEnrolled = courses.find(c => c.enrolled);
+            if (firstEnrolled) {
+                courseSelect.value = firstEnrolled.courseId;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Заполнить select групп, отметить членство, добавить опцию "Добавить новую"
+    function populateGroupSelect(groups, preselectedGroupId) {
+        groupSelect.innerHTML = '<option value="">-- Все группы --</option>';
+        if (groups.length === 0) {
+            groupSelect.innerHTML = '<option value="">-- Нет групп --</option>';
+        } else {
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.groupId;
+                let text = `${group.groupId}${group.displayName ? ' (' + group.displayName + ')' : ''}`;
+                if (group.member) {
+                    text += ` ✓`;
+                    option.style.fontWeight = 'bold';
+                    option.style.backgroundColor = '#e6f7e6';
+                }
+                option.textContent = text;
+                groupSelect.appendChild(option);
+            });
+        }
+        // Добавляем опцию "➕ Добавить новую группу"
+        const addOption = document.createElement('option');
+        addOption.value = '__ADD_NEW_GROUP__';
+        addOption.textContent = '➕ Добавить новую группу';
+        addOption.style.fontStyle = 'italic';
+        addOption.style.color = '#2563eb';
+        groupSelect.appendChild(addOption);
+
+        if (preselectedGroupId && groups.some(g => g.groupId === preselectedGroupId)) {
+            groupSelect.value = preselectedGroupId;
             return true;
         }
         return false;
     }
 
+    // Обработчик выбора курса
+    async function onCourseChange() {
+        const selectedCourseId = courseSelect.value;
+        if (!selectedCourseId || selectedCourseId === '__ADD_NEW_COURSE__') {
+            if (selectedCourseId === '__ADD_NEW_COURSE__') {
+                const newCourseId = prompt('Введите идентификатор нового курса:');
+                if (newCourseId && newCourseId.trim()) {
+                    // Добавляем новый курс в селектор (временно, без проверки существования)
+                    const newOption = document.createElement('option');
+                    newOption.value = newCourseId.trim();
+                    newOption.textContent = `${newCourseId.trim()} (новый)`;
+                    newOption.style.fontWeight = 'bold';
+                    newOption.style.backgroundColor = '#ffffcc';
+                    // Вставляем перед опцией добавления
+                    const addOption = courseSelect.querySelector('option[value="__ADD_NEW_COURSE__"]');
+                    courseSelect.insertBefore(newOption, addOption);
+                    courseSelect.value = newCourseId.trim();
+                    // Загружаем группы для нового курса (скорее всего пусто)
+                    await loadAndPopulateGroups(newCourseId.trim());
+                } else {
+                    // восстанавливаем предыдущее значение, если было
+                    if (coursesList.length > 0) {
+                        const firstEnrolled = coursesList.find(c => c.enrolled);
+                        courseSelect.value = firstEnrolled ? firstEnrolled.courseId : coursesList[0].courseId;
+                    } else {
+                        courseSelect.value = '';
+                    }
+                }
+            }
+            return;
+        }
+        // Загружаем группы для выбранного курса
+        await loadAndPopulateGroups(selectedCourseId);
+    }
+
+    async function loadAndPopulateGroups(courseId) {
+        if (!currentUserId) return;
+        groupsList = await loadGroupsForCourse(courseId, currentUserId);
+        populateGroupSelect(groupsList, urlGroupId);
+    }
+
     // Загрузить лидерборд на основе выбранных в данный момент курса и группы
     async function loadLeaderboard() {
         const courseId = courseSelect.value;
-        if (!courseId) {
+        if (!courseId || courseId === '__ADD_NEW_COURSE__') {
             container.innerHTML = '<div class="loading-overlay">Пожалуйста, выберите курс</div>';
             return;
         }
-        const groupId = groupInput.value.trim() || undefined;
+        let groupId = groupSelect.value;
+        if (groupId === '__ADD_NEW_GROUP__') {
+            const newGroupId = prompt('Введите идентификатор новой группы:');
+            if (newGroupId && newGroupId.trim()) {
+                groupId = newGroupId.trim();
+                // Добавляем новую группу в селектор временно
+                const newOption = document.createElement('option');
+                newOption.value = groupId;
+                newOption.textContent = `${groupId} (новая)`;
+                newOption.style.fontWeight = 'bold';
+                newOption.style.backgroundColor = '#ffffcc';
+                const addOption = groupSelect.querySelector('option[value="__ADD_NEW_GROUP__"]');
+                groupSelect.insertBefore(newOption, addOption);
+                groupSelect.value = groupId;
+            } else {
+                groupId = '';
+                groupSelect.value = '';
+            }
+        }
         const userId = currentUserId;
 
         if (!userId) {
@@ -118,7 +246,7 @@
 
         try {
             let url = `/api/v1/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?page=0&size=50`;
-            if (groupId) url += `&groupId=${encodeURIComponent(groupId)}`;
+            if (groupId && groupId !== '__ADD_NEW_GROUP__') url += `&groupId=${encodeURIComponent(groupId)}`;
 
             const response = await window.GamificationAPI.apiRequest(url, {
                 method: 'GET',
@@ -229,20 +357,27 @@
         currentUserId = effectiveUserId;
         updateUserDisplay(currentUserId);
 
-        // Загрузка курсов для этого пользователя
-        coursesList = await loadUserCourses(currentUserId);
+        // Загрузка ВСЕХ курсов для этого пользователя
+        coursesList = await loadAllCourses(currentUserId);
         // Заполнить select курсов, предвыбрав курс из URL, если есть
         const hasCourse = populateCourseSelect(coursesList, urlCourseId);
-        // Если в URL была группа, подставить её в поле ввода
+        // Если в URL была группа, подставить её в поле выбора (загрузка групп произойдёт после выбора курса)
         if (urlGroupId) {
-            groupInput.value = urlGroupId;
+            // Группы ещё не загружены, сохраним для последующей установки
         }
 
-        // Если курс был предвыбран (из URL или первый доступный), автоматически загружаем лидерборд
-        if (hasCourse && courseSelect.value) {
+        // Если курс был предвыбран (из URL или первый доступный), загружаем группы и лидерборд
+        if (hasCourse && courseSelect.value && courseSelect.value !== '__ADD_NEW_COURSE__') {
+            await loadAndPopulateGroups(courseSelect.value);
+            if (urlGroupId) {
+                // пытаемся установить группу, если она есть в списке
+                const groupOption = groupSelect.querySelector(`option[value="${escapeHtml(urlGroupId)}"]`);
+                if (groupOption) groupSelect.value = urlGroupId;
+                else groupSelect.value = '';
+            }
             await loadLeaderboard();
         } else if (!hasCourse && coursesList.length === 0) {
-            container.innerHTML = '<div class="empty-state">У этого пользователя нет курсов</div>';
+            container.innerHTML = '<div class="empty-state">Нет доступных курсов</div>';
         }
 
         // Слушаем событие смены пользователя в хедере
@@ -251,14 +386,31 @@
             if (newUserId === currentUserId) return;
             currentUserId = newUserId;
             updateUserDisplay(currentUserId);
-            // Перезагружаем курсы для нового пользователя
-            coursesList = await loadUserCourses(currentUserId);
-            const hasAny = populateCourseSelect(coursesList, null); // без предвыбора, берём первый
-            groupInput.value = ''; // очищаем поле группы
-            if (hasAny && courseSelect.value) {
+            // Перезагружаем все курсы для нового пользователя
+            coursesList = await loadAllCourses(currentUserId);
+            const hasAny = populateCourseSelect(coursesList, null);
+            if (hasAny && courseSelect.value && courseSelect.value !== '__ADD_NEW_COURSE__') {
+                await loadAndPopulateGroups(courseSelect.value);
                 await loadLeaderboard();
             } else {
                 container.innerHTML = '<div class="loading-overlay">Выберите курс и нажмите «Показать лидерборд»</div>';
+            }
+        });
+
+        // Слушаем изменение курса
+        courseSelect.addEventListener('change', async () => {
+            await onCourseChange();
+            if (courseSelect.value && courseSelect.value !== '__ADD_NEW_COURSE__') {
+                await loadLeaderboard();
+            } else {
+                container.innerHTML = '<div class="loading-overlay">Выберите курс</div>';
+            }
+        });
+
+        // Слушаем изменение группы
+        groupSelect.addEventListener('change', async () => {
+            if (courseSelect.value && courseSelect.value !== '__ADD_NEW_COURSE__') {
+                await loadLeaderboard();
             }
         });
     }

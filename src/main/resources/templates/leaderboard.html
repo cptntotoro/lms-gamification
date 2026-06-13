@@ -90,8 +90,10 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="leaderboardGroupInput">Группа (опционально)</label>
-                <input type="text" id="leaderboardGroupInput" placeholder="например, M-21-2" class="demo-select">
+                <label for="leaderboardGroupSelect">Группа (опционально)</label>
+                <select id="leaderboardGroupSelect" class="demo-select">
+                    <option value="">-- Все группы --</option>
+                </select>
             </div>
             <div>
                 <button id="loadLeaderboardBtn" class="btn btn-primary">Показать лидерборд</button>
@@ -99,6 +101,7 @@
         </div>
         <div class="help-text" style="margin-top: 12px; font-size: 0.85rem;">
             Выберите курс, чтобы увидеть рейтинг участников. Группу можно не указывать — будет показан общий лидерборд курса.
+            Записанные курсы и группы отмечены символом ✓.
         </div>
     </div>
 

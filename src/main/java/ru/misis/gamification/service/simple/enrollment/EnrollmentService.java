@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.misis.gamification.entity.Course;
+import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
 import ru.misis.gamification.exception.UserCourseEnrollmentNotFoundException;
@@ -84,4 +85,13 @@ public interface EnrollmentService {
      * @return Список зачислений на курсы
      */
     List<UserCourseEnrollment> findAllByUser(User user);
+
+    /**
+     * Проверить, состоит ли пользователь в указанной группе на данном курсе
+     *
+     * @param user  пользователь
+     * @param group группа
+     * @return true, если пользователь зачислен на курс и привязан к этой группе
+     */
+    boolean isUserInGroup(User user, Group group);
 }

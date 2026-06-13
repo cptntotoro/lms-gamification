@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.misis.gamification.entity.Course;
+import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
 import ru.misis.gamification.model.LeaderboardEntryView;
@@ -138,4 +139,14 @@ public interface UserCourseEnrollmentRepository extends JpaRepository<UserCourse
      * @return Список зачислений на курсы (связи пользователь — курс)
      */
     List<UserCourseEnrollment> findAllByUser(User user);
+
+    /**
+     * Проверить, существует ли зачисление пользователя на курс с привязкой к конкретной группе
+     *
+     * @param user   пользователь
+     * @param course курс
+     * @param group  группа
+     * @return true, если существует
+     */
+    boolean existsByUserAndCourseAndGroup(User user, Course course, Group group);
 }

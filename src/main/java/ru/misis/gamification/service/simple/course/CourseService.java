@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.exception.CourseNotFoundException;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -51,4 +52,11 @@ public interface CourseService {
      * @throws ConstraintViolationException если courseUuid == null
      */
     Course findById(@NotNull(message = "{course.uuid.required}") UUID courseUuid);
+
+    /**
+     * Получить все курсы
+     *
+     * @return список всех курсов
+     */
+    List<Course> getAllCourses();
 }

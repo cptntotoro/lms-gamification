@@ -82,8 +82,10 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="groupIdInput">Группа (ID, опционально)</label>
-                <input type="text" id="groupIdInput" placeholder="например, M-21-2" class="demo-select">
+                <label for="groupIdSelect">Группа (ID, опционально)</label>
+                <select id="groupIdSelect" class="demo-select">
+                    <option value="">-- Все группы --</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="demoRoleSelect">Роль (для демо)</label>
@@ -94,7 +96,7 @@
                 </select>
             </div>
         </div>
-        <p class="help-text">Выберите курс, чтобы лидерборд и профиль показывали данные именно по нему.</p>
+        <p class="help-text">Выберите курс, чтобы лидерборд и профиль показывали данные именно по нему. Записанные курсы и группы отмечены символом ✓.</p>
     </div>
 
     <!-- Отправка событий -->
