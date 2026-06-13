@@ -1,20 +1,19 @@
 // ============================
-// Глобальные переменные состояния
+// Глобальные переменные и данные
 // ============================
 
-let availableCourses = [];            // список всех курсов {courseId, enrolled, totalPointsInCourse}
-let availableGroups = [];             // список групп выбранного курса {groupId, member}
-let currentCourseId = null;           // выбранный курс
-let currentGroupId = null;            // выбранная группа (строка)
+let availableCourses = [];            // все курсы {courseId, enrolled, totalPointsInCourse}
+let availableEventTypes = [];         // активные типы событий
+let lastSentEventId = null;           // для дублирования, храним в localStorage
 
-let availableEventTypes = [];          // активные типы событий с сервера
-let lastSentEventId = null;            // для дублирования
+// DOM элементы
+let logContainer;
 
-// Элементы DOM
-let courseSelect, groupSelect, eventTypeSelect, eventIdInput, logContainer;
+// Ключ localStorage для lastEventId
+const STORAGE_LAST_EVENT_ID = "demoLastEventId";
 
 // ============================
-// Вспомогательные функции
+// Вспомогательные функции (лог, очистка)
 // ============================
 function log(message, type = 'info') {
     if (!logContainer) return;
@@ -23,7 +22,6 @@ function log(message, type = 'info') {
     entry.className = `log-item log-${type}`;
     entry.innerHTML = `<span>[${time}]</span> ${message}`;
     logContainer.prepend(entry);
-    // Ограничим длину лога 200 записями
     while (logContainer.children.length > 200) {
         logContainer.removeChild(logContainer.lastChild);
     }
@@ -34,108 +32,21 @@ function clearLog() {
     log('Лог очищен', 'info');
 }
 
-// Загрузка ВСЕХ курсов системы с признаком записи пользователя
+// Загрузка ВСЕХ курсов (с признаком записи для текущего пользователя)
 async function loadAllCourses() {
     try {
         const userId = window.GamificationAPI.getCurrentUserId();
         const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/all?userId=${encodeURIComponent(userId)}`);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const data = await response.json();
-        availableCourses = data;
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        availableCourses = await response.json();
         log(`Загружено курсов: ${availableCourses.length}`, 'success');
-
-        // Заполнить выпадающий список курсов
-        courseSelect.innerHTML = '<option value="">-- Выберите курс --</option>';
-        availableCourses.forEach(course => {
-            const option = document.createElement('option');
-            option.value = course.courseId;
-            let text = `${course.courseId}${course.displayName ? ' (' + course.displayName + ')' : ''}`;
-            if (course.enrolled) {
-                text += ` ✓ (${course.totalPointsInCourse || 0} очков)`;
-                option.style.fontWeight = 'bold';
-                option.style.backgroundColor = '#e6f7e6';
-            } else {
-                text += ` (не записан)`;
-            }
-            option.textContent = text;
-            courseSelect.appendChild(option);
-        });
-        // Добавляем опцию добавления нового курса
-        const addCourseOption = document.createElement('option');
-        addCourseOption.value = '__ADD_NEW_COURSE__';
-        addCourseOption.textContent = '➕ Добавить новый курс';
-        addCourseOption.style.fontStyle = 'italic';
-        addCourseOption.style.color = '#2563eb';
-        courseSelect.appendChild(addCourseOption);
-
-        // Восстановить сохранённый курс из localStorage
-        const savedCourse = localStorage.getItem('demoCourseId');
-        if (savedCourse && availableCourses.some(c => c.courseId === savedCourse)) {
-            courseSelect.value = savedCourse;
-        } else if (availableCourses.length > 0) {
-            // предвыбираем первый записанный курс, если есть
-            const firstEnrolled = availableCourses.find(c => c.enrolled);
-            courseSelect.value = firstEnrolled ? firstEnrolled.courseId : availableCourses[0].courseId;
-        }
-        await onCourseChange(); // загрузит группы для выбранного курса
     } catch (error) {
         log(`Ошибка загрузки курсов: ${error.message}`, 'error');
-        courseSelect.innerHTML = '<option value="">-- Ошибка загрузки --</option>';
+        availableCourses = [];
     }
 }
 
-// Загрузка групп для выбранного курса с членством пользователя
-async function loadGroupsForCourse(courseId) {
-    if (!courseId) return [];
-    try {
-        const userId = window.GamificationAPI.getCurrentUserId();
-        const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        log(`Ошибка загрузки групп: ${error.message}`, 'error');
-        return [];
-    }
-}
-
-// Заполнить селектор групп
-function populateGroupSelect(groups, preselectedGroupId) {
-    groupSelect.innerHTML = '<option value="">-- Все группы --</option>';
-    if (groups.length === 0) {
-        groupSelect.innerHTML = '<option value="">-- Нет групп --</option>';
-    } else {
-        groups.forEach(group => {
-            const option = document.createElement('option');
-            option.value = group.groupId;
-            let text = `${group.groupId}${group.displayName ? ' (' + group.displayName + ')' : ''}`;
-            if (group.member) {
-                text += ` ✓`;
-                option.style.fontWeight = 'bold';
-                option.style.backgroundColor = '#e6f7e6';
-            }
-            option.textContent = text;
-            groupSelect.appendChild(option);
-        });
-    }
-    // Добавляем опцию добавления новой группы
-    const addGroupOption = document.createElement('option');
-    addGroupOption.value = '__ADD_NEW_GROUP__';
-    addGroupOption.textContent = '➕ Добавить новую группу';
-    addGroupOption.style.fontStyle = 'italic';
-    addGroupOption.style.color = '#2563eb';
-    groupSelect.appendChild(addGroupOption);
-
-    if (preselectedGroupId && groups.some(g => g.groupId === preselectedGroupId)) {
-        groupSelect.value = preselectedGroupId;
-    } else {
-        groupSelect.value = '';
-    }
-}
-
-// Загрузка типов событий
+// Загрузка активных типов событий
 async function loadEventTypes() {
     try {
         const response = await window.GamificationAPI.apiRequest(`/demo/admin/event-types/all-types?page=0&size=100`);
@@ -143,229 +54,342 @@ async function loadEventTypes() {
         const page = await response.json();
         availableEventTypes = page.content.filter(t => t.active);
         log(`Загружено типов событий: ${availableEventTypes.length}`, 'success');
-
-        eventTypeSelect.innerHTML = '<option value="">-- Выберите тип --</option>';
-        availableEventTypes.forEach(et => {
-            const option = document.createElement('option');
-            option.value = et.typeCode;
-            option.textContent = `${et.displayName} (${et.points} XP)`;
-            eventTypeSelect.appendChild(option);
-        });
     } catch (error) {
         log(`Ошибка загрузки типов событий: ${error.message}`, 'error');
-        eventTypeSelect.innerHTML = '<option value="">-- Ошибка --</option>';
+        availableEventTypes = [];
     }
 }
 
-// Обработка смены курса
-async function onCourseChange() {
-    const newCourseId = courseSelect.value;
-    if (newCourseId === '__ADD_NEW_COURSE__') {
-        const newCourseInput = prompt('Введите идентификатор нового курса:');
-        if (newCourseInput && newCourseInput.trim()) {
-            // Добавляем новый курс в селектор временно
-            const newOption = document.createElement('option');
-            newOption.value = newCourseInput.trim();
-            newOption.textContent = `${newCourseInput.trim()} (новый)`;
-            newOption.style.fontWeight = 'bold';
-            newOption.style.backgroundColor = '#ffffcc';
-            const addOption = courseSelect.querySelector('option[value="__ADD_NEW_COURSE__"]');
-            courseSelect.insertBefore(newOption, addOption);
-            courseSelect.value = newCourseInput.trim();
-            currentCourseId = newCourseInput.trim();
-            // Загружаем группы (скорее всего пусто)
-            availableGroups = await loadGroupsForCourse(currentCourseId);
-            populateGroupSelect(availableGroups, null);
-        } else {
-            // восстанавливаем предыдущее значение
-            const savedCourse = localStorage.getItem('demoCourseId');
-            if (savedCourse && availableCourses.some(c => c.courseId === savedCourse)) {
-                courseSelect.value = savedCourse;
-            } else if (availableCourses.length > 0) {
-                courseSelect.value = availableCourses[0].courseId;
-            } else {
-                courseSelect.value = '';
-            }
-            currentCourseId = courseSelect.value;
-            if (currentCourseId) {
-                availableGroups = await loadGroupsForCourse(currentCourseId);
-                populateGroupSelect(availableGroups, null);
-            }
-        }
-    } else {
-        currentCourseId = newCourseId;
-        if (currentCourseId) {
-            localStorage.setItem('demoCourseId', currentCourseId);
-            log(`Выбран курс: ${currentCourseId}`, 'info');
-            // Загружаем группы для этого курса
-            availableGroups = await loadGroupsForCourse(currentCourseId);
-            const savedGroup = localStorage.getItem('demoGroupId');
-            populateGroupSelect(availableGroups, savedGroup);
-        } else {
-            localStorage.removeItem('demoCourseId');
-            groupSelect.innerHTML = '<option value="">-- Все группы --</option>';
-        }
-    }
-}
-
-// Отправка события (основная)
-async function sendEvent(eventType, eventId) {
-    if (!eventType || eventType.trim() === '') {
-        log('❌ Не указан тип события', 'error');
-        return;
-    }
-
-    let payload = {
-        userId: window.GamificationAPI.getCurrentUserId(),
-        eventType: eventType,
-        eventId: eventId
-    };
-    if (currentCourseId) payload.courseId = currentCourseId;
-    if (currentGroupId && currentGroupId !== '__ADD_NEW_GROUP__') payload.groupId = currentGroupId;
-
-    log(`➡️ Отправка события: ${eventType} / ${eventId}`, 'info');
+// Загрузить группы для курса (с членством для текущего пользователя)
+async function loadGroupsForCourse(courseId) {
+    if (!courseId) return [];
     try {
+        const userId = window.GamificationAPI.getCurrentUserId();
+        const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        log(`Ошибка загрузки групп: ${error.message}`, 'error');
+        return [];
+    }
+}
+
+// Сохранить последний отправленный eventId
+function updateLastEventId(eventId) {
+    if (eventId) {
+        lastSentEventId = eventId;
+        localStorage.setItem(STORAGE_LAST_EVENT_ID, eventId);
+    }
+}
+
+// Получить сохранённый eventId
+function getLastEventId() {
+    if (lastSentEventId === null) {
+        lastSentEventId = localStorage.getItem(STORAGE_LAST_EVENT_ID);
+    }
+    return lastSentEventId;
+}
+
+// ============================
+// Отправка события (общая)
+// ============================
+async function sendEvent(payload, tokenOverride = null) {
+    log(`➡️ Отправка: userId=${payload.userId}, eventType=${payload.eventType}, eventId=${payload.eventId}, course=${payload.courseId || '-'}, group=${payload.groupId || '-'}`, 'info');
+
+    try {
+        const overrideHeaders = {};
+        if (tokenOverride) {
+            overrideHeaders.token = tokenOverride;
+        }
         const response = await window.GamificationAPI.apiRequest('/api/v1/event', {
             method: 'POST',
             body: JSON.stringify(payload),
+            overrideHeaders: overrideHeaders
         });
         const data = await response.json();
 
         if (response.ok && data.status === 'success') {
             log(`✅ Успех! Начислено ${data.pointsEarned} XP, всего очков: ${data.totalPoints}. ${data.levelUp ? '🎉 Уровень повышен!' : ''}`, 'success');
+            updateLastEventId(payload.eventId);
+            return true;
         } else if (data.status === 'duplicate') {
             log(`⚠️ Дубликат события: ${data.message}`, 'warning');
+            updateLastEventId(payload.eventId);
+            return false;
         } else {
-            log(`❌ Ошибка сервера (${response.status}): ${data.message || JSON.stringify(data)}`, 'error');
+            log(`❌ Ошибка (${response.status}): ${data.message || JSON.stringify(data)}`, 'error');
+            return false;
         }
-        lastSentEventId = eventId;
-        // Виджет обновится сам через setInterval, но можно принудительно вызвать refresh, если нужно
     } catch (error) {
         log(`❌ Ошибка соединения: ${error.message}`, 'error');
+        return false;
     }
-}
-
-// Отправить событие с выбранными в UI типом и eventId
-function sendFromUI() {
-    const eventType = eventTypeSelect.value;
-    let eventId = eventIdInput.value.trim();
-    if (eventId === '' || eventId === 'auto') {
-        eventId = `demo-${Date.now()}`;
-        eventIdInput.value = eventId;
-        log(`Автоматически сгенерирован eventId: ${eventId}`, 'info');
-    }
-    sendEvent(eventType, eventId);
-}
-
-// Отправить дубликат последнего eventId
-function sendDuplicate() {
-    if (!lastSentEventId) {
-        log('❌ Нет предыдущего отправленного события. Сначала отправьте что-нибудь.', 'error');
-        return;
-    }
-    const eventType = eventTypeSelect.value;
-    if (!eventType) {
-        log('❌ Выберите тип события', 'error');
-        return;
-    }
-    sendEvent(eventType, lastSentEventId);
-}
-
-// Отправить заведомо неверный тип события
-function sendInvalidType() {
-    const fakeType = 'nonexistent_type_' + Date.now();
-    const eventId = `invalid-${Date.now()}`;
-    sendEvent(fakeType, eventId);
-}
-
-// Отправить с пустым eventId (проверка валидации на бэкенде)
-function sendEmptyEventId() {
-    const eventType = eventTypeSelect.value;
-    if (!eventType) {
-        log('❌ Выберите тип события', 'error');
-        return;
-    }
-    sendEvent(eventType, '');
 }
 
 // ============================
-// Навигация (Profile / Leaderboard) с учётом выбранных курса/группы
+// Управление модальным окном
 // ============================
-function getDemoState() {
-    return {
-        userId: window.GamificationAPI.getCurrentUserId(),
-        courseId: currentCourseId || (availableCourses.length ? availableCourses.find(c => c.enrolled)?.courseId || availableCourses[0].courseId : 'DEMO_COURSE'),
-        groupId: groupSelect.value === '__ADD_NEW_GROUP__' ? '' : (groupSelect.value || null)
+let currentModal = null;
+
+function closeModal() {
+    if (currentModal && currentModal.remove) {
+        currentModal.remove();
+        currentModal = null;
+    }
+}
+
+// Генерация модалки под конкретный сценарий
+async function openScenarioModal(scenario) {
+    closeModal();
+
+    // Базовые значения
+    const currentUserId = window.GamificationAPI.getCurrentUserId();
+    let modalConfig = {
+        title: '',
+        fields: {},
+        sendHandler: null
     };
+
+    // Общие данные для всех сценариев, где нужны селекты
+    const coursesForSelect = availableCourses.map(c => ({ value: c.courseId, label: `${c.courseId}${c.enrolled ? ' ✓' : ''}` }));
+    const eventTypesForSelect = availableEventTypes.map(et => ({ value: et.typeCode, label: `${et.displayName} (${et.points} XP)` }));
+
+    // Сценарий 1: существующий пользователь, курс, группа (выбор из селектов)
+    if (scenario === 'existing') {
+        modalConfig.title = '📌 Отправка события (существующий пользователь)';
+        modalConfig.fields = {
+            userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
+            course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
+            group: { type: 'select', label: 'Группа (опционально)', options: [], value: '', dependsOnCourse: true },
+            eventType: { type: 'select', label: 'Тип события', options: eventTypesForSelect, value: eventTypesForSelect[0]?.value || '' },
+            eventId: { type: 'text', label: 'ID события (оставьте пустым для автогенерации)', value: '', disabled: false }
+        };
+    }
+    // Сценарий 2: новый пользователь + новый курс + новая группа (все поля инпуты)
+    else if (scenario === 'newUser') {
+        modalConfig.title = '✨ Новый пользователь + новый курс + новая группа';
+        modalConfig.fields = {
+            userId: { type: 'text', label: 'Новый пользователь', value: 'new_student_' + Date.now(), disabled: false },
+            course: { type: 'text', label: 'Новый курс', value: 'COURSE_' + Date.now(), disabled: false },
+            group: { type: 'text', label: 'Новая группа', value: 'GROUP_' + Date.now(), disabled: false },
+            eventType: { type: 'select', label: 'Тип события', options: eventTypesForSelect, value: eventTypesForSelect[0]?.value || '' },
+            eventId: { type: 'text', label: 'ID события (оставьте пустым для автогенерации)', value: '', disabled: false }
+        };
+    }
+    // Сценарий 3: новый курс для существующего пользователя
+    else if (scenario === 'newCourse') {
+        modalConfig.title = '🆕 Новый курс для существующего пользователя';
+        modalConfig.fields = {
+            userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
+            course: { type: 'text', label: 'Новый курс', value: 'NEW_COURSE_' + Date.now(), disabled: false },
+            group: { type: 'text', label: 'Новая группа (опционально)', value: '', disabled: false },
+            eventType: { type: 'select', label: 'Тип события', options: eventTypesForSelect, value: eventTypesForSelect[0]?.value || '' },
+            eventId: { type: 'text', label: 'ID события (оставьте пустым для автогенерации)', value: '', disabled: false }
+        };
+    }
+    // Сценарий 4: дубликат eventId
+    else if (scenario === 'duplicate') {
+        const lastId = getLastEventId();
+        if (!lastId) {
+            log('❌ Нет сохранённого eventId. Сначала отправьте любое успешное событие.', 'error');
+            return;
+        }
+        modalConfig.title = '🔄 Дубликат eventId (ожидается ошибка)';
+        modalConfig.fields = {
+            userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
+            course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
+            group: { type: 'select', label: 'Группа', options: [], value: '', dependsOnCourse: true },
+            eventType: { type: 'select', label: 'Тип события', options: eventTypesForSelect, value: eventTypesForSelect[0]?.value || '' },
+            eventId: { type: 'text', label: 'EventId (заблокирован, будет использован сохранённый)', value: lastId, disabled: true }
+        };
+    }
+    // Сценарий 5: пустой eventId
+    else if (scenario === 'emptyEventId') {
+        modalConfig.title = '⚠️ Пустой eventId (ожидается ошибка валидации)';
+        modalConfig.fields = {
+            userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
+            course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
+            group: { type: 'select', label: 'Группа', options: [], value: '', dependsOnCourse: true },
+            eventType: { type: 'select', label: 'Тип события', options: eventTypesForSelect, value: eventTypesForSelect[0]?.value || '' },
+            eventId: { type: 'text', label: 'EventId (пустой, заблокирован)', value: '', disabled: true }
+        };
+    }
+    // Сценарий 6: неверный тип события
+    else if (scenario === 'invalidType') {
+        modalConfig.title = '❌ Неверный тип события (ожидается ошибка)';
+        modalConfig.fields = {
+            userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
+            course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
+            group: { type: 'select', label: 'Группа', options: [], value: '', dependsOnCourse: true },
+            eventType: { type: 'text', label: 'Тип события (некорректный)', value: 'invalid_type_xyz', disabled: true },
+            eventId: { type: 'text', label: 'ID события', value: 'event_' + Date.now(), disabled: false }
+        };
+    }
+    // Сценарий 7: неверный токен
+    else if (scenario === 'invalidToken') {
+        modalConfig.title = '🔑 Неверный токен (ожидается 401/403)';
+        modalConfig.fields = {
+            userId: { type: 'text', label: 'Пользователь', value: currentUserId, disabled: true },
+            course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
+            group: { type: 'select', label: 'Группа', options: [], value: '', dependsOnCourse: true },
+            eventType: { type: 'select', label: 'Тип события', options: eventTypesForSelect, value: eventTypesForSelect[0]?.value || '' },
+            eventId: { type: 'text', label: 'ID события', value: 'event_' + Date.now(), disabled: false }
+        };
+    } else {
+        return;
+    }
+
+    // Создаём DOM модалки
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'modal-overlay';
+    const modalContainer = document.createElement('div');
+    modalContainer.className = 'modal-container';
+
+    // Заголовок
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'modal-header';
+    headerDiv.innerHTML = `<h3>${modalConfig.title}</h3><button class="modal-close">&times;</button>`;
+    modalContainer.appendChild(headerDiv);
+
+    // Форма
+    const formDiv = document.createElement('div');
+    const fieldElements = {};
+
+    for (const [key, cfg] of Object.entries(modalConfig.fields)) {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'modal-field';
+        const label = document.createElement('label');
+        label.textContent = cfg.label;
+        fieldDiv.appendChild(label);
+        let input;
+        if (cfg.type === 'select') {
+            input = document.createElement('select');
+            cfg.options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.value;
+                option.textContent = opt.label;
+                input.appendChild(option);
+            });
+            if (cfg.value) input.value = cfg.value;
+        } else {
+            input = document.createElement('input');
+            input.type = 'text';
+            input.value = cfg.value || '';
+        }
+        if (cfg.disabled) input.disabled = true;
+        fieldDiv.appendChild(input);
+        formDiv.appendChild(fieldDiv);
+        fieldElements[key] = input;
+    }
+
+    // Если есть dependsOnCourse (группа зависит от курса) — добавляем динамическую загрузку
+    let groupSelect = null;
+    if (modalConfig.fields.group && modalConfig.fields.group.dependsOnCourse && fieldElements.course && fieldElements.group && fieldElements.course.tagName === 'SELECT') {
+        groupSelect = fieldElements.group;
+        const courseSelect = fieldElements.course;
+        const loadGroups = async () => {
+            const courseId = courseSelect.value;
+            if (courseId) {
+                const groups = await loadGroupsForCourse(courseId);
+                groupSelect.innerHTML = '<option value="">-- Все группы --</option>';
+                groups.forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.groupId;
+                    opt.textContent = `${g.groupId}${g.member ? ' ✓' : ''}`;
+                    groupSelect.appendChild(opt);
+                });
+            } else {
+                groupSelect.innerHTML = '<option value="">-- Сначала выберите курс --</option>';
+            }
+        };
+        courseSelect.addEventListener('change', loadGroups);
+        await loadGroups(); // начальная загрузка, если курс уже выбран
+    }
+
+    modalContainer.appendChild(formDiv);
+
+    // Кнопки действий
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'modal-actions';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Отмена';
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.addEventListener('click', closeModal);
+    const sendBtn = document.createElement('button');
+    sendBtn.textContent = 'Отправить событие';
+    sendBtn.className = 'btn btn-primary';
+    actionsDiv.appendChild(cancelBtn);
+    actionsDiv.appendChild(sendBtn);
+    modalContainer.appendChild(actionsDiv);
+
+    modalOverlay.appendChild(modalContainer);
+    document.body.appendChild(modalOverlay);
+    currentModal = modalOverlay;
+
+    // Обработчик закрытия
+    modalOverlay.querySelector('.modal-close').addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) closeModal();
+    });
+
+    // Обработчик отправки
+    sendBtn.addEventListener('click', async () => {
+        // Собираем данные
+        let userId = fieldElements.userId.value;
+        let courseId = fieldElements.course.value;
+        let groupId = fieldElements.group.value;
+        let eventType = fieldElements.eventType.value;
+        let eventId = fieldElements.eventId.value;
+
+        if (!eventId && !fieldElements.eventId.disabled) {
+            eventId = `demo-${Date.now()}`;
+            log(`Автоматически сгенерирован eventId: ${eventId}`, 'info');
+        }
+
+        if (!userId || !eventType) {
+            log('❌ Заполните обязательные поля: пользователь и тип события', 'error');
+            return;
+        }
+
+        const payload = {
+            userId: userId,
+            eventType: eventType,
+            eventId: eventId
+        };
+        if (courseId && courseId !== '') payload.courseId = courseId;
+        if (groupId && groupId !== '') payload.groupId = groupId;
+
+        let tokenOverride = null;
+        if (scenario === 'invalidToken') {
+            tokenOverride = 'wrong_token_xyz';
+        }
+
+        await sendEvent(payload, tokenOverride);
+        closeModal();
+    });
 }
 
+// ============================
+// Инициализация страницы
+// ============================
 document.addEventListener("DOMContentLoaded", async () => {
-    // Найти элементы
-    courseSelect = document.getElementById('courseSelect');
-    groupSelect = document.getElementById('groupIdSelect');
-    eventTypeSelect = document.getElementById('eventTypeSelect');
-    eventIdInput = document.getElementById('eventIdInput');
     logContainer = document.getElementById('eventLog');
-
-    // Кнопки
-    document.getElementById('sendEventBtn').addEventListener('click', sendFromUI);
-    document.getElementById('sendDuplicateBtn').addEventListener('click', sendDuplicate);
-    document.getElementById('sendInvalidTypeBtn').addEventListener('click', sendInvalidType);
-    document.getElementById('sendEmptyEventIdBtn').addEventListener('click', sendEmptyEventId);
     document.getElementById('clearLogBtn').addEventListener('click', clearLog);
-
-    if (courseSelect) courseSelect.addEventListener('change', onCourseChange);
-    if (groupSelect) groupSelect.addEventListener('change', () => {
-        if (groupSelect.value === '__ADD_NEW_GROUP__') {
-            // Проверка выбора группы
-            let selectedGroup = groupSelect.value;
-            const newGroup = prompt('Введите идентификатор новой группы:');
-            if (newGroup && newGroup.trim()) {
-                selectedGroup = newGroup.trim();
-                // Добавляем временно в селектор
-                const newOption = document.createElement('option');
-                newOption.value = selectedGroup;
-                newOption.textContent = `${selectedGroup} (новая)`;
-                newOption.style.fontWeight = 'bold';
-                newOption.style.backgroundColor = '#ffffcc';
-                const addOption = groupSelect.querySelector('option[value="__ADD_NEW_GROUP__"]');
-                groupSelect.insertBefore(newOption, addOption);
-                groupSelect.value = selectedGroup;
-            } else {
-                selectedGroup = '';
-                groupSelect.value = '';
-            }
-        } else {
-            currentGroupId = groupSelect.value;
-            if (currentGroupId) localStorage.setItem('demoGroupId', currentGroupId);
-            else localStorage.removeItem('demoGroupId');
-        }
-    });
 
     await loadAllCourses();
     await loadEventTypes();
 
-    // Восстановить группу из localStorage, если есть (после загрузки групп)
-    const savedGroup = localStorage.getItem('demoGroupId');
-    if (savedGroup && groupSelect) {
-        // Отложим установку, т.к. группы могут быть ещё не загружены
-        setTimeout(() => {
-            if (groupSelect.querySelector(`option[value="${savedGroup}"]`)) {
-                groupSelect.value = savedGroup;
-                currentGroupId = savedGroup;
-            }
-        }, 100);
-    }
+    // Привязываем сценарии к кнопкам
+    document.querySelectorAll('.scenario-btn').forEach(btn => {
+        const scenario = btn.getAttribute('data-scenario');
+        btn.addEventListener('click', () => openScenarioModal(scenario));
+    });
 
-    // Значение eventId по умолчанию – пусто (будет auto генерироваться)
-    if (eventIdInput) eventIdInput.placeholder = "auto";
-    log('Демо-панель готова. Выберите курс и тип события.', 'success');
+    log('Демо-панель готова. Выберите сценарий для тестирования.', 'success');
 
-    // При смене пользователя (из header.js) перезагружаем курсы
-    document.addEventListener('userChanged', () => {
-        loadAllCourses().catch(e => log(`Ошибка загрузки курсов: ${e.message}`, 'error'));
+    // При смене пользователя в хедере перезагружаем курсы (для селектов)
+    document.addEventListener('userChanged', async () => {
+        await loadAllCourses();
+        log('Пользователь изменён, список курсов обновлён', 'info');
     });
 });
-
-window.goToProfile = goToProfile;
-window.goToLeaderboard = goToLeaderboard;
