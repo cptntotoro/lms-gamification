@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
@@ -16,11 +17,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboardDto;
+import ru.misis.gamification.dto.user.response.CourseWithEnrollmentDto;
+import ru.misis.gamification.dto.user.response.GroupWithMembershipDto;
 import ru.misis.gamification.mapper.LeaderboardMapper;
 import ru.misis.gamification.model.UserCourseGroupLeaderboardView;
 import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicationService;
+import ru.misis.gamification.service.application.user.UserStatisticsApplicationService;
 
-@Tag(name = "Web Pages", description = "Простые HTML-страницы приложения")
+import java.util.List;
+
 @Controller
 @RequestMapping("/demo/leaderboard")
 @RequiredArgsConstructor
@@ -34,6 +39,11 @@ public class UserLeaderboardPageController {
     private final LeaderboardApplicationService leaderboardService;
 
     /**
+     * Фасадный сервис управления статистикой пользователей
+     */
+    private final UserStatisticsApplicationService userStatisticsApplicationService;
+
+    /**
      * Маппер лидербордов
      */
     private final LeaderboardMapper leaderboardMapper;
@@ -41,44 +51,32 @@ public class UserLeaderboardPageController {
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 100;
 
+    /**
+     * Лидерборд
+     */
     @GetMapping
     public String leaderboardPage() {
         return "leaderboard";
     }
 
-    @Operation(
-            summary = "Персонализированный лидерборд по курсу (и опционально группе)",
-            description = """
-                     Отображает пагинированный топ участников курса (все группы или конкретную группу) +\s
-                     место, очки и уровень текущего студента.
-                     groupId — опциональный параметр.
-                    \s"""
-    )
+    /**
+     * Персонализированный лидерборд по курсу (и опционально группе)
+     */
     @GetMapping("/course/{courseId}/user/{userId}")
     public String getLeaderboard(
             @PathVariable @NotBlank(message = "{course.id.required}")
-            @Parameter(description = "Идентификатор курса из LMS", example = "MATH-101")
             String courseId,
-
             @PathVariable @NotBlank(message = "{user.id.required}")
-            @Parameter(description = "Идентификатор пользователя из LMS", example = "student007")
             String userId,
-
             @RequestParam(required = false)
-            @Parameter(description = "Идентификатор группы (опционально, если не указан — весь курс)", example = "M-21-2")
             String groupId,
-
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "{page.non-negative}")
-            @Parameter(description = "Номер страницы (0-based)", example = "0")
             int page,
-
             @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE)
             @Min(value = 1, message = "{size.positive}")
             @Max(value = MAX_PAGE_SIZE, message = "{size.too-large}")
-            @Parameter(description = "Размер страницы (макс " + MAX_PAGE_SIZE + ")", example = "50")
             int size,
-
             Model model
     ) {
         log.debug("Демо-лидерборд: userId={}, courseId={}, groupId={}, page={}, size={}",
@@ -94,5 +92,30 @@ public class UserLeaderboardPageController {
         model.addAttribute("groupId", groupId);
 
         return "leaderboard";
+    }
+
+
+
+    /**
+     * Список всех курсов системы с признаком записи пользователя
+     */
+    @GetMapping("/courses/all")
+    public ResponseEntity<List<CourseWithEnrollmentDto>> getAllCoursesWithEnrollmentStatus(
+            @RequestParam @NotBlank String userId) {
+        log.debug("REST запрос всех курсов с признаком записи для userId={}", userId);
+        List<CourseWithEnrollmentDto> courses = userStatisticsApplicationService.getAllCoursesWithEnrollmentStatus(userId);
+        return ResponseEntity.ok(courses);
+    }
+
+    /**
+     * Список всех групп курса с признаком членства пользователя
+     */
+    @GetMapping("/courses/{courseId}/groups")
+    public ResponseEntity<List<GroupWithMembershipDto>> getCourseGroupsWithMembership(
+            @PathVariable @NotBlank String courseId,
+            @RequestParam @NotBlank String userId) {
+        log.debug("REST запрос групп курса {} с признаком членства для userId={}", courseId, userId);
+        List<GroupWithMembershipDto> groups = userStatisticsApplicationService.getCourseGroupsWithMembership(courseId, userId);
+        return ResponseEntity.ok(groups);
     }
 }

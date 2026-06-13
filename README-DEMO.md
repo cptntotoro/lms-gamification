@@ -105,13 +105,13 @@
 
 | Сценарий                       | URL                                                                | Ожидаемый результат                   |
 |--------------------------------|--------------------------------------------------------------------|---------------------------------------|
-| Общий лидерборд курса MATH-101 | `/api/admin/analytics/leaderboard/courses/MATH-101`                | Топ всех студентов курса (все группы) |
-| Лидерборд только группы M-21-2 | `/api/admin/analytics/leaderboard/courses/MATH-101?groupId=M-21-2` | Топ только студентов группы M-21-2    |
-| Общий лидерборд PROG-202       | `/api/admin/analytics/leaderboard/courses/PROG-202`                | Топ по всему курсу Java               |
-| С пагинацией                   | `/api/admin/analytics/leaderboard/courses/MATH-101?page=1&size=20` | Вторая страница, 20 записей           |
-| Лидерборд HIST-303             | `/api/admin/analytics/leaderboard/courses/HIST-303`                | Топ по курсу История России           |
-| Несуществующий курс            | `/api/admin/analytics/leaderboard/courses/WRONG-COURSE`            | Ошибка "Курс не найден"               |
-| Несуществующая группа          | `/api/admin/analytics/leaderboard/courses/MATH-101?groupId=WRONG`  | Пустой список или ошибка              |
+| Общий лидерборд курса MATH-101 | `/api/v1/admin/analytics/leaderboard/courses/MATH-101`                | Топ всех студентов курса (все группы) |
+| Лидерборд только группы M-21-2 | `/api/v1/admin/analytics/leaderboard/courses/MATH-101?groupId=M-21-2` | Топ только студентов группы M-21-2    |
+| Общий лидерборд PROG-202       | `/api/v1/admin/analytics/leaderboard/courses/PROG-202`                | Топ по всему курсу Java               |
+| С пагинацией                   | `/api/v1/admin/analytics/leaderboard/courses/MATH-101?page=1&size=20` | Вторая страница, 20 записей           |
+| Лидерборд HIST-303             | `/api/v1/admin/analytics/leaderboard/courses/HIST-303`                | Топ по курсу История России           |
+| Несуществующий курс            | `/api/v1/admin/analytics/leaderboard/courses/WRONG-COURSE`            | Ошибка "Курс не найден"               |
+| Несуществующая группа          | `/api/v1/admin/analytics/leaderboard/courses/MATH-101?groupId=WRONG`  | Пустой список или ошибка              |
 
 **Примечание:**  
 `groupId` — опциональный. Если указан — лидерборд считается **только внутри группы**, иначе — по всему курсу. Сортировка

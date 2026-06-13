@@ -109,7 +109,7 @@ async function openEditModal(btn) {
     };
 
     try {
-        const response = await window.GamificationAPI.apiRequest(`/api/admin/event-types/${id}`, {
+        const response = await window.GamificationAPI.apiRequest(`/api/v1/admin/event-types/${id}`, {
             method: 'GET',
             headers: {'Content-Type': 'application/json'},
         });
@@ -141,7 +141,7 @@ async function deactivateType(btn) {
     if (!confirm('Деактивировать тип события?')) return;
 
     try {
-        const response = await window.GamificationAPI.apiRequest(`/api/admin/event-types/${id}`, { method: 'DELETE' });
+        const response = await window.GamificationAPI.apiRequest(`/api/v1/admin/event-types/${id}`, { method: 'DELETE' });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || `Ошибка ${response.status}`);
@@ -192,11 +192,11 @@ async function saveEventType() {
         maxDailyPoints,
     };
 
-    let url = '/api/admin/event-types';
+    let url = '/api/v1/admin/event-types';
     let method = 'POST';
 
     if (isEdit) {
-        url = `/api/admin/event-types/${id}`;
+        url = `/api/v1/admin/event-types/${id}`;
         method = 'PUT';
         data.active = form.active.checked;
     } else {

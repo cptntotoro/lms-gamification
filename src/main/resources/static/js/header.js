@@ -23,7 +23,7 @@
         async function loadUsersList() {
             try {
                 // Запрос к админскому API с явным указанием роли ADMIN
-                const response = await window.GamificationAPI.apiRequest("/api/admin/users?page=0&size=1000");
+                const response = await window.GamificationAPI.apiRequest("/api/v1/admin/users?page=0&size=1000");
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }

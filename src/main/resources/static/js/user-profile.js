@@ -33,10 +33,10 @@
 
     let coursesList = []; // { courseId, groupId, pointsInCourse }
 
-    // Функция загрузки курсов пользователя (через админский API /api/admin/users/with-courses)
+    // Функция загрузки курсов пользователя (через админский API /demo/users)
     async function loadUserCourses() {
         try {
-            const response = await window.GamificationAPI.apiRequest('/api/admin/users/with-courses', {
+            const response = await window.GamificationAPI.apiRequest('/demo/users', {
                 method: 'GET'
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);

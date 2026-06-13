@@ -45,7 +45,7 @@
         errorMessageDiv.style.display = 'none';
 
         try {
-            const url = `/api/admin/transactions/users/${encodeURIComponent(currentUserId)}?page=${page}&size=${currentSize}&sortDir=${currentSortDir}`;
+            const url = `/api/v1/admin/transactions/users/${encodeURIComponent(currentUserId)}?page=${page}&size=${currentSize}&sortDir=${currentSortDir}`;
             const response = await window.GamificationAPI.apiRequest(url, {
                 method: 'GET'
             });

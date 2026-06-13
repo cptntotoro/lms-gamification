@@ -20,7 +20,6 @@ import ru.misis.gamification.mapper.EventTypeMapper;
 import ru.misis.gamification.model.EventTypeSummary;
 import ru.misis.gamification.service.application.eventtype.EventTypeAdminApplicationService;
 
-@Tag(name = "Admin - Типы событий (страницы)", description = "HTML-страницы управления типами событий")
 @Controller
 @RequestMapping("/demo/admin/event-types")
 @RequiredArgsConstructor
@@ -29,27 +28,18 @@ public class EventTypeAdminPageController {
     private final EventTypeAdminApplicationService eventTypeAdminService;
     private final EventTypeMapper eventTypeMapper;
 
-    @Operation(summary = "Страница управления типами событий")
+    /**
+     * Страница управления типами событий
+     */
     @GetMapping
     public String getEventTypesPage() {
         return "admin/event-types";
     }
 
+    /**
+     * Список всех типов событий с пагинацией
+     */
     @GetMapping("/all-types")
-    @PreAuthorize("hasRole('ADMIN') || hasRole('TEACHER')")
-    @Operation(
-            summary = "Получить список всех типов событий с пагинацией",
-            description = "Возвращает страницу типов событий с возможностью сортировки и фильтрации"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Список типов событий успешно получен",
-                    content = @Content(schema = @Schema(implementation = Page.class))
-            ),
-            @ApiResponse(responseCode = "401", description = "Не авторизован. Отсутствует заголовок X-User-Id."),
-            @ApiResponse(responseCode = "403", description = "Доступ запрещён. Недостаточно прав.")
-    })
     public ResponseEntity<Page<EventTypeDto>> getAll(Pageable pageable) {
         Page<EventTypeSummary> page = eventTypeAdminService.findAll(pageable);
         return ResponseEntity.ok(page.map(eventTypeMapper::toEventTypeDto));

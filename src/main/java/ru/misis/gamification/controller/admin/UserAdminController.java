@@ -21,19 +21,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.admin.response.UserAdminDto;
-import ru.misis.gamification.dto.admin.response.UserWithCoursesDto;
 import ru.misis.gamification.mapper.UserMapper;
 import ru.misis.gamification.model.UserAdminView;
 import ru.misis.gamification.service.application.user.UserAdminApplicationService;
-import ru.misis.gamification.service.application.user.UserStatisticsApplicationService;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @PreAuthorize("hasRole('ADMIN')")
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/users")
+@RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Пользователи", description = "Административные операции с пользователями и их транзакциями")
 public class UserAdminController {
@@ -42,8 +37,6 @@ public class UserAdminController {
      * Фасадный сервис управления пользователями для администратора
      */
     private final UserAdminApplicationService adminApplicationService;
-
-    private final UserStatisticsApplicationService userStatisticsApplicationService;
 
     /**
      * Маппер пользователей
@@ -113,36 +106,5 @@ public class UserAdminController {
 
         UserAdminView dto = adminApplicationService.findByUserId(userId);
         return ResponseEntity.ok(userMapper.toUserAdminDto(dto));
-    }
-
-    @GetMapping("/with-courses")
-    @Operation(
-            summary = "Получить всех пользователей с их курсами и группами",
-            description = "Возвращает список пользователей, для каждого указаны все зачисления: courseId, groupId, очки в курсе."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Список пользователей с курсами успешно получен",
-                    content = @Content(schema = @Schema(implementation = UserWithCoursesDto.class))),
-            @ApiResponse(responseCode = "401", description = "Не авторизован"),
-            @ApiResponse(responseCode = "403", description = "Доступ запрещён")
-    })
-    public ResponseEntity<List<UserWithCoursesDto>> getAllUsersWithCourses() {
-        // Используем существующий метод, чтобы получить всех пользователей (без пагинации, максимум 1000)
-        Pageable pageable = PageRequest.of(0, 1000, Sort.by(Sort.Direction.ASC, "userId"));
-        Page<UserAdminView> usersPage = adminApplicationService.findAll(null, null, pageable);
-
-        List<UserWithCoursesDto> result = usersPage.getContent().stream()
-                .map(user -> UserWithCoursesDto.builder()
-                        .userId(user.userId())
-                        .enrollments(userStatisticsApplicationService.getUserCourses(user.userId()).getCourses().stream()
-                                .map(enr -> UserWithCoursesDto.CourseEnrollmentDto.builder()
-                                        .courseId(enr.getCourseId())
-                                        .groupId(enr.getGroupId())
-                                        .pointsInCourse(enr.getTotalPointsInCourse())
-                                        .build())
-                                .collect(Collectors.toList()))
-                        .build())
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(result);
     }
 }
