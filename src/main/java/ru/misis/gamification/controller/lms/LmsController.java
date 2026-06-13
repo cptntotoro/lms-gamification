@@ -23,7 +23,6 @@ import ru.misis.gamification.service.application.awarding.LmsEventProcessorAppli
 /**
  * Контроллер для приема событий от LMS
  */
-@PreAuthorize("hasRole('ADMIN') || hasRole('TEACHER')")
 @RestController
 @RequestMapping("/api/v1/event")
 @RequiredArgsConstructor

@@ -80,3 +80,7 @@ gamification:
         base: 500            # базовый множитель
         increment: 200       # только для LINEAR
         fallback-level-increment: 1000
+
+lms:
+  security:
+    token: '@%dCxrBAF7ozyF346l7$us0Vc31c5Z18'
