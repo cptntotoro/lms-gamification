@@ -1,6 +1,5 @@
-
 (function() {
-    // Получаем userId из модели (Thymeleaf) и параметры URL
+    // Получаем userId из модели (Thymeleaf) и параметров URL
     let userId = null;
     try {
         // Считываем из data-атрибута или из глобальной переменной, созданной Thymeleaf
@@ -80,7 +79,7 @@
         } catch (error) {
             console.error('Ошибка загрузки курсов:', error);
             courseSelect.innerHTML = '<option value="">-- Ошибка загрузки --</option>';
-            errorDiv.style.display = 'block';
+            errorDiv.classList.remove('hide');
             errorDiv.textContent = 'Не удалось загрузить курсы пользователя';
         }
     }
@@ -89,15 +88,15 @@
     async function loadCourseStats() {
         const courseId = courseSelect.value;
         if (!courseId) {
-            statsContainer.style.display = 'none';
+            statsContainer.classList.add('hide');
             return;
         }
         const groupId = groupInput.value.trim() || undefined;
 
         // Показываем лоадер
-        statsContainer.style.display = 'block';
+        statsContainer.classList.remove('hide');
         statsGrid.innerHTML = '<div class="loading-small" style="margin: 20px auto;"></div>';
-        errorDiv.style.display = 'none';
+        errorDiv.classList.add('hide');
 
         try {
             // Используем API /api/v1/users/{userId} с параметрами courseId и groupId
@@ -120,29 +119,29 @@
 
             let html = `
                     <div class="course-stat-item">
-                        <div class="course-stat-label">🎯 Очки в курсе</div>
+                        <div class="course-stat-label">Очки в курсе</div>
                         <div class="course-stat-value">${points}</div>
                     </div>
                     <div class="course-stat-item">
-                        <div class="course-stat-label">🏆 Место в курсе</div>
+                        <div class="course-stat-label">Место в курсе</div>
                         <div class="course-stat-value">${rankCourse}</div>
                     </div>
                 `;
             if (rankGroup !== null && rankGroup !== undefined) {
                 html += `
                         <div class="course-stat-item">
-                            <div class="course-stat-label">👥 Место в группе</div>
+                            <div class="course-stat-label">Место в группе</div>
                             <div class="course-stat-value">${rankGroup}</div>
                         </div>
                     `;
             }
             if (groupId && data.groupId && data.groupId !== groupId) {
-                html += `<div class="course-stat-item"><div class="course-stat-label">⚠️ Группа</div><div class="course-stat-value">${data.groupId}</div></div>`;
+                html += `<div class="course-stat-item"><div class="course-stat-label">Группа</div><div class="course-stat-value">${data.groupId}</div></div>`;
             }
             statsGrid.innerHTML = html;
         } catch (error) {
             console.error('Ошибка загрузки статистики курса:', error);
-            errorDiv.style.display = 'block';
+            errorDiv.classList.remove('hide');
             errorDiv.textContent = `Ошибка: ${error.message}`;
             statsGrid.innerHTML = '';
         }
@@ -154,7 +153,7 @@
             if (loadBtn) loadBtn.addEventListener('click', loadCourseStats);
             if (courseSelect) courseSelect.addEventListener('change', () => {
                 // При смене курса сбрасываем статистику, но не загружаем автоматически (по кнопке)
-                statsContainer.style.display = 'none';
+                statsContainer.classList.add('hide');
             });
         });
     } else {

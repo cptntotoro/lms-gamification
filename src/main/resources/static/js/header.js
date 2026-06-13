@@ -124,9 +124,4 @@
             console.warn('Не удалось определить пользователя для перехода в профиль');
         }
     };
-
-    window.goToLeaderboard = function() {
-        // Открываем страницу лидерборда с возможностью выбора курса/группы
-        window.location.href = '/demo/leaderboard';
-    };
 })();

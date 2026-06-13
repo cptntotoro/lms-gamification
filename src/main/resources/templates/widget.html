@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Геймификация</title>
+    <link rel="stylesheet" th:href="@{/css/colors.css}">
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/widget.css}">
 </head>
@@ -15,9 +16,6 @@
     <div th:if="${user}" class="gamification-widget">
         <!-- Заголовок: аватар + имя + уровень -->
         <div class="widget-header">
-            <div class="avatar">
-                <span th:text="${user.userId?.substring(0,1)?.toUpperCase()}"></span>
-            </div>
             <div class="user-info">
                 <h2 th:text="${user.userId}"></h2>
                 <div class="level-info">

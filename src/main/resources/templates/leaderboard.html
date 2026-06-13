@@ -4,75 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Лидерборд курса</title>
+    <link rel="stylesheet" th:href="@{/css/colors.css}">
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/leaderboard.css}">
-    <style>
-        /* Дополнительные стили для полоски с текущим пользователем */
-        .current-user-bar {
-            background: #eef2ff;
-            border-radius: 16px;
-            padding: 12px 20px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            border: 1px solid #c7d2fe;
-        }
-        .current-user-label {
-            font-weight: 600;
-            color: #1e40af;
-        }
-        .current-user-id {
-            font-family: monospace;
-            background: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-        .selector-panel {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 32px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-            border: 1px solid #e2e8f0;
-        }
-        .selector-row {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-        }
-        .selector-row .form-group {
-            flex: 1;
-            min-width: 200px;
-            margin-bottom: 0;
-        }
-        .selector-row .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            color: #475569;
-        }
-        .loading-overlay {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-        }
-        .leaderboard-wrapper {
-            transition: all 0.2s;
-        }
-    </style>
 </head>
 <body>
 
 <div th:replace="~{fragments/header :: header}"></div>
 
 <div class="container">
-    <h1 class="page-title">🏆 Лидерборд курса</h1>
+    <h1 class="page-title">Лидерборд курса</h1>
 
     <!-- Отображение текущего пользователя -->
     <div class="current-user-bar" id="currentUserBar">
@@ -99,7 +40,7 @@
                 <button id="loadLeaderboardBtn" class="btn btn-primary">Показать лидерборд</button>
             </div>
         </div>
-        <div class="help-text" style="margin-top: 12px; font-size: 0.85rem;">
+        <div class="help-text">
             Выберите курс, чтобы увидеть рейтинг участников. Группу можно не указывать — будет показан общий лидерборд курса.
             Записанные курсы и группы отмечены символом ✓.
         </div>

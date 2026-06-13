@@ -4,87 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Админ: Профиль пользователя</title>
+    <link rel="stylesheet" th:href="@{/css/colors.css}">
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/user-profile.css}">
-    <style>
-        /* Дополнительные стили для блока выбора курса и статистики */
-        .course-selector {
-            margin: 24px 0 32px;
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-        }
-        .course-selector h3 {
-            margin-top: 0;
-            margin-bottom: 16px;
-            font-size: 1.3rem;
-        }
-        .selector-row {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-            margin-bottom: 20px;
-        }
-        .selector-row .form-group {
-            flex: 1;
-            min-width: 180px;
-            margin-bottom: 0;
-        }
-        .selector-row .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            color: #475569;
-        }
-        .course-stats {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
-            border: 1px solid #e2e8f0;
-        }
-        .course-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
-            margin-top: 12px;
-        }
-        .course-stat-item {
-            text-align: center;
-            padding: 12px;
-            background: #f1f5f9;
-            border-radius: 12px;
-        }
-        .course-stat-label {
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-bottom: 6px;
-        }
-        .course-stat-value {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: #111827;
-        }
-        .badge-group {
-            background: #eef2ff;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-family: monospace;
-        }
-        .loading-small {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #e2e8f0;
-            border-top-color: #6366f1;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
 </head>
 <body>
 
@@ -93,9 +15,6 @@
 <div class="container">
     <div th:if="${user}" class="profile-card">
         <div class="profile-header">
-            <div class="avatar">
-                <span th:text="${user.userId?.substring(0,1)?.toUpperCase()} ?: 'U'">U</span>
-            </div>
             <div class="user-main-info">
                 <h1 th:text="${user.userId}"></h1>
                 <div class="meta-info">
@@ -140,7 +59,7 @@
 
         <!-- Блок выбора курса и статистики по курсу -->
         <div class="course-selector" id="courseSelectorBlock">
-            <h3>📊 Статистика по курсу</h3>
+            <h3>Статистика по курсу</h3>
             <div class="selector-row">
                 <div class="form-group">
                     <label for="courseSelectProfile">Курс</label>
@@ -156,14 +75,14 @@
                     <button id="loadCourseStatsBtn" class="btn btn-primary" style="padding: 8px 16px;">Загрузить</button>
                 </div>
             </div>
-            <div id="courseStatsContainer" style="display: none;">
+            <div id="courseStatsContainer" class="hide">
                 <div class="course-stats">
                     <div class="course-stats-grid" id="courseStatsGrid">
                         <!-- динамически заполняется -->
                     </div>
                 </div>
             </div>
-            <div id="courseStatsError" class="error-message" style="display: none; margin-top: 12px;"></div>
+            <div id="courseStatsError" class="error-message hide" style="margin-top: 12px;"></div>
         </div>
     </div>
 

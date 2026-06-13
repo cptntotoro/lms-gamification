@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Админ: Типы событий</title>
+    <link rel="stylesheet" th:href="@{/css/colors.css}">
     <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -21,8 +22,8 @@
     <!-- Контейнер для таблицы и сообщений -->
     <div id="eventTypesContainer">
         <div id="loadingIndicator" class="text-center" style="padding: 40px;">Загрузка...</div>
-        <div id="errorMessage" class="error-message" style="display: none; text-align: center;"></div>
-        <div id="tableContainer" style="display: none;">
+        <div id="errorMessage" class="error-message hide" style="text-align: center;"></div>
+        <div id="tableContainer" class="hide">
             <div class="table-container">
                 <table class="data-table">
                     <thead>
@@ -45,7 +46,7 @@
 </div>
 
 <!-- Модальное окно создания/редактирования -->
-<div id="eventTypeModal" class="modal">
+<div id="eventTypeModal" class="modal hide">
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
         <h2 id="modalTitle">Создать тип события</h2>

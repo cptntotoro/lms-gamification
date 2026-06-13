@@ -9,25 +9,24 @@
     <script th:src="@{/js/common-api.js}"></script>
     <script th:src="@{/js/header.js}"></script>
     <div class="demo-header-inner">
-        <div class="demo-badge"><a href="/demo">DEMO MODE</a></div>
+        <div class="demo-badge"><a href="/demo">Демо</a></div>
 
         <div class="demo-controls">
             <!-- Динамический select пользователей -->
             <select id="demoUser" class="demo-select"></select>
 
             <!-- Ручной ввод UserId -->
-            <input type="text" id="manualUserId" placeholder="введите UserId" class="demo-select" style="width: 150px;">
-            <button id="setUserIdBtn" class="btn" style="padding: 6px 12px; background: #6366f1; color: white; border: none; border-radius: 8px;">Set</button>
+            <input type="text" id="manualUserId" placeholder="введите UserId" class="demo-select input-small">
+            <button id="setUserIdBtn" class="btn-set">Set</button>
         </div>
 
         <div class="demo-nav">
-            <a href="/demo">Demo</a>
-            <a href="/demo/admin/users">Profiles</a>
-            <a href="/demo/admin/event-types">Event Types</a>
-            <a href="/demo/transactions">Transactions</a>
-
-            <a href="#" onclick="goToProfile()">Profile</a>
-            <a href="#" onclick="goToLeaderboard()">Leaderboard</a>
+            <a href="/demo">Демо</a>
+            <a href="/demo/admin/users">Студенты</a>
+            <a href="/demo/admin/event-types">Типы событий</a>
+            <a href="/demo/transactions">Транзакции</a>
+            <a href="#" onclick="goToProfile()">Профиль</a>
+            <a href="/demo/leaderboard">Лидерборд</a>
         </div>
     </div>
 </div>

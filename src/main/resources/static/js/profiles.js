@@ -21,8 +21,8 @@
     function renderProfiles(users) {
         if (!users || users.length === 0) {
             profilesContent.innerHTML = '<div class="empty-message">Нет пользователей или данных о зачислениях</div>';
-            profilesContent.style.display = 'block';
-            loadingDiv.style.display = 'none';
+            profilesContent.classList.remove('hide');
+            loadingDiv.classList.add('hide');
             return;
         }
 
@@ -30,11 +30,11 @@
         for (const user of users) {
             const enrollments = user.enrollments || [];
             // Ссылка на транзакции пользователя
-            const transactionsLink = `<a class="transactions-link" href="/demo/transactions?userId=${encodeURIComponent(user.userId)}">📜 Транзакции</a>`;
+            const transactionsLink = `<a class="transactions-link" href="/demo/transactions?userId=${encodeURIComponent(user.userId)}">Транзакции</a>`;
             html += `
                 <div class="user-card">
                     <div class="user-header">
-                        <span>👤</span>
+                        <span>Пользователь:</span>
                         <span class="user-id">${escapeHtml(user.userId)}</span>
                         <span style="font-size:0.85rem; font-weight:normal;">(${enrollments.length} ${declension(enrollments.length, 'курс', 'курса', 'курсов')})</span>
                         ${transactionsLink}
@@ -59,11 +59,11 @@
                             <td><span class="badge-group">${escapeHtml(groupId)}</span></td>
                             <td>${points}</td>
                             <td class="actions-cell">
-                                <a class="event-link course-link" data-user-id="${escapeHtml(user.userId)}" data-course-id="${escapeHtml(courseId)}">📊 Лидерборд курса</a>
-                                <a class="event-link course-link" data-user-id="${escapeHtml(user.userId)}" data-course-id="${escapeHtml(courseId)}" data-group-id="${escapeHtml(groupId)}">📊 Лидерборд группы</a>
-                                <a class="event-link profile-link" data-user-id="${escapeHtml(user.userId)}">📊 Профиль</a>
-                                <a class="event-link profile-link" data-user-id="${escapeHtml(user.userId)}" data-course-id="${escapeHtml(courseId)}">📊 Профиль с курсом</a>
-                                <a class="event-link profile-link" data-user-id="${escapeHtml(user.userId)}" data-course-id="${escapeHtml(courseId)}" data-group-id="${escapeHtml(groupId)}">📊 Профиль с курсом и группой</a>
+                                <a class="event-link course-link" data-user-id="${escapeHtml(user.userId)}" data-course-id="${escapeHtml(courseId)}">Лидерборд курса</a>
+                                <a class="event-link course-link" data-user-id="${escapeHtml(user.userId)}" data-course-id="${escapeHtml(courseId)}" data-group-id="${escapeHtml(groupId)}">Лидерборд группы</a>
+                                <a class="event-link profile-link" data-user-id="${escapeHtml(user.userId)}">Профиль</a>
+                                <a class="event-link profile-link" data-user-id="${escapeHtml(user.userId)}" data-course-id="${escapeHtml(courseId)}">Профиль с курсом</a>
+                                <a class="event-link profile-link" data-user-id="${escapeHtml(user.userId)}" data-course-id="${escapeHtml(courseId)}" data-group-id="${escapeHtml(groupId)}">Профиль с курсом и группой</a>
                             </td>
                         </tr>
                     `;
@@ -72,8 +72,8 @@
             html += `</tbody></table></div></div>`;
         }
         profilesContent.innerHTML = html;
-        profilesContent.style.display = 'block';
-        loadingDiv.style.display = 'none';
+        profilesContent.classList.remove('hide');
+        loadingDiv.classList.add('hide');
 
         // Навешиваем обработчики на ссылки
         document.querySelectorAll('.course-link').forEach(link => {
@@ -128,8 +128,8 @@
 
     // Обновление при смене пользователя/роли (опционально)
     document.addEventListener('userChanged', () => {
-        profilesContent.style.display = 'none';
-        loadingDiv.style.display = 'block';
+        profilesContent.classList.add('hide');
+        loadingDiv.classList.remove('hide');
         loadingDiv.innerHTML = 'Загрузка...';
         loadUsersWithCourses();
     });

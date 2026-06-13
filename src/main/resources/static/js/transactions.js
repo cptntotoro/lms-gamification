@@ -40,9 +40,9 @@
         currentPage = page;
 
         // Показываем загрузку
-        loadingIndicator.style.display = 'block';
-        tableContainer.style.display = 'none';
-        errorMessageDiv.style.display = 'none';
+        loadingIndicator.classList.remove('hide');
+        tableContainer.classList.add('hide');
+        errorMessageDiv.classList.add('hide');
 
         try {
             const url = `/api/v1/admin/transactions/users/${encodeURIComponent(currentUserId)}?page=${page}&size=${currentSize}&sortDir=${currentSortDir}`;
@@ -64,7 +64,7 @@
             console.error('Ошибка загрузки транзакций:', error);
             showError(error.message);
         } finally {
-            loadingIndicator.style.display = 'none';
+            loadingIndicator.classList.add('hide');
         }
     }
 
@@ -96,7 +96,7 @@
         }
 
         renderPagination();
-        tableContainer.style.display = 'block';
+        tableContainer.classList.remove('hide');
     }
 
     // Отрисовать пагинацию
@@ -140,10 +140,10 @@
 
     // Показать сообщение об ошибке
     function showError(msg) {
-        errorMessageDiv.style.display = 'block';
+        errorMessageDiv.classList.remove('hide');
         errorMessageDiv.innerHTML = `<strong>Ошибка:</strong> ${escapeHtml(msg)}`;
-        tableContainer.style.display = 'none';
-        loadingIndicator.style.display = 'none';
+        tableContainer.classList.add('hide');
+        loadingIndicator.classList.add('hide');
         paginationContainer.innerHTML = '';
     }
 
