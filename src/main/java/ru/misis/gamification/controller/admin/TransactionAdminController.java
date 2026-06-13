@@ -28,9 +28,9 @@ import ru.misis.gamification.service.application.transaction.TransactionHistoryA
 @PreAuthorize("hasRole('ADMIN')")
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/transactions")
+@RequestMapping("/api/v1/admin/transactions")
 @RequiredArgsConstructor
-@Tag(name = "Admin - Пользователи", description = "Административные операции с транзакциями")
+@Tag(name = "Admin - Транзакции", description = "Административные операции с транзакциями")
 public class TransactionAdminController {
 
     /**

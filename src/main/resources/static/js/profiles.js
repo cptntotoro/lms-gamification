@@ -4,7 +4,7 @@
 
     async function loadUsersWithCourses() {
         try {
-            const response = await window.GamificationAPI.apiRequest('/api/admin/users/with-courses', {
+            const response = await window.GamificationAPI.apiRequest('/demo/users', {
                 method: 'GET'
             });
             if (!response.ok) {

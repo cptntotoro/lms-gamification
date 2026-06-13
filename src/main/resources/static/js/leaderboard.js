@@ -61,7 +61,7 @@
     async function loadAllCourses(userId) {
         if (!userId) return [];
         try {
-            const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/all?userId=${encodeURIComponent(userId)}`, {
+            const response = await window.GamificationAPI.apiRequest(`/demo/leaderboard/courses/all?userId=${encodeURIComponent(userId)}`, {
                 method: 'GET'
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -77,7 +77,7 @@
     async function loadGroupsForCourse(courseId, userId) {
         if (!courseId || !userId) return [];
         try {
-            const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`, {
+            const response = await window.GamificationAPI.apiRequest(`/demo/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`, {
                 method: 'GET'
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);

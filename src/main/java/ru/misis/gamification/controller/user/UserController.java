@@ -27,6 +27,7 @@ import ru.misis.gamification.service.application.user.UserStatisticsApplicationS
 /**
  * Контроллер для получения данных пользователями (виджеты).
  */
+@PreAuthorize("hasRole('ADMIN') || hasRole('TEACHER') || hasRole('STUDENT')")
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor

@@ -18,7 +18,6 @@ import ru.misis.gamification.mapper.UserMapper;
 import ru.misis.gamification.model.UserAdminView;
 import ru.misis.gamification.service.application.user.UserAdminApplicationService;
 
-@Tag(name = "Admin - Пользователи (страницы)", description = "HTML-страницы админ-панели")
 @Controller
 @RequestMapping("/demo/admin/users")
 @RequiredArgsConstructor
@@ -35,25 +34,19 @@ public class UserAdminPageController {
      */
     private final UserMapper userMapper;
 
+    /**
+     * Страница со списком пользователей, их курсов и групп
+     */
     @GetMapping
-    @Operation(summary = "Страница со списком пользователей, их курсов и групп")
     public String profilesPage() {
         return "admin/profiles";
     }
 
-    @Operation(
-            summary = "Страница профиля пользователя в админ-панели",
-            description = "Отображает полную информацию о пользователе для администратора"
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Страница успешно отображена"),
-            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
-    })
+    /**
+     * Страница профиля пользователя в админ-панели
+     */
     @GetMapping("/{userId}")
-    public String getUserProfilePage(
-            @Parameter(description = "Идентификатор пользователя из LMS", required = true, example = "alex123")
-            @PathVariable String userId,
-            Model model) {
+    public String getUserProfilePage(@PathVariable String userId, Model model) {
 
         log.debug("Админ открыл профиль пользователя: userId={}", userId);
 

@@ -36,7 +36,7 @@ function clearLog() {
 async function loadAllCourses() {
     try {
         const userId = window.GamificationAPI.getCurrentUserId();
-        const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/all?userId=${encodeURIComponent(userId)}`);
+        const response = await window.GamificationAPI.apiRequest(`/demo/leaderboard/courses/all?userId=${encodeURIComponent(userId)}`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         availableCourses = await response.json();
         log(`Загружено курсов: ${availableCourses.length}`, 'success');
@@ -65,7 +65,7 @@ async function loadGroupsForCourse(courseId) {
     if (!courseId) return [];
     try {
         const userId = window.GamificationAPI.getCurrentUserId();
-        const response = await window.GamificationAPI.apiRequest(`/api/v1/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`);
+        const response = await window.GamificationAPI.apiRequest(`/demo/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return await response.json();
     } catch (error) {

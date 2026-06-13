@@ -8,14 +8,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Tag(name = "Web Pages", description = "Простые HTML-страницы приложения")
 @Controller
 @RequestMapping("/demo/transactions")
 @RequiredArgsConstructor
 @Slf4j
 public class TransactionPageController {
 
-    @Operation(summary = "Страница истории транзакций пользователя")
+    /**
+     * Страница истории транзакций пользователя
+     */
     @GetMapping
     public String transactionsPage() {
         return "admin/transactions";

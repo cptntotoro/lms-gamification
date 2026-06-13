@@ -133,8 +133,8 @@ L = 1 + ⌊ totalPoints / 1000 ⌋
 - Создана сущность `EventType` с полями: `typeCode` (уникальный), `displayName`, `points`, `maxDailyPoints`, `active`
 - Реализован поиск активных типов событий (`EventTypeService.getActiveByCode`)
 - Добавлен административный CRUD для типов событий:
-    - GET `/api/admin/event-types` — список с пагинацией
-    - POST/PUT/GET/DELETE `/api/admin/event-types/{id}`
+    - GET `/api/v1/admin/event-types` — список с пагинацией
+    - POST/PUT/GET/DELETE `/api/v1/admin/event-types/{id}`
     - `typeCode` неизменяемый после создания
     - DELETE — деактивация (`active = false`), а не физическое удаление
 
@@ -350,14 +350,14 @@ API спроектировано по принципам REST:
 | GET    | `/api/v1/widget/users/{userId}`                                        | Полная статистика пользователя по курсу и группе (если передана)     | Публичный | Для виджета, courseId обязателен                |
 | GET    | `/api/v1/leaderboard/course/{courseId}/user/{userId}`                  | Лидерборд курса (все группы) + место и очки текущего студента        | Публичный | Персонализированный лидерборд                   |
 | GET    | `/api/v1/leaderboard/course/{courseId}/groups/{groupId}/user/{userId}` | Лидерборд группы внутри курса + место и очки текущего студента       | Публичный | Персонализированный лидерборд                   |
-| GET    | `/api/admin/event-types`                                               | Список всех типов событий с пагинацией                               | ADMIN     | —                                               |
-| POST   | `/api/admin/event-types`                                               | Создание нового типа события                                         | ADMIN     | typeCode должен быть уникальным                 |
-| GET    | `/api/admin/event-types/{id}`                                          | Получение типа события по UUID                                       | ADMIN     | —                                               |
-| PUT    | `/api/admin/event-types/{id}`                                          | Обновление типа события (typeCode изменить нельзя)                   | ADMIN     | Частичное обновление                            |
-| DELETE | `/api/admin/event-types/{id}`                                          | Деактивация типа события (active = false)                            | ADMIN     | Без физического удаления                        |
-| GET    | `/api/admin/transactions/{userId}/transactions`                        | История транзакций пользователя с пагинацией                         | ADMIN     | Сортировка по дате                              |
-| GET    | `/api/admin/users/{userId}`                                            | Полная информация о пользователе для админ-панели                    | ADMIN     | —                                               |
-| GET    | `/api/admin/users`                                                     | Пагинированный список пользователей с фильтрацией по курсу и группе  | ADMIN     | Сортировка по totalPoints (asc/desc), пагинация |
+| GET    | `/api/v1/admin/event-types`                                               | Список всех типов событий с пагинацией                               | ADMIN     | —                                               |
+| POST   | `/api/v1/admin/event-types`                                               | Создание нового типа события                                         | ADMIN     | typeCode должен быть уникальным                 |
+| GET    | `/api/v1/admin/event-types/{id}`                                          | Получение типа события по UUID                                       | ADMIN     | —                                               |
+| PUT    | `/api/v1/admin/event-types/{id}`                                          | Обновление типа события (typeCode изменить нельзя)                   | ADMIN     | Частичное обновление                            |
+| DELETE | `/api/v1/admin/event-types/{id}`                                          | Деактивация типа события (active = false)                            | ADMIN     | Без физического удаления                        |
+| GET    | `/api/v1/admin/transactions/{userId}/transactions`                        | История транзакций пользователя с пагинацией                         | ADMIN     | Сортировка по дате                              |
+| GET    | `/api/v1/admin/transactions/{userId}`                                            | Полная информация о пользователе для админ-панели                    | ADMIN     | —                                               |
+| GET    | `/api/v1/admin/transactions`                                                     | Пагинированный список пользователей с фильтрацией по курсу и группе  | ADMIN     | Сортировка по totalPoints (asc/desc), пагинация |
 | GET    | `/api/admin/analytics/courses/{courseId}/leaderboard`                  | Лидерборд курса (все группы) для админа                              | ADMIN     | Пагинация                                       |
 | GET    | `/api/admin/analytics/courses/{courseId}/groups/{groupId}/leaderboard` | Лидерборд конкретной группы внутри курса для админа                  | ADMIN     | Пагинация                                       |
 

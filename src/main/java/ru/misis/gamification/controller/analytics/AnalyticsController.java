@@ -35,7 +35,7 @@ import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicat
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Analytics — Лидерборд и статистика")
 @RestController
-@RequestMapping("/api/admin/analytics/leaderboard")
+@RequestMapping("/api/v1/admin/analytics/leaderboard")
 @RequiredArgsConstructor
 @Slf4j
 public class AnalyticsController {
