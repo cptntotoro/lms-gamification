@@ -75,7 +75,7 @@ CREATE TABLE groups
 (
     uuid         UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
     group_id     VARCHAR(100) NOT NULL,
-    display_name VARCHAR(255) NOT NULL,
+    display_name VARCHAR(255),
     course_id    UUID         NOT NULL REFERENCES courses (uuid) ON DELETE CASCADE,
     active       BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at   TIMESTAMP(6) NOT NULL DEFAULT NOW(),

@@ -3,6 +3,7 @@ package ru.misis.gamification.service.simple.group;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.exception.GroupNotFoundException;
 
@@ -56,4 +57,12 @@ public interface GroupService {
      * @return список групп
      */
     List<Group> getGroupsByCourseId(@NotBlank(message = "{course.id.required}") String courseId);
+
+    /**
+     *
+     * @param groupId Идентификатор группы из LMS
+     * @param course Группа {@link Course}
+     * @return Новая группа
+     */
+    Group addGroup(@NotBlank(message = "{group.id.required}") String groupId, Course course);
 }

@@ -15,7 +15,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Validated
 public class CourseServiceImpl implements CourseService {
 
@@ -48,5 +47,11 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public List<Course> getAllCourses() {
         return courseRepository.findAll();
+    }
+
+    @Transactional
+    @Override
+    public Course addCourse(String courseId) {
+        return courseRepository.saveAndFlush(Course.builder().courseId(courseId).build());
     }
 }

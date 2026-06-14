@@ -59,4 +59,11 @@ public interface CourseService {
      * @return список всех курсов
      */
     List<Course> getAllCourses();
+
+    /**
+     * Добавить курс
+     * @param courseId Идентификатор курса из LMS
+     * @return Курс {@link Course}
+     */
+    Course addCourse(String courseId);
 }

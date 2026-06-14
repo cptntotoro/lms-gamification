@@ -39,7 +39,6 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.existsByEventId(eventId);
     }
 
-    @Transactional
     @Override
     public Transaction saveIfNotExists(@NotNull(message = "{transaction.required}") Transaction transaction) {
         validateTransaction(transaction);
@@ -55,7 +54,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         try {
-            Transaction saved = transactionRepository.save(transaction);
+            Transaction saved = transactionRepository.saveAndFlush(transaction);
             log.info("Транзакция сохранена: id={}, eventId={}", saved.getUuid(), eventId);
             return saved;
         } catch (DataIntegrityViolationException e) {

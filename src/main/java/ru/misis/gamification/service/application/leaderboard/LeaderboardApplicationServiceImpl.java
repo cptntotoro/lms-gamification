@@ -24,6 +24,7 @@ import ru.misis.gamification.service.simple.group.GroupService;
 import ru.misis.gamification.service.simple.user.UserService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -105,7 +106,7 @@ public class LeaderboardApplicationServiceImpl implements LeaderboardApplication
                         user.getLevel(),
                         currentUserRank,
                         true,
-                        enrollment.getCourse().getDisplayName()
+                        Optional.ofNullable(enrollment.getCourse().getDisplayName()).orElse(enrollment.getCourse().getCourseId())
                 );
             }
         } catch (CourseNotFoundException | UserNotFoundException e) {

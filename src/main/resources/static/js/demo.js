@@ -222,7 +222,7 @@ async function openScenarioModal(scenario) {
             course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
             group: { type: 'select', label: 'Группа', options: [], value: '', dependsOnCourse: true },
             eventType: { type: 'text', label: 'Тип события (некорректный)', value: 'invalid_type_xyz', disabled: true },
-            eventId: { type: 'text', label: 'ID события', value: 'event_' + Date.now(), disabled: false }
+            eventId: { type: 'text', label: 'ID события (оставьте пустым для автогенерации)', value: '', disabled: false }
         };
     }
     // Сценарий 7: неверный токен
@@ -233,7 +233,7 @@ async function openScenarioModal(scenario) {
             course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
             group: { type: 'select', label: 'Группа', options: [], value: '', dependsOnCourse: true },
             eventType: { type: 'select', label: 'Тип события', options: eventTypesForSelect, value: eventTypesForSelect[0]?.value || '' },
-            eventId: { type: 'text', label: 'ID события', value: 'event_' + Date.now(), disabled: false }
+            eventId: { type: 'text', label: 'ID события (оставьте пустым для автогенерации)', value: '', disabled: false }
         };
     } else {
         return;

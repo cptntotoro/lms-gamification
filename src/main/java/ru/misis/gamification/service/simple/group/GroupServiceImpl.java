@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import ru.misis.gamification.entity.Course;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.exception.GroupNotFoundException;
 import ru.misis.gamification.repository.GroupRepository;
@@ -15,7 +16,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Validated
 public class GroupServiceImpl implements GroupService {
 
@@ -46,5 +46,11 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public List<Group> getGroupsByCourseId(@NotBlank(message = "{course.id.required}") String courseId) {
         return groupRepository.findByCourseCourseId(courseId);
+    }
+
+    @Transactional
+    @Override
+    public Group addGroup(@NotBlank(message = "{group.id.required}") String groupId, Course course) {
+        return groupRepository.saveAndFlush(Group.builder().groupId(groupId).course(course).build());
     }
 }
