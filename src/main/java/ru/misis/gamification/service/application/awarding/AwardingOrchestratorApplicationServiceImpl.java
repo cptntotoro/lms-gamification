@@ -10,8 +10,11 @@ import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.Transaction;
 import ru.misis.gamification.entity.User;
+import ru.misis.gamification.exception.DuplicateEventException;
+import ru.misis.gamification.exception.EventTypeNotFoundException;
 import ru.misis.gamification.model.AwardResultView;
 import ru.misis.gamification.model.AwardResultViews;
+import ru.misis.gamification.model.EnrollmentResult;
 import ru.misis.gamification.service.application.enrollment.EnrollmentApplicationService;
 import ru.misis.gamification.service.simple.course.CourseService;
 import ru.misis.gamification.service.simple.eventtype.EventTypeService;
@@ -82,11 +85,27 @@ public class AwardingOrchestratorApplicationServiceImpl implements AwardingOrche
         EventType eventType;
         try {
             eventType = eventTypeService.getActiveByCode(typeCode);
-        } catch (Exception e) {
+        } catch (EventTypeNotFoundException e) {
             return AwardResultViews.rejected("Неизвестный или отключённый тип события: " + typeCode);
         }
 
-        User user = userService.getUserByExternalId(userId);
+        User user = userService.createIfNotExists(userId);
+        EnrollmentResult enrollmentResult = enrollmentApplicationService.enrollIfNeeded(userId, courseId, groupId);
+
+        Course course = enrollmentResult.course();
+        if (course == null) {
+            return AwardResultViews.rejected("Не указан курс пользователя");
+        }
+
+        Group group = enrollmentResult.group();
+        if (group == null && groupId != null && !groupId.trim().isEmpty() && course != null) {
+            UUID groupUuid = groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId);
+            group = groupService.findById(groupUuid);
+        }
+
+        if(group != null && !enrollmentApplicationService.isUserInGroup(user, group)) {
+            return AwardResultViews.rejected("Пользователь уже состоит в другой группе курса: " + courseId);
+        }
 
         long todaySum = transactionService.sumPointsByUserAndEventTypeAndDate(
                 user.getUuid(), eventType.getUuid(), LocalDate.now());
@@ -94,17 +113,6 @@ public class AwardingOrchestratorApplicationServiceImpl implements AwardingOrche
         int points = eventType.getPoints();
         if (eventType.getMaxDailyPoints() != null && todaySum + points > eventType.getMaxDailyPoints()) {
             return AwardResultViews.rejected("Превышен дневной лимит по типу " + eventType.getDisplayName());
-        }
-
-        Course course = null;
-        if (courseId != null && !courseId.trim().isEmpty()) {
-            course = courseService.findByCourseId(courseId);
-        }
-
-        Group group = null;
-        if (groupId != null && !groupId.trim().isEmpty() && course != null) {
-            UUID groupUuid = groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId);
-            group = groupService.findById(groupUuid);
         }
 
         Transaction tx = Transaction.builder()
@@ -118,7 +126,11 @@ public class AwardingOrchestratorApplicationServiceImpl implements AwardingOrche
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        transactionService.saveIfNotExists(tx);
+        try {
+            transactionService.saveIfNotExists(tx);
+        } catch (DuplicateEventException e) {
+            return AwardResultViews.rejected("Событие уже было обработано: " + eventId);
+        }
 
         int oldLevel = user.getLevel();
         int newTotal = user.getTotalPoints() + points;

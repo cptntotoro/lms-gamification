@@ -12,8 +12,11 @@ import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
 import ru.misis.gamification.events.UserCreatedEvent;
+import ru.misis.gamification.exception.CourseNotFoundException;
+import ru.misis.gamification.exception.GroupNotFoundException;
 import ru.misis.gamification.exception.UserNotEnrolledInCourseException;
 import ru.misis.gamification.model.CourseEnrollmentSummary;
+import ru.misis.gamification.model.EnrollmentResult;
 import ru.misis.gamification.service.simple.course.CourseService;
 import ru.misis.gamification.service.simple.enrollment.EnrollmentService;
 import ru.misis.gamification.service.simple.group.GroupService;
@@ -51,26 +54,37 @@ public class EnrollmentApplicationServiceImpl implements EnrollmentApplicationSe
     @Value("${gamification.features.courses.enabled:true}")
     private boolean coursesEnabled;
 
+    @Transactional
     @Override
-    public void enrollIfNeeded(String userId, String courseId, String groupId) {
+    public EnrollmentResult enrollIfNeeded(String userId, String courseId, String groupId) {
         if (!coursesEnabled || courseId == null || courseId.trim().isEmpty()) {
-            return;
+            return new EnrollmentResult(null, null);
         }
 
         log.info("Зачисление пользователя {} на курс {} / группу {}", userId, courseId, groupId);
 
         User user = userService.getUserByExternalId(userId);
-        Course course = courseService.findByCourseId(courseId);
+
+        Course course = null;
+        try {
+            course = courseService.findByCourseId(courseId);
+        } catch (CourseNotFoundException e) {
+            course = courseService.addCourse(courseId);
+        }
 
         if (enrollmentService.isUserEnrolledInCourse(user, course)) {
             log.debug("Пользователь {} уже зачислен на курс {}", userId, courseId);
-            return;
+            return new EnrollmentResult(course, null);
         }
 
         Group group = null;
         if (groupId != null && !groupId.trim().isEmpty()) {
-            UUID groupUuid = groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId);
-            group = groupService.findById(groupUuid);
+            try {
+                UUID groupUuid = groupService.getGroupUuidByExternalIdAndCourseId(groupId, courseId);
+                group = groupService.findById(groupUuid);
+            } catch (GroupNotFoundException e) {
+                group = groupService.addGroup(groupId, course);
+            }
         }
 
         UserCourseEnrollment enrollment = UserCourseEnrollment.builder()
@@ -84,6 +98,8 @@ public class EnrollmentApplicationServiceImpl implements EnrollmentApplicationSe
 
         log.info("Пользователь {} зачислен на курс {} (группа: {})",
                 userId, courseId, group != null ? group.getGroupId() : "без группы");
+
+        return new EnrollmentResult(course, group);
     }
 
     @Override
@@ -129,5 +145,16 @@ public class EnrollmentApplicationServiceImpl implements EnrollmentApplicationSe
     @EventListener
     public void onUserCreated(UserCreatedEvent event) {
         enrollIfNeeded(event.getUserId(), event.getCourseId(), event.getGroupId());
+    }
+
+    /**
+     * Проверить, состоит ли пользователь в указанной группе на данном курсе
+     *
+     * @param user  пользователь
+     * @param group группа
+     * @return true, если пользователь зачислен на курс и привязан к этой группе
+     */
+    public boolean isUserInGroup(User user, Group group) {
+        return enrollmentService.isUserInGroup(user, group);
     }
 }

@@ -1,6 +1,9 @@
 package ru.misis.gamification.service.application.enrollment;
 
+import ru.misis.gamification.entity.Group;
+import ru.misis.gamification.entity.User;
 import ru.misis.gamification.model.CourseEnrollmentSummary;
+import ru.misis.gamification.model.EnrollmentResult;
 
 import java.util.UUID;
 
@@ -17,7 +20,7 @@ public interface EnrollmentApplicationService {
      * @param courseId Идентификатор курса из LMS
      * @param groupId  Идентификатор группы из LMS
      */
-    void enrollIfNeeded(String userId, String courseId, String groupId);
+    EnrollmentResult enrollIfNeeded(String userId, String courseId, String groupId);
 
     /**
      * Начислить очки пользователю по конкретному курсу
@@ -36,4 +39,13 @@ public interface EnrollmentApplicationService {
      * @return Модель зачисления на курс
      */
     CourseEnrollmentSummary getEnrollmentSummary(String userId, String courseId);
+
+    /**
+     * Проверить, состоит ли пользователь в указанной группе на данном курсе
+     *
+     * @param user  пользователь
+     * @param group группа
+     * @return true, если пользователь зачислен на курс и привязан к этой группе
+     */
+    boolean isUserInGroup(User user, Group group);
 }

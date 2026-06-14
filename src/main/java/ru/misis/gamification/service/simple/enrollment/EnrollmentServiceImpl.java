@@ -52,9 +52,10 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return repository.findRankByPointsInCourse(courseUuid, groupUuid, userUuid);
     }
 
+    @Transactional
     @Override
     public UserCourseEnrollment save(UserCourseEnrollment enrollment) {
-        return repository.save(enrollment);
+        return repository.saveAndFlush(enrollment);
     }
 
     @Override

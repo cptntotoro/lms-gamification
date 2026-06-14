@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
                 .level(initialLevel)
                 .build();
 
-        User savedUser = userRepository.save(newUser);
+        User savedUser = userRepository.saveAndFlush(newUser);
         eventPublisher.publishEvent(new UserCreatedEvent(userId, courseId, groupId));
 
         log.info("Создан новый пользователь: userId={}, uuid={}", userId, savedUser.getUuid());

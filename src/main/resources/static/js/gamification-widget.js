@@ -295,7 +295,7 @@
                             const leaderboardContainer = tabContents.leaderboard;
                             if (leaderboardContainer) {
                                 const headerEl = leaderboardContainer.querySelector(".widget-leaderboard-header");
-                                if (headerEl) headerEl.textContent = `Лидерборд курса: ${cname}`;
+                                if (headerEl) headerEl.textContent = `Лидерборд курса: ${cname || cid}`;
                             }
                         });
                     }

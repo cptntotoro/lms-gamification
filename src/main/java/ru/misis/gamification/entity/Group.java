@@ -61,7 +61,7 @@ public class Group {
     /**
      * Название
      */
-    @Column(name = "display_name", nullable = false)
+    @Column(name = "display_name")
     private String displayName;
 
     /**

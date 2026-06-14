@@ -2,7 +2,6 @@ package ru.misis.gamification.service.simple.eventtype;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.misis.gamification.entity.EventType;
 import ru.misis.gamification.exception.EventTypeNotFoundException;
@@ -14,7 +13,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Validated
 public class EventTypeServiceImpl implements EventTypeService {
 
