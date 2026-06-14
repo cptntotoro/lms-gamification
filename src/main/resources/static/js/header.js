@@ -11,8 +11,6 @@
     document.addEventListener("DOMContentLoaded", async () => {
         // Элементы DOM
         const userSelect = document.getElementById("demoUser");
-        const manualUserIdInput = document.getElementById("manualUserId");
-        const setUserIdBtn = document.getElementById("setUserIdBtn");
 
         if (!userSelect) {
             // На страницах без хедера выходим
@@ -64,52 +62,14 @@
             const newUserId = userSelect.value;
             if (!newUserId) return;
             window.GamificationAPI.setCurrentUserId(newUserId);
-            if (manualUserIdInput) manualUserIdInput.value = newUserId;
             document.dispatchEvent(new Event("userChanged"));
         }
-
-        // Ручной ввод userId
-        function setManualUserId() {
-            const newUserId = manualUserIdInput.value.trim();
-            if (!newUserId) {
-                console.warn("[Header] Пустой userId");
-                return;
-            }
-            window.GamificationAPI.setCurrentUserId(newUserId);
-            // Синхронизируем select
-            let optionExists = false;
-            for (let i = 0; i < userSelect.options.length; i++) {
-                if (userSelect.options[i].value === newUserId) {
-                    userSelect.selectedIndex = i;
-                    optionExists = true;
-                    break;
-                }
-            }
-            if (!optionExists) {
-                const option = document.createElement("option");
-                option.value = newUserId;
-                option.textContent = `${newUserId} (вручную)`;
-                option.selected = true;
-                userSelect.appendChild(option);
-            }
-            document.dispatchEvent(new Event("userChanged"));
-        }
-
-        // Инициализация значений из localStorage
-        const savedUserId = window.GamificationAPI.getCurrentUserId();
-        if (manualUserIdInput) manualUserIdInput.value = savedUserId;
 
         // Загружаем список пользователей и навешиваем обработчики
         await loadUsersList();
 
         // Обработчики событий
         userSelect.addEventListener("change", onUserSelectChange);
-        if (setUserIdBtn) setUserIdBtn.addEventListener("click", setManualUserId);
-        if (manualUserIdInput) {
-            manualUserIdInput.addEventListener("keypress", (e) => {
-                if (e.key === "Enter") setManualUserId();
-            });
-        }
 
         // После первичной загрузки диспатчим событие, чтобы виджет/панель обновились
         document.dispatchEvent(new Event("userChanged"));
