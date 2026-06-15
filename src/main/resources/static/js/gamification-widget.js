@@ -1,41 +1,41 @@
 /**
- * Gamification Widget for LMS
+ * Виджет геймификации для LMS
  *
- * Displays user progress, enrolled courses, and course leaderboard in a floating popup.
+ * Отображает прогресс пользователя, записанные курсы и лидерборд курса во всплывающем окне.
  *
- * Required configuration (set before calling init function):
+ * Требуемая конфигурация (задать до вызова init):
  *
  *   window.GamificationWidgetConfig = {
- *     apiBaseUrl: "https://your-gamification-server.com", // base URL of the gamification API
- *     userId: "student123",                                // current user's external ID from LMS
- *     updateIntervalMs: 5000,                              // optional, default 5000ms (5 sec)
- *     headers: {                                           // optional, additional HTTP headers
- *       "X-User-Id": "student123"                         // if required by your API
+ *     apiBaseUrl: "https://your-gamification-server.com", // базовый URL API геймификации
+ *     userId: "student123",                                // внешний ID текущего пользователя из LMS
+ *     updateIntervalMs: 5000,                              // опционально, по умолчанию 5000 мс (5 сек)
+ *     headers: {                                           // опционально, дополнительные HTTP-заголовки
+ *       "X-User-Id": "student123"                         // если требуется вашим API
  *     }
  *   };
  *
- * Then init the widget:
+ * Затем инициализировать виджет:
  *   <script src="gamification-widget.js"></script>
  *   <script>window.initGamificationWidget();</script>
  *
- * Or pass config directly:
+ * Или передать конфиг напрямую:
  *   window.initGamificationWidget({ apiBaseUrl: "...", userId: "..." });
  *
- * The widget will appear in the bottom-right corner.
+ * Виджет появится в правом нижнем углу.
  */
 
 (function() {
-    // ---------- Configuration defaults ----------
+    // ---------- Значения по умолчанию ----------
     const DEFAULT_UPDATE_INTERVAL_MS = 5000;
-    const DEFAULT_PAGE_SIZE = 10;        // for leaderboard top entries
+    const DEFAULT_PAGE_SIZE = 10;        // для верхних записей лидерборда
     const MAX_LEADERBOARD_ENTRIES = 10;
 
-    // State that can be cleaned up
-    let activeWidget = null;  // holds cleanup function and DOM references
+    // Состояние для очистки
+    let activeWidget = null;  // хранит функцию очистки и ссылки на DOM
 
-    // ---------- Widget implementation ----------
+    // ---------- Реализация виджета ----------
     function createWidget(configData) {
-        // Local copies of config (to avoid external mutation)
+        // Локальные копии конфигурации (чтобы избежать внешних мутаций)
         const apiBaseUrl = configData.apiBaseUrl;
         const userId = configData.userId;
         let updateIntervalMs = (configData.updateIntervalMs && !isNaN(configData.updateIntervalMs))
@@ -43,34 +43,35 @@
             : DEFAULT_UPDATE_INTERVAL_MS;
         const customHeaders = configData.headers || {};
 
-        // Validation
+        // Проверка обязательных параметров
         if (!apiBaseUrl) {
-            console.error("[GamificationWidget] Missing required config: apiBaseUrl");
+            console.error("[GamificationWidget] Отсутствует обязательный параметр конфигурации: apiBaseUrl");
             return null;
         }
         if (!userId) {
-            console.error("[GamificationWidget] Missing required config: userId");
+            console.error("[GamificationWidget] Отсутствует обязательный параметр конфигурации: userId");
             return null;
         }
 
-        // ---------- State ----------
+        // ---------- Состояние ----------
         let globalData = null;          // UserGlobalCourseGroupDto
-        let coursesList = [];           // array of UserCourseSummary
-        let leaderboardData = null;     // UserCourseGroupLeaderboardDto for selected course
-        let selectedCourseId = null;    // currently selected course for leaderboard tab
+        let coursesList = [];           // массив UserCourseSummary
+        let leaderboardData = null;     // UserCourseGroupLeaderboardDto для выбранного курса
+        let selectedCourseId = null;    // выбранный курс для вкладки лидерборда
+        let selectedGroupId = null;     // выбранная группа (null = лидерборд курса)
         let refreshIntervalId = null;
-        let isOpen = false;             // whether the detailed popup is open
+        let isOpen = false;             // открыта ли панель с подробностями
         let isLoading = false;
         let activeTab = "overview";     // 'overview', 'courses', 'leaderboard'
 
-        // DOM elements
+        // DOM-элементы
         let widgetContainer = null;
         let floatingButton = null;
         let popupPanel = null;
         let tabButtons = {};
         let tabContents = {};
 
-        // Helper: build request headers
+        // Вспомогательная функция: формирование заголовков запроса
         function getRequestHeaders() {
             return {
                 "Content-Type": "application/json",
@@ -78,7 +79,7 @@
             };
         }
 
-        // Helper: safe fetch with timeout
+        // Вспомогательная функция: безопасный fetch с таймаутом
         async function fetchWithTimeout(url, options, timeoutMs = 10000) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -92,11 +93,11 @@
             }
         }
 
-        // API calls
+        // API-вызовы
         async function fetchGlobalProgress() {
             const url = `${apiBaseUrl}/api/v1/users/${encodeURIComponent(userId)}`;
             const response = await fetchWithTimeout(url, { headers: getRequestHeaders(), credentials: "include" });
-            if (!response.ok) throw new Error(`Global progress API error: ${response.status}`);
+            if (!response.ok) throw new Error(`Ошибка API глобального прогресса: ${response.status}`);
             const data = await response.json();
             return data;
         }
@@ -104,15 +105,18 @@
         async function fetchUserCourses() {
             const url = `${apiBaseUrl}/api/v1/leaderboard/users/${encodeURIComponent(userId)}/courses`;
             const response = await fetchWithTimeout(url, { headers: getRequestHeaders(), credentials: "include" });
-            if (!response.ok) throw new Error(`Courses API error: ${response.status}`);
+            if (!response.ok) throw new Error(`Ошибка API курсов: ${response.status}`);
             const data = await response.json();
             return data;
         }
 
-        async function fetchLeaderboard(courseId, page = 0, size = DEFAULT_PAGE_SIZE) {
-            const url = `${apiBaseUrl}/api/v1/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?page=${page}&size=${size}`;
+        async function fetchLeaderboard(courseId, groupId = null, page = 0, size = DEFAULT_PAGE_SIZE) {
+            let url = `${apiBaseUrl}/api/v1/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?page=${page}&size=${size}`;
+            if (groupId) {
+                url += `&groupId=${encodeURIComponent(groupId)}`;
+            }
             const response = await fetchWithTimeout(url, { headers: getRequestHeaders(), credentials: "include" });
-            if (!response.ok) throw new Error(`Leaderboard API error: ${response.status}`);
+            if (!response.ok) throw new Error(`Ошибка API лидерборда: ${response.status}`);
             const data = await response.json();
             return data;
         }
@@ -137,12 +141,13 @@
                     renderCurrentTab();
                 }
 
+                // Обновляем лидерборд, если открыта соответствующая вкладка
                 if (isOpen && activeTab === "leaderboard" && selectedCourseId) {
-                    await refreshLeaderboardForSelectedCourse();
+                    await refreshLeaderboardForCurrentFilter();
                 }
 
             } catch (error) {
-                console.error("[GamificationWidget] Refresh error:", error);
+                console.error("[GamificationWidget] Ошибка обновления:", error);
                 if (isOpen) {
                     showErrorMessage("Ошибка загрузки данных: " + error.message);
                 }
@@ -152,16 +157,17 @@
             }
         }
 
-        async function refreshLeaderboardForSelectedCourse() {
+        // Обновление лидерборда с учётом текущей группы (selectedGroupId)
+        async function refreshLeaderboardForCurrentFilter() {
             if (!selectedCourseId) return;
             try {
-                const leaderboard = await fetchLeaderboard(selectedCourseId, 0, MAX_LEADERBOARD_ENTRIES);
+                const leaderboard = await fetchLeaderboard(selectedCourseId, selectedGroupId, 0, MAX_LEADERBOARD_ENTRIES);
                 leaderboardData = leaderboard;
                 if (isOpen && activeTab === "leaderboard") {
                     renderLeaderboardTab();
                 }
             } catch (error) {
-                console.error("[GamificationWidget] Leaderboard refresh error:", error);
+                console.error("[GamificationWidget] Ошибка обновления лидерборда:", error);
                 if (isOpen && activeTab === "leaderboard") {
                     showErrorMessage("Ошибка загрузки лидерборда: " + error.message);
                 }
@@ -185,7 +191,7 @@
             }
         }
 
-        // UI Rendering
+        // Отрисовка UI
         function showLoadingState(loading) {
             if (!popupPanel) return;
             const loaderDiv = popupPanel.querySelector(".widget-loader-overlay");
@@ -267,6 +273,8 @@
                 const points = course.totalPointsInCourse || 0;
                 const group = course.groupId ? `Группа: ${course.groupId}` : "Без группы";
                 const enrolledAt = course.enrolledAt ? new Date(course.enrolledAt).toLocaleDateString() : "—";
+                // Проверяем, состоит ли пользователь в группе на этом курсе
+                const userGroupId = course.groupId; // предполагаем, что поле groupId есть в ответе API
                 html += `
                     <div class="widget-course-item" data-course-id="${courseIdVal}">
                         <div class="widget-course-title">${escapeHtml(displayName)}</div>
@@ -275,27 +283,56 @@
                             <span>${escapeHtml(group)}</span>
                             <span>Дата: ${enrolledAt}</span>
                         </div>
-                        <button class="widget-view-leaderboard-btn" data-course-id="${courseIdVal}" data-course-name="${escapeHtml(displayName)}">Посмотреть лидерборд</button>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <button class="widget-view-leaderboard-btn course" data-course-id="${courseIdVal}" data-course-name="${escapeHtml(displayName)}">Посмотреть лидерборд курса</button>
+                            ${userGroupId ? `<button class="widget-view-leaderboard-btn group" data-course-id="${courseIdVal}" data-group-id="${escapeHtml(userGroupId)}" data-course-name="${escapeHtml(displayName)}" data-group-name="${escapeHtml(userGroupId)}">Посмотреть лидерборд группы (${escapeHtml(userGroupId)})</button>` : ''}
+                        </div>
                     </div>
                 `;
             });
             html += `</div>`;
             container.innerHTML = html;
 
-            container.querySelectorAll(".widget-view-leaderboard-btn").forEach(btn => {
+            // Обработчики для кнопок "Посмотреть лидерборд курса"
+            container.querySelectorAll(".widget-view-leaderboard-btn.course").forEach(btn => {
                 btn.addEventListener("click", (e) => {
                     e.stopPropagation();
                     const cid = btn.getAttribute("data-course-id");
                     const cname = btn.getAttribute("data-course-name");
                     if (cid) {
                         selectedCourseId = cid;
+                        selectedGroupId = null; // сбрасываем группу
                         activeTab = "leaderboard";
                         activateTab("leaderboard");
-                        refreshLeaderboardForSelectedCourse().then(() => {
+                        refreshLeaderboardForCurrentFilter().then(() => {
                             const leaderboardContainer = tabContents.leaderboard;
                             if (leaderboardContainer) {
                                 const headerEl = leaderboardContainer.querySelector(".widget-leaderboard-header");
                                 if (headerEl) headerEl.textContent = `Лидерборд курса: ${cname || cid}`;
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Обработчики для кнопок "Посмотреть лидерборд группы"
+            container.querySelectorAll(".widget-view-leaderboard-btn.group").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const cid = btn.getAttribute("data-course-id");
+                    const gid = btn.getAttribute("data-group-id");
+                    const cname = btn.getAttribute("data-course-name");
+                    const gname = btn.getAttribute("data-group-name");
+                    if (cid && gid) {
+                        selectedCourseId = cid;
+                        selectedGroupId = gid; // устанавливаем группу
+                        activeTab = "leaderboard";
+                        activateTab("leaderboard");
+                        refreshLeaderboardForCurrentFilter().then(() => {
+                            const leaderboardContainer = tabContents.leaderboard;
+                            if (leaderboardContainer) {
+                                const headerEl = leaderboardContainer.querySelector(".widget-leaderboard-header");
+                                if (headerEl) headerEl.textContent = `Лидерборд группы "${gname}" курса: ${cname || cid}`;
                             }
                         });
                     }
@@ -318,8 +355,9 @@
             const topEntries = leaderboardData.topEntries || [];
             const currentUserRank = leaderboardData.currentUserRank;
             const currentUserPoints = leaderboardData.currentUserPoints;
+            const isGroupLeaderboard = selectedGroupId !== null;
 
-            let html = `<div class="widget-leaderboard-header">Лидерборд курса: ${leaderboardData.currentUserEntry.courseDisplayName}</div>`;
+            let html = `<div class="widget-leaderboard-header">${isGroupLeaderboard ? `Лидерборд группы "${selectedGroupId}"` : `Лидерборд курса`}: ${leaderboardData.currentUserEntry.courseDisplayName}</div>`;
 
             html += `<div class="widget-current-user-stats">
                         <div>Ваше место: ${currentUserRank !== null && currentUserRank !== undefined ? currentUserRank : "—"}</div>
@@ -339,7 +377,7 @@
                               <td>${escapeHtml(userIdDisplay)}${isCurrent ? ' (Вы)' : ''}</td>
                               <td>${points}</td>
                               <td>${level}</td>
-                           </tr>`;
+                            </tr>`;
             });
             html += `</tbody></table></div>`;
             if (topEntries.length === 0) {
@@ -452,7 +490,7 @@
                 activeTab = tabId;
                 activateTab(tabId);
                 if (tabId === "leaderboard" && selectedCourseId) {
-                    refreshLeaderboardForSelectedCourse();
+                    refreshLeaderboardForCurrentFilter();
                 }
             });
             return btn;
@@ -482,7 +520,7 @@
         function startAutoRefresh() {
             if (refreshIntervalId) clearInterval(refreshIntervalId);
             refreshIntervalId = setInterval(() => {
-                refreshAllData().catch(e => console.warn("Auto-refresh error", e));
+                refreshAllData().catch(e => console.warn("Ошибка автообновления", e));
             }, updateIntervalMs);
         }
 
@@ -493,18 +531,18 @@
             }
         }
 
-        // Build UI and start
+        // Создаём UI и запускаем
         buildWidgetUI();
         startAutoRefresh();
         refreshAllData().catch(console.error);
 
-        // Return cleanup function
+        // Возвращаем функцию очистки
         return function cleanup() {
             stopAutoRefresh();
             if (widgetContainer && widgetContainer.parentNode) {
                 widgetContainer.parentNode.removeChild(widgetContainer);
             }
-            // Remove injected styles
+            // Удаляем инжектированные стили
             const styles = document.head.querySelectorAll('style');
             styles.forEach(style => {
                 if (style.textContent.includes('.gamification-widget-root')) {
@@ -514,7 +552,7 @@
         };
     }
 
-    // Expose public API
+    // Публичное API
     window.initGamificationWidget = function(providedConfig) {
         if (providedConfig) {
             window.GamificationWidgetConfig = providedConfig;
