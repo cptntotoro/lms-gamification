@@ -126,6 +126,30 @@
         }
     }
 
+        /**
+         * Получить последний использованный eventId для пользователя (из транзакций)
+         * @param {string} userId - ID пользователя
+         * @returns {Promise<string|null>} последний eventId или null, если транзакций нет
+         */
+        async function fetchLastEventId(userId) {
+            if (!userId) return null;
+            try {
+                const url = `/api/v1/admin/transactions/users/${encodeURIComponent(userId)}?page=0&size=1&sortDir=desc`;
+                const response = await apiRequest(url);
+                if (!response.ok) {
+                    if (response.status === 404) return null;
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                const transactions = data.content || [];
+                if (transactions.length === 0) return null;
+                return transactions[0].eventId || null;
+            } catch (error) {
+                console.error("Ошибка получения последнего eventId:", error);
+                return null;
+            }
+        }
+
     // Экспортируем в глобальную область
     window.GamificationAPI = {
         getCurrentUserId,
@@ -135,6 +159,7 @@
         STORAGE_USER_ID,
         fetchUsersList,
         loadAllCourses,
-        loadGroupsForCourse
+        loadGroupsForCourse,
+        fetchLastEventId
     };
 })();

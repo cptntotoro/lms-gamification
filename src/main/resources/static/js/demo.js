@@ -4,13 +4,9 @@
 
 let availableCourses = [];            // все курсы {courseId, enrolled, totalPointsInCourse, displayName}
 let availableEventTypes = [];         // активные типы событий
-let lastSentEventId = null;           // для дублирования, храним в localStorage
 
 // DOM элементы
 let logContainer;
-
-// Ключ localStorage для lastEventId
-const STORAGE_LAST_EVENT_ID = "demoLastEventId";
 
 // ============================
 // Вспомогательные функции (лог, очистка)
@@ -63,22 +59,6 @@ async function loadGroupsForCourse(courseId) {
     return groups;
 }
 
-// Сохранить последний отправленный eventId
-function updateLastEventId(eventId) {
-    if (eventId) {
-        lastSentEventId = eventId;
-        localStorage.setItem(STORAGE_LAST_EVENT_ID, eventId);
-    }
-}
-
-// Получить сохранённый eventId
-function getLastEventId() {
-    if (lastSentEventId === null) {
-        lastSentEventId = localStorage.getItem(STORAGE_LAST_EVENT_ID);
-    }
-    return lastSentEventId;
-}
-
 // ============================
 // Отправка события (общая)
 // ============================
@@ -99,11 +79,9 @@ async function sendEvent(payload, tokenOverride = null) {
 
         if (response.ok && data.status === 'success') {
             log(`Успех! Начислено ${data.pointsEarned} XP, всего очков: ${data.totalPoints}. ${data.levelUp ? 'Уровень повышен!' : ''}`, 'success');
-            updateLastEventId(payload.eventId);
             return true;
         } else if (data.status === 'duplicate') {
             log(`Дубликат события: ${data.message}`, 'warning');
-            updateLastEventId(payload.eventId);
             return false;
         } else {
             log(`Ошибка (${response.status}): ${data.message || JSON.stringify(data)}`, 'error');
@@ -182,9 +160,10 @@ async function openScenarioModal(scenario) {
     }
     // Сценарий 4: дубликат eventId
     else if (scenario === 'duplicate') {
-        const lastId = getLastEventId();
-        if (!lastId) {
-            log('Нет сохранённого eventId. Сначала отправьте любое успешное событие.', 'error');
+        log('Запрашиваем последний eventId с сервера...', 'info');
+        const lastEventId = await window.GamificationAPI.fetchLastEventId(currentUserId);
+        if (!lastEventId) {
+            log('Не найден ни один eventId в транзакциях пользователя. Сначала отправьте любое успешное событие или выберите другого пользователя с историей.', 'error');
             return;
         }
         modalConfig.title = 'Дубликат eventId (ожидается ошибка)';
@@ -193,7 +172,7 @@ async function openScenarioModal(scenario) {
             course: { type: 'select', label: 'Курс', options: coursesForSelect, value: coursesForSelect[0]?.value || '' },
             group: { type: 'select', label: 'Группа', options: [], value: '', dependsOnCourse: true },
             eventType: { type: 'select', label: 'Тип события', options: eventTypesForSelect, value: eventTypesForSelect[0]?.value || '' },
-            eventId: { type: 'text', label: 'EventId (заблокирован, будет использован сохранённый)', value: lastId, disabled: true }
+            eventId: { type: 'text', label: 'EventId (заблокирован, будет использован последний из транзакций)', value: lastEventId, disabled: true }
         };
     }
     // Сценарий 5: пустой eventId
