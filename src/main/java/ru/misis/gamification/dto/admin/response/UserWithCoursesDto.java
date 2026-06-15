@@ -23,5 +23,6 @@ public class UserWithCoursesDto {
         private String courseId;
         private String groupId;
         private Integer pointsInCourse;
+        private String displayName;
     }
 }

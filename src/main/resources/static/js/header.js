@@ -1,9 +1,10 @@
 /**
  * Скрипт для демо-хедера:
- * - Загружает список пользователей через API
+ * - Загружает список пользователей через общий API
  * - Управляет выбором пользователя
  * - Синхронизирует состояние с localStorage
  * - Генерирует событие userChanged
+ * - Слушает событие usersChanged для обновления списка
  */
 
 (function() {
@@ -17,17 +18,10 @@
             return;
         }
 
-        // Функция загрузки списка пользователей
-        async function loadUsersList() {
+        // Функция загрузки и отображения списка пользователей (использует общий fetchUsersList)
+        async function loadAndRenderUsers() {
             try {
-                // Запрос к админскому API с явным указанием роли ADMIN
-                const response = await window.GamificationAPI.apiRequest("/api/v1/admin/users?page=0&size=1000");
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                const pageData = await response.json();
-                const users = pageData.content || [];
-
+                const users = await window.GamificationAPI.fetchUsersList();
                 const currentUserId = window.GamificationAPI.getCurrentUserId();
 
                 // Очищаем и заполняем select
@@ -58,18 +52,25 @@
             }
         }
 
-        function onUserSelectChange() {
-            const newUserId = userSelect.value;
+        function onUserSelectChange(userId) {
+            const newUserId = userId || userSelect.value;
+            userSelect.value = newUserId;
             if (!newUserId) return;
             window.GamificationAPI.setCurrentUserId(newUserId);
             document.dispatchEvent(new Event("userChanged"));
         }
 
         // Загружаем список пользователей и навешиваем обработчики
-        await loadUsersList();
+        await loadAndRenderUsers();
 
         // Обработчики событий
-        userSelect.addEventListener("change", onUserSelectChange);
+        userSelect.addEventListener("change", () => onUserSelectChange());
+
+        // Слушаем событие обновления списка пользователей (например, после создания нового пользователя)
+        document.addEventListener('usersChanged', async (e) => {
+            await loadAndRenderUsers();
+            onUserSelectChange(e.detail.userId)
+        });
 
         // После первичной загрузки диспатчим событие, чтобы виджет/панель обновились
         document.dispatchEvent(new Event("userChanged"));

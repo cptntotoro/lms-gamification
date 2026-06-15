@@ -2,7 +2,7 @@
 // Глобальные переменные и данные
 // ============================
 
-let availableCourses = [];            // все курсы {courseId, enrolled, totalPointsInCourse}
+let availableCourses = [];            // все курсы {courseId, enrolled, totalPointsInCourse, displayName}
 let availableEventTypes = [];         // активные типы событий
 let lastSentEventId = null;           // для дублирования, храним в localStorage
 
@@ -34,16 +34,9 @@ function clearLog() {
 
 // Загрузка ВСЕХ курсов (с признаком записи для текущего пользователя)
 async function loadAllCourses() {
-    try {
-        const userId = window.GamificationAPI.getCurrentUserId();
-        const response = await window.GamificationAPI.apiRequest(`/demo/leaderboard/courses/all?userId=${encodeURIComponent(userId)}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        availableCourses = await response.json();
-        log(`Загружено курсов: ${availableCourses.length}`, 'success');
-    } catch (error) {
-        log(`Ошибка загрузки курсов: ${error.message}`, 'error');
-        availableCourses = [];
-    }
+    const userId = window.GamificationAPI.getCurrentUserId();
+    availableCourses = await window.GamificationAPI.loadAllCourses(userId);
+    log(`Загружено курсов: ${availableCourses.length}`, 'success');
 }
 
 // Загрузка активных типов событий
@@ -62,16 +55,12 @@ async function loadEventTypes() {
 
 // Загрузить группы для курса (с членством для текущего пользователя)
 async function loadGroupsForCourse(courseId) {
-    if (!courseId) return [];
-    try {
-        const userId = window.GamificationAPI.getCurrentUserId();
-        const response = await window.GamificationAPI.apiRequest(`/demo/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        log(`Ошибка загрузки групп: ${error.message}`, 'error');
-        return [];
+    const userId = window.GamificationAPI.getCurrentUserId();
+    const groups = await window.GamificationAPI.loadGroupsForCourse(courseId, userId);
+    if (!groups.length && courseId) {
+        log(`Нет групп для курса ${courseId}`, 'info');
     }
+    return groups;
 }
 
 // Сохранить последний отправленный eventId
@@ -151,7 +140,11 @@ async function openScenarioModal(scenario) {
     };
 
     // Общие данные для всех сценариев, где нужны селекты
-    const coursesForSelect = availableCourses.map(c => ({ value: c.courseId, label: `${c.courseId}${c.enrolled ? ' ✓' : ''}` }));
+    const coursesForSelect = availableCourses.map(c => ({
+        value: c.courseId,
+        label: `${c.courseId}${c.displayName ? ' (' + c.displayName + ')' : ''}${c.enrolled ? ' (' + (c.totalPointsInCourse || 0) + ' очков)' : ' (не записан)'}`,
+        enrolled: c.enrolled
+    }));
     const eventTypesForSelect = availableEventTypes.map(et => ({ value: et.typeCode, label: `${et.displayName} (${et.points} XP)` }));
 
     // Сценарий 1: существующий пользователь, курс, группа (выбор из селектов)
@@ -264,10 +257,14 @@ async function openScenarioModal(scenario) {
         let input;
         if (cfg.type === 'select') {
             input = document.createElement('select');
+            input.className = 'demo-select';
             cfg.options.forEach(opt => {
                 const option = document.createElement('option');
                 option.value = opt.value;
                 option.textContent = opt.label;
+                if (opt.enrolled) {
+                    option.className = 'option-enrolled';
+                }
                 input.appendChild(option);
             });
             if (cfg.value) input.value = cfg.value;
@@ -291,11 +288,17 @@ async function openScenarioModal(scenario) {
             const courseId = courseSelect.value;
             if (courseId) {
                 const groups = await loadGroupsForCourse(courseId);
-                groupSelect.innerHTML = '<option value="">-- Все группы --</option>';
+                groupSelect.innerHTML = '<option value="">-- Без группы --</option>';
                 groups.forEach(g => {
                     const opt = document.createElement('option');
                     opt.value = g.groupId;
-                    opt.textContent = `${g.groupId}${g.member ? ' ✓' : ''}`;
+                    opt.textContent = `${g.groupId}${g.displayName ? ' (' + g.displayName + ')' : ''}`;
+                    if (g.member) {
+                        opt.textContent += ' (участник)';
+                        opt.className = 'option-enrolled';
+                    } else {
+                        opt.textContent += ' (не участник)';
+                    }
                     groupSelect.appendChild(opt);
                 });
             } else {
@@ -365,6 +368,19 @@ async function openScenarioModal(scenario) {
         }
 
         await sendEvent(payload, tokenOverride);
+
+        if(scenario === 'newCourse' || scenario === 'newUser') {
+            await loadAllCourses();
+            if (scenario === 'newUser') {
+                // Обновляем список пользователей в хедере
+                document.dispatchEvent(new CustomEvent('usersChanged', {
+                    detail: {
+                        userId: payload.userId,
+                    }
+                }));
+            }
+        }
+
         closeModal();
     });
 }
@@ -390,6 +406,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // При смене пользователя в хедере перезагружаем курсы (для селектов)
     document.addEventListener('userChanged', async () => {
         await loadAllCourses();
-        log('Пользователь изменён, список курсов обновлён', 'info');
+        log('Пользователь изменён', 'info');
     });
 });

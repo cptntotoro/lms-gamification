@@ -9,8 +9,8 @@
 
 (function() {
     let currentUserId = null;               // ID текущего пользователя
-    let coursesList = [];                   // список всех курсов {courseId, enrolled, totalPointsInCourse}
-    let groupsList = [];                    // список групп для выбранного курса {groupId, member}
+    let coursesList = [];                  // список всех курсов {courseId, enrolled, totalPointsInCourse}
+    let groupsList = [];                   // список групп для выбранного курса {groupId, member}
     let urlCourseId = null;                 // ID курса из URL
     let urlGroupId = null;                  // ID группы из URL
     let urlUserId = null;                   // ID пользователя из URL
@@ -59,37 +59,15 @@
 
     // Загрузить ВСЕ курсы для заданного userId (с признаком enrolled)
     async function loadAllCourses(userId) {
-        if (!userId) return [];
-        try {
-            const response = await window.GamificationAPI.apiRequest(`/demo/leaderboard/courses/all?userId=${encodeURIComponent(userId)}`, {
-                method: 'GET'
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            return data; // массив CourseWithEnrollmentDto
-        } catch (error) {
-            console.error('Ошибка загрузки курсов:', error);
-            return [];
-        }
+        return await window.GamificationAPI.loadAllCourses(userId);
     }
 
     // Загрузить группы для курса с членством пользователя
     async function loadGroupsForCourse(courseId, userId) {
-        if (!courseId || !userId) return [];
-        try {
-            const response = await window.GamificationAPI.apiRequest(`/demo/leaderboard/courses/${encodeURIComponent(courseId)}/groups?userId=${encodeURIComponent(userId)}`, {
-                method: 'GET'
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            return data; // массив GroupWithMembershipDto
-        } catch (error) {
-            console.error('Ошибка загрузки групп:', error);
-            return [];
-        }
+        return await window.GamificationAPI.loadGroupsForCourse(courseId, userId);
     }
 
-    // Заполнить select курсов, отметить записанные, добавить опцию "Добавить новый"
+    // Заполнить select курсов, отметить записанные
     function populateCourseSelect(courses, preselectedCourseId) {
         courseSelect.innerHTML = '<option value="">-- Выберите курс --</option>';
         if (courses.length === 0) {
@@ -101,7 +79,7 @@
             option.value = course.courseId;
             let text = `${course.courseId}${course.displayName ? ' (' + course.displayName + ')' : ''}`;
             if (course.enrolled) {
-                text += ` ✓ (${course.totalPointsInCourse || 0} очков)`;
+                text += ` (${course.totalPointsInCourse || 0} очков)`;
                 option.className = 'option-enrolled';
             } else {
                 text += ` (не записан)`;
@@ -109,12 +87,6 @@
             option.textContent = text;
             courseSelect.appendChild(option);
         });
-        // Добавляем опцию "Добавить новый курс"
-        const addOption = document.createElement('option');
-        addOption.value = '__ADD_NEW_COURSE__';
-        addOption.textContent = 'Добавить новый курс';
-        addOption.className = 'option-add';
-        courseSelect.appendChild(addOption);
 
         if (preselectedCourseId && courses.some(c => c.courseId === preselectedCourseId)) {
             courseSelect.value = preselectedCourseId;
@@ -130,7 +102,7 @@
         return false;
     }
 
-    // Заполнить select групп, отметить членство, добавить опцию "Добавить новую"
+    // Заполнить select групп, отметить членство
     function populateGroupSelect(groups, preselectedGroupId) {
         groupSelect.innerHTML = '<option value="">-- Все группы --</option>';
         if (groups.length === 0) {
@@ -141,19 +113,15 @@
                 option.value = group.groupId;
                 let text = `${group.groupId}${group.displayName ? ' (' + group.displayName + ')' : ''}`;
                 if (group.member) {
-                    text += ` ✓`;
+                    text += ` (участник)`;
                     option.className = 'option-enrolled';
+                } else {
+                    text += ` (не участник)`;
                 }
                 option.textContent = text;
                 groupSelect.appendChild(option);
             });
         }
-        // Добавляем опцию "Добавить новую группу"
-        const addOption = document.createElement('option');
-        addOption.value = '__ADD_NEW_GROUP__';
-        addOption.textContent = 'Добавить новую группу';
-        addOption.className = 'option-add';
-        groupSelect.appendChild(addOption);
 
         if (preselectedGroupId && groups.some(g => g.groupId === preselectedGroupId)) {
             groupSelect.value = preselectedGroupId;
@@ -165,31 +133,7 @@
     // Обработчик выбора курса
     async function onCourseChange() {
         const selectedCourseId = courseSelect.value;
-        if (!selectedCourseId || selectedCourseId === '__ADD_NEW_COURSE__') {
-            if (selectedCourseId === '__ADD_NEW_COURSE__') {
-                const newCourseId = prompt('Введите идентификатор нового курса:');
-                if (newCourseId && newCourseId.trim()) {
-                    // Добавляем новый курс в селектор (временно, без проверки существования)
-                    const newOption = document.createElement('option');
-                    newOption.value = newCourseId.trim();
-                    newOption.textContent = `${newCourseId.trim()} (новый)`;
-                    newOption.className = 'option-add';
-                    // Вставляем перед опцией добавления
-                    const addOption = courseSelect.querySelector('option[value="__ADD_NEW_COURSE__"]');
-                    courseSelect.insertBefore(newOption, addOption);
-                    courseSelect.value = newCourseId.trim();
-                    // Загружаем группы для нового курса (скорее всего пусто)
-                    await loadAndPopulateGroups(newCourseId.trim());
-                } else {
-                    // восстанавливаем предыдущее значение, если было
-                    if (coursesList.length > 0) {
-                        const firstEnrolled = coursesList.find(c => c.enrolled);
-                        courseSelect.value = firstEnrolled ? firstEnrolled.courseId : coursesList[0].courseId;
-                    } else {
-                        courseSelect.value = '';
-                    }
-                }
-            }
+        if (!selectedCourseId) {
             return;
         }
         // Загружаем группы для выбранного курса
@@ -205,28 +149,11 @@
     // Загрузить лидерборд на основе выбранных в данный момент курса и группы
     async function loadLeaderboard() {
         const courseId = courseSelect.value;
-        if (!courseId || courseId === '__ADD_NEW_COURSE__') {
+        if (!courseId) {
             container.innerHTML = '<div class="loading-overlay">Пожалуйста, выберите курс</div>';
             return;
         }
-        let groupId = groupSelect.value;
-        if (groupId === '__ADD_NEW_GROUP__') {
-            const newGroupId = prompt('Введите идентификатор новой группы:');
-            if (newGroupId && newGroupId.trim()) {
-                groupId = newGroupId.trim();
-                // Добавляем новую группу в селектор временно
-                const newOption = document.createElement('option');
-                newOption.value = groupId;
-                newOption.textContent = `${groupId} (новая)`;
-                newOption.className = 'option-add';
-                const addOption = groupSelect.querySelector('option[value="__ADD_NEW_GROUP__"]');
-                groupSelect.insertBefore(newOption, addOption);
-                groupSelect.value = groupId;
-            } else {
-                groupId = '';
-                groupSelect.value = '';
-            }
-        }
+        const groupId = groupSelect.value; // может быть пустой строкой (означает все группы)
         const userId = currentUserId;
 
         if (!userId) {
@@ -238,7 +165,7 @@
 
         try {
             let url = `/api/v1/leaderboard/course/${encodeURIComponent(courseId)}/user/${encodeURIComponent(userId)}?page=0&size=50`;
-            if (groupId && groupId !== '__ADD_NEW_GROUP__') url += `&groupId=${encodeURIComponent(groupId)}`;
+            if (groupId) url += `&groupId=${encodeURIComponent(groupId)}`;
 
             const response = await window.GamificationAPI.apiRequest(url, {
                 method: 'GET',
@@ -358,7 +285,7 @@
         }
 
         // Если курс был предвыбран (из URL или первый доступный), загружаем группы и лидерборд
-        if (hasCourse && courseSelect.value && courseSelect.value !== '__ADD_NEW_COURSE__') {
+        if (hasCourse && courseSelect.value) {
             await loadAndPopulateGroups(courseSelect.value);
             if (urlGroupId) {
                 // пытаемся установить группу, если она есть в списке
@@ -380,18 +307,18 @@
             // Перезагружаем все курсы для нового пользователя
             coursesList = await loadAllCourses(currentUserId);
             const hasAny = populateCourseSelect(coursesList, null);
-            if (hasAny && courseSelect.value && courseSelect.value !== '__ADD_NEW_COURSE__') {
+            if (hasAny && courseSelect.value) {
                 await loadAndPopulateGroups(courseSelect.value);
                 await loadLeaderboard();
             } else {
-                container.innerHTML = '<div class="loading-overlay">Выберите курс и нажмите «Показать лидерборд»</div>';
+                container.innerHTML = '<div class="loading-overlay">Выберите курс и нажмите «Загрузить»</div>';
             }
         });
 
         // Слушаем изменение курса
         courseSelect.addEventListener('change', async () => {
             await onCourseChange();
-            if (courseSelect.value && courseSelect.value !== '__ADD_NEW_COURSE__') {
+            if (courseSelect.value) {
                 await loadLeaderboard();
             } else {
                 container.innerHTML = '<div class="loading-overlay">Выберите курс</div>';
@@ -400,7 +327,7 @@
 
         // Слушаем изменение группы
         groupSelect.addEventListener('change', async () => {
-            if (courseSelect.value && courseSelect.value !== '__ADD_NEW_COURSE__') {
+            if (courseSelect.value) {
                 await loadLeaderboard();
             }
         });
