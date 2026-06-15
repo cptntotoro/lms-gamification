@@ -35,9 +35,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("SELECT t FROM Transaction t " +
             "LEFT JOIN FETCH t.course " +
             "LEFT JOIN FETCH t.group " +
-            "WHERE t.user.uuid = :userUuid " +
-            "ORDER BY t.createdAt DESC")
-    Page<Transaction> findByUserUuidOrderByCreatedAtDesc(@Param("userUuid") UUID userUuid, Pageable pageable);
+            "WHERE t.user.uuid = :userUuid")
+    Page<Transaction> findByUserUuidWithFetch(@Param("userUuid") UUID userUuid, Pageable pageable);
 
     /**
      * Получить сумму очков, начисленных пользователю по конкретному типу события за указанный день
