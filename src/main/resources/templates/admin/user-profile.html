@@ -58,7 +58,7 @@
         </div>
 
         <!-- Блок выбора курса и статистики по курсу -->
-        <div class="course-selector" id="courseSelectorBlock">
+        <div class="selector-panel" id="courseSelectorBlock">
             <h3>Статистика по курсу</h3>
             <div class="selector-row">
                 <div class="form-group">
@@ -68,8 +68,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="groupIdInputProfile">Группа (опционально)</label>
-                    <input type="text" id="groupIdInputProfile" placeholder="например, M-21-2" class="demo-select">
+                    <label for="groupIdSelectProfile">Группа (опционально)</label>
+                    <select id="groupIdSelectProfile" class="demo-select">
+                        <option value="">-- Сначала выберите курс --</option>
+                    </select>
                 </div>
                 <div>
                     <button id="loadCourseStatsBtn" class="btn btn-primary" style="padding: 8px 16px;">Загрузить</button>

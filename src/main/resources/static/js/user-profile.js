@@ -24,7 +24,7 @@
     }
 
     const courseSelect = document.getElementById('courseSelectProfile');
-    const groupInput = document.getElementById('groupIdInputProfile');
+    const groupSelect = document.getElementById('groupIdSelectProfile');  // изменён id
     const loadBtn = document.getElementById('loadCourseStatsBtn');
     const statsContainer = document.getElementById('courseStatsContainer');
     const statsGrid = document.getElementById('courseStatsGrid');
@@ -43,22 +43,22 @@
             const currentUser = users.find(u => u.userId === userId);
             if (!currentUser || !currentUser.enrollments || currentUser.enrollments.length === 0) {
                 courseSelect.innerHTML = '<option value="">-- Нет курсов --</option>';
+                groupSelect.innerHTML = '<option value="">-- Нет групп --</option>';
                 return;
             }
             coursesList = currentUser.enrollments.map(enr => ({
                 courseId: enr.courseId,
                 groupId: enr.groupId,
-                pointsInCourse: enr.pointsInCourse || 0
+                pointsInCourse: enr.pointsInCourse || 0,
+                displayName: enr.displayName
             }));
             // Заполняем select курсами
             courseSelect.innerHTML = '<option value="">-- Выберите курс --</option>';
             coursesList.forEach(course => {
                 const option = document.createElement('option');
                 option.value = course.courseId;
-                option.textContent = `${course.courseId} (${course.pointsInCourse} очков)`;
-                if (course.groupId && course.groupId !== '—') {
-                    option.textContent += ` • группа ${course.groupId}`;
-                }
+                option.textContent = `${course.courseId}${course.displayName ? ' (' + course.displayName + ')' : ''} (${course.pointsInCourse} очков)`;
+                option.className = 'option-enrolled'; // все курсы из списка — записанные
                 courseSelect.appendChild(option);
             });
 
@@ -68,10 +68,18 @@
             const urlGroupId = urlParams.get('groupId');
             if (urlCourseId && coursesList.some(c => c.courseId === urlCourseId)) {
                 courseSelect.value = urlCourseId;
+                // Загружаем группы для выбранного курса
+                await loadGroupsForCourseSelect(courseSelect.value);
+                if (urlGroupId) {
+                    // Устанавливаем выбранную группу, если она есть в списке
+                    const optionExists = Array.from(groupSelect.options).some(opt => opt.value === urlGroupId);
+                    if (optionExists) groupSelect.value = urlGroupId;
+                    else groupSelect.value = '';
+                }
+            } else {
+                groupSelect.innerHTML = '<option value="">-- Сначала выберите курс --</option>';
             }
-            if (urlGroupId) {
-                groupInput.value = urlGroupId;
-            }
+
             // Если курс выбран, автоматически загружаем статистику
             if (courseSelect.value) {
                 loadCourseStats();
@@ -84,6 +92,40 @@
         }
     }
 
+    // Функция загрузки групп для выбранного курса (использует общий API)
+    async function loadGroupsForCourseSelect(courseId) {
+        if (!courseId || !userId) {
+            groupSelect.innerHTML = '<option value="">-- Нет курса --</option>';
+            return;
+        }
+        try {
+            const groups = await window.GamificationAPI.loadGroupsForCourse(courseId, userId);
+            groupSelect.innerHTML = '<option value="">-- Без группы --</option>';
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.groupId;
+                option.textContent = `${group.groupId}${group.displayName ? ' (' + group.displayName + ')' : ''}`;
+                if (group.member) {
+                    option.textContent += ` (участник)`;
+                    option.className = 'option-enrolled';
+                } else {
+                    option.textContent += ` (не участник)`;
+                }
+                groupSelect.appendChild(option);
+            });
+            if (groups.length === 0) {
+                const noneOption = document.createElement('option');
+                noneOption.value = '';
+                noneOption.textContent = '-- Нет групп --';
+                noneOption.disabled = true;
+                groupSelect.appendChild(noneOption);
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки групп:', error);
+            groupSelect.innerHTML = '<option value="">-- Ошибка загрузки групп --</option>';
+        }
+    }
+
     // Загрузка статистики по выбранному курсу/группе
     async function loadCourseStats() {
         const courseId = courseSelect.value;
@@ -91,7 +133,7 @@
             statsContainer.classList.add('hide');
             return;
         }
-        const groupId = groupInput.value.trim() || undefined;
+        const groupId = groupSelect.value === '' ? undefined : groupSelect.value;
 
         // Показываем лоадер
         statsContainer.classList.remove('hide');
@@ -115,7 +157,6 @@
             const points = data.pointsInCourse !== undefined ? data.pointsInCourse : '—';
             const rankCourse = data.rankInCourse !== undefined ? data.rankInCourse : '—';
             const rankGroup = data.rankInGroup !== undefined ? data.rankInGroup : null;
-            const groupDisplay = groupId ? groupId : (data.groupId || '—');
 
             let html = `
                     <div class="course-stat-item">
@@ -151,10 +192,17 @@
     if (window.GamificationAPI) {
         loadUserCourses().then(() => {
             if (loadBtn) loadBtn.addEventListener('click', loadCourseStats);
-            if (courseSelect) courseSelect.addEventListener('change', () => {
-                // При смене курса сбрасываем статистику, но не загружаем автоматически (по кнопке)
-                statsContainer.classList.add('hide');
-            });
+            if (courseSelect) {
+                courseSelect.addEventListener('change', async () => {
+                    // При смене курса сбрасываем статистику, но не загружаем автоматически (по кнопке)
+                    statsContainer.classList.add('hide');
+                    if (courseSelect.value) {
+                        await loadGroupsForCourseSelect(courseSelect.value);
+                    } else {
+                        groupSelect.innerHTML = '<option value="">-- Сначала выберите курс --</option>';
+                    }
+                });
+            }
         });
     } else {
         console.error('GamificationAPI не загружен');

@@ -127,6 +127,7 @@ public class UserPageController {
                                         .courseId(enr.getCourseId())
                                         .groupId(enr.getGroupId())
                                         .pointsInCourse(enr.getTotalPointsInCourse())
+                                        .displayName(enr.getDisplayName())
                                         .build())
                                 .collect(Collectors.toList()))
                         .build())
