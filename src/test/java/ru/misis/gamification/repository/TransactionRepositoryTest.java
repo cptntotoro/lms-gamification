@@ -80,7 +80,7 @@ class TransactionRepositoryTest {
     }
 
     @Test
-    void findByUserUuidOrderByCreatedAtDesc_shouldReturnSortedPage() {
+    void findByUserUuidWithFetch_shouldReturnSortedPage() {
         User user = userRepository.save(User.builder().userId("u-abc").totalPoints(0).level(1).build());
 
         EventType type1 = eventTypeRepository.save(EventType.builder()
@@ -127,7 +127,7 @@ class TransactionRepositoryTest {
 
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Page<Transaction> page = transactionRepository.findByUserUuidOrderByCreatedAtDesc(user.getUuid(), pageable);
+        Page<Transaction> page = transactionRepository.findByUserUuidWithFetch(user.getUuid(), pageable);
 
         assertThat(page.getTotalElements()).isEqualTo(2);
         assertThat(page.getContent()).hasSize(2);
@@ -136,10 +136,10 @@ class TransactionRepositoryTest {
     }
 
     @Test
-    void findByUserUuidOrderByCreatedAtDesc_nonExistingUser_shouldReturnEmptyPage() {
+    void findByUserUuidWithFetch_nonExistingUser_shouldReturnEmptyPage() {
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Transaction> page = transactionRepository.findByUserUuidOrderByCreatedAtDesc(
+        Page<Transaction> page = transactionRepository.findByUserUuidWithFetch(
                 UUID.randomUUID(), pageable
         );
 
@@ -148,10 +148,10 @@ class TransactionRepositoryTest {
     }
 
     @Test
-    void findByUserUuidOrderByCreatedAtDesc_nullUserUuid_shouldReturnEmptyPage() {
+    void findByUserUuidWithFetch_nullUserUuid_shouldReturnEmptyPage() {
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Transaction> page = transactionRepository.findByUserUuidOrderByCreatedAtDesc(null, pageable);
+        Page<Transaction> page = transactionRepository.findByUserUuidWithFetch(null, pageable);
 
         assertThat(page.getTotalElements()).isZero();
         assertThat(page.getContent()).isEmpty();

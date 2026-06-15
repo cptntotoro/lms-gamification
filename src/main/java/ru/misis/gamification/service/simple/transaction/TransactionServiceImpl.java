@@ -71,7 +71,7 @@ public class TransactionServiceImpl implements TransactionService {
                 userId, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
         UUID userUuid = userService.getUserUuidByExternalId(userId);
-        Page<Transaction> page = transactionRepository.findByUserUuidOrderByCreatedAtDesc(userUuid, pageable);
+        Page<Transaction> page = transactionRepository.findByUserUuidWithFetch(userUuid, pageable);
 
         log.debug("Результат: элементов={}, всего={}", page.getNumberOfElements(), page.getTotalElements());
         return page;

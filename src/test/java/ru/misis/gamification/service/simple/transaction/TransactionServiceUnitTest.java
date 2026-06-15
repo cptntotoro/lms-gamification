@@ -216,7 +216,7 @@ class TransactionServiceUnitTest {
         Page<Transaction> mockPage = new PageImpl<>(content, pageable, 5);
 
         when(userService.getUserUuidByExternalId(userId)).thenReturn(userUuid);
-        when(transactionRepository.findByUserUuidOrderByCreatedAtDesc(userUuid, pageable))
+        when(transactionRepository.findByUserUuidWithFetch(userUuid, pageable))
                 .thenReturn(mockPage);
 
         Page<Transaction> result = service.getTransactionsByUserId(userId, pageable);
@@ -226,7 +226,7 @@ class TransactionServiceUnitTest {
         assertThat(result.getContent()).hasSize(5);
 
         verify(userService).getUserUuidByExternalId(userId);
-        verify(transactionRepository).findByUserUuidOrderByCreatedAtDesc(userUuid, pageable);
+        verify(transactionRepository).findByUserUuidWithFetch(userUuid, pageable);
     }
 
     @Test
