@@ -128,22 +128,22 @@ class EnrollmentServiceUnitTest {
         UserCourseEnrollment enrollment = new UserCourseEnrollment();
         UserCourseEnrollment saved = new UserCourseEnrollment();
 
-        when(repository.save(enrollment)).thenReturn(saved);
+        when(repository.saveAndFlush(enrollment)).thenReturn(saved);
 
         UserCourseEnrollment result = service.save(enrollment);
 
         assertThat(result).isSameAs(saved);
-        verify(repository).save(enrollment);
+        verify(repository).saveAndFlush(enrollment);
     }
 
     @Test
     void save_nullEnrollment_callsRepositoryWithNull() {
-        when(repository.save(null)).thenReturn(null);
+        when(repository.saveAndFlush(null)).thenReturn(null);
 
         UserCourseEnrollment result = service.save(null);
 
         assertThat(result).isNull();
-        verify(repository).save(null);
+        verify(repository).saveAndFlush(null);
     }
 
     @Test

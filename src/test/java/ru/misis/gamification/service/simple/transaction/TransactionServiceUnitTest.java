@@ -86,7 +86,7 @@ class TransactionServiceUnitTest {
 
         when(transactionRepository.existsByEventId(tx.getEventId())).thenReturn(false);
 
-        when(transactionRepository.save(tx)).thenAnswer(invocation -> {
+        when(transactionRepository.saveAndFlush(tx)).thenAnswer(invocation -> {
             Transaction argument = invocation.getArgument(0);
             argument.setUuid(UUID.randomUUID());
             return argument;
@@ -98,7 +98,7 @@ class TransactionServiceUnitTest {
         assertThat(saved.getUuid()).isNotNull();
 
         verify(transactionRepository).existsByEventId(tx.getEventId());
-        verify(transactionRepository).save(txCaptor.capture());
+        verify(transactionRepository).saveAndFlush(txCaptor.capture());
 
         assertThat(txCaptor.getValue()).isSameAs(tx);
     }
@@ -124,7 +124,7 @@ class TransactionServiceUnitTest {
         tx.setEventId("evt-constraint");
 
         when(transactionRepository.existsByEventId("evt-constraint")).thenReturn(false);
-        when(transactionRepository.save(any())).thenThrow(
+        when(transactionRepository.saveAndFlush(any())).thenThrow(
                 new DataIntegrityViolationException("unique constraint violation"));
 
         assertThatThrownBy(() -> service.saveIfNotExists(tx))
@@ -132,7 +132,7 @@ class TransactionServiceUnitTest {
                 .hasMessageContaining("evt-constraint");
 
         verify(transactionRepository).existsByEventId("evt-constraint");
-        verify(transactionRepository).save(any());
+        verify(transactionRepository).saveAndFlush(any());
     }
 
     @Test

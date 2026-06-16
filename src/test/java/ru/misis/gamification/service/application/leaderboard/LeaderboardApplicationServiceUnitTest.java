@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.misis.gamification.entity.Course;
+import ru.misis.gamification.entity.Group;
 import ru.misis.gamification.entity.User;
 import ru.misis.gamification.entity.UserCourseEnrollment;
 import ru.misis.gamification.exception.CourseNotFoundException;
@@ -100,7 +101,10 @@ class LeaderboardApplicationServiceUnitTest {
 
         when(enrollmentService.isUserEnrolledInCourse(any(), eq(course))).thenReturn(true);
 
-        UserCourseEnrollment enrollment = UserCourseEnrollment.builder().totalPointsInCourse(750).build();
+        UserCourseEnrollment enrollment = UserCourseEnrollment.builder().totalPointsInCourse(750).course(Course.builder()
+                .uuid(UUID.randomUUID())
+                .courseId("MATH-101")
+                .build()).build();
         when(enrollmentService.findByUserAndCourse(any(), eq(course))).thenReturn(enrollment);
 
         when(enrollmentService.getRankByPointsInCourse(eq(courseUuid), isNull(), eq(userUuid))).thenReturn(3L);

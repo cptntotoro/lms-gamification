@@ -90,7 +90,7 @@ class UserServiceUnitTest {
     @Test
     void createIfNotExists_userNotExists_createsAndEnrolls() {
         when(userRepository.findByUserIdWithLock("new-user")).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> {
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(inv -> {
             User u = inv.getArgument(0);
             u.setUuid(UUID.randomUUID());
             return u;
@@ -104,7 +104,7 @@ class UserServiceUnitTest {
         assertThat(result.getUuid()).isNotNull();
 
         // Проверяем сохранение пользователя
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository).saveAndFlush(userCaptor.capture());
         User saved = userCaptor.getValue();
         assertThat(saved.getUserId()).isEqualTo("new-user");
 

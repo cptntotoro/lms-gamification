@@ -50,8 +50,8 @@ class TransactionHistoryApplicationServiceUnitTest {
 
         Page<Transaction> entityPage = new PageImpl<>(List.of(t1, t2), pageable, 2);
 
-        TransactionSummary s1 = new TransactionSummary(txId1, userId, "evt1", 50, "desc1", LocalDateTime.now());
-        TransactionSummary s2 = new TransactionSummary(txId2, userId, "evt2", 100, "desc2", LocalDateTime.now());
+        TransactionSummary s1 = new TransactionSummary(txId1, userId, "evt1", 50, "desc1", LocalDateTime.now(), "curse-asd3451", "group-dsa2341");
+        TransactionSummary s2 = new TransactionSummary(txId2, userId, "evt2", 100, "desc2", LocalDateTime.now(), "curse-asd3452", "group-dsa2342");
 
         when(transactionService.getTransactionsByUserId(userId, pageable)).thenReturn(entityPage);
         when(transactionMapper.toTransactionSummary(t1)).thenReturn(s1);
