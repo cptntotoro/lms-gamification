@@ -70,38 +70,12 @@ COMMENT ON COLUMN courses.short_name IS 'Короткое обозначение
 CREATE INDEX idx_courses_course_id ON courses (course_id);
 CREATE INDEX idx_courses_active ON courses (active);
 
--- Таблица транзакций
-CREATE TABLE transactions
-(
-    uuid            UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
-    user_uuid       UUID         NOT NULL REFERENCES users (uuid) ON DELETE RESTRICT,
-    course_uuid     UUID         REFERENCES courses (uuid) ON DELETE SET NULL,
-    event_id        VARCHAR(255) NOT NULL UNIQUE,
-    event_type_uuid UUID         NOT NULL REFERENCES event_types (uuid) ON DELETE RESTRICT,
-    points          INTEGER      NOT NULL CHECK (points > 0),
-    description     VARCHAR(500),
-    created_at      TIMESTAMP(6) NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE transactions IS 'Транзакции';
-COMMENT ON COLUMN transactions.course_uuid IS 'Ссылка на курс (для аналитики)';
-COMMENT ON COLUMN transactions.event_id IS 'Идентификатор события из LMS';
-COMMENT ON COLUMN transactions.points IS 'Количество начисленных очков';
-COMMENT ON COLUMN transactions.description IS 'Описание события';
-
-CREATE INDEX idx_transactions_user_uuid ON transactions (user_uuid);
-CREATE INDEX idx_transactions_course_uuid ON transactions (course_uuid);
-CREATE INDEX idx_transactions_event_type_uuid ON transactions (event_type_uuid);
-CREATE INDEX idx_transactions_event_id ON transactions (event_id);
-CREATE INDEX idx_transactions_created_at ON transactions (created_at DESC);
-CREATE INDEX idx_transactions_user_created ON transactions (user_uuid, created_at DESC);
-
 -- Таблица групп / потоков внутри курса
 CREATE TABLE groups
 (
     uuid         UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
     group_id     VARCHAR(100) NOT NULL,
-    display_name VARCHAR(255) NOT NULL,
+    display_name VARCHAR(255),
     course_id    UUID         NOT NULL REFERENCES courses (uuid) ON DELETE CASCADE,
     active       BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at   TIMESTAMP(6) NOT NULL DEFAULT NOW(),
@@ -115,6 +89,35 @@ COMMENT ON COLUMN groups.course_id IS 'Ссылка на курс';
 
 CREATE INDEX idx_groups_group_id_course ON groups (group_id, course_id);
 CREATE INDEX idx_groups_active ON groups (active);
+
+-- Таблица транзакций
+CREATE TABLE transactions
+(
+    uuid            UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    user_uuid       UUID         NOT NULL REFERENCES users (uuid) ON DELETE RESTRICT,
+    course_uuid     UUID         REFERENCES courses (uuid) ON DELETE SET NULL,
+    group_uuid      UUID         REFERENCES groups(uuid)   ON DELETE SET NULL,
+    event_id        VARCHAR(255) NOT NULL UNIQUE,
+    event_type_uuid UUID         NOT NULL REFERENCES event_types (uuid) ON DELETE RESTRICT,
+    points          INTEGER      NOT NULL CHECK (points > 0),
+    description     VARCHAR(500),
+    created_at      TIMESTAMP(6) NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE transactions IS 'Транзакции';
+COMMENT ON COLUMN transactions.course_uuid IS 'Ссылка на курс (для аналитики)';
+COMMENT ON COLUMN transactions.group_uuid IS 'Ссылка на группу (для аналитики)';
+COMMENT ON COLUMN transactions.event_id IS 'Идентификатор события из LMS';
+COMMENT ON COLUMN transactions.points IS 'Количество начисленных очков';
+COMMENT ON COLUMN transactions.description IS 'Описание события';
+
+CREATE INDEX idx_transactions_user_uuid ON transactions (user_uuid);
+CREATE INDEX idx_transactions_course_uuid ON transactions (course_uuid);
+CREATE INDEX idx_transactions_group_uuid ON transactions (group_uuid);
+CREATE INDEX idx_transactions_event_type_uuid ON transactions (event_type_uuid);
+CREATE INDEX idx_transactions_event_id ON transactions (event_id);
+CREATE INDEX idx_transactions_created_at ON transactions (created_at DESC);
+CREATE INDEX idx_transactions_user_created ON transactions (user_uuid, created_at DESC);
 
 -- Связующая таблица: пользователь - курс (с очками по курсу)
 CREATE TABLE user_course_enrollments

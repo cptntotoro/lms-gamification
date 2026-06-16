@@ -32,7 +32,9 @@ class TransactionMapperTest {
                 "event-xyz789",
                 150,
                 "Прохождение теста #5",
-                now
+                now,
+                "curse-asd345",
+                "group-dsa234"
         );
 
         TransactionItemDto dto = mapper.toTransactionItemDto(summary);
@@ -44,6 +46,8 @@ class TransactionMapperTest {
         assertThat(dto.getPoints()).isEqualTo(150);
         assertThat(dto.getDescription()).isEqualTo("Прохождение теста #5");
         assertThat(dto.getCreatedAt()).isEqualTo(now);
+        assertThat(dto.getCourseId()).isEqualTo("curse-asd345");
+        assertThat(dto.getGroupId()).isEqualTo("group-dsa234");
     }
 
     @Test
@@ -93,8 +97,8 @@ class TransactionMapperTest {
         LocalDateTime now = LocalDateTime.now();
 
         List<TransactionSummary> summaries = List.of(
-                new TransactionSummary(uuid1, "alice", "event-1", 100, "Тест 1", now.minusHours(2)),
-                new TransactionSummary(uuid2, "bob", "event-2", 50, "Квиз 2", now.minusHours(1))
+                new TransactionSummary(uuid1, "alice", "event-1", 100, "Тест 1", now.minusHours(2), "curse-asd3451", "group-dsa2341"),
+                new TransactionSummary(uuid2, "bob", "event-2", 50, "Квиз 2", now.minusHours(1), "curse-asd3452", "group-dsa2342")
         );
 
         Page<TransactionSummary> page = new PageImpl<>(
@@ -109,6 +113,8 @@ class TransactionMapperTest {
         assertThat(dto.getContent()).hasSize(2);
         assertThat(dto.getContent().get(0).getUuid()).isEqualTo(uuid1);
         assertThat(dto.getContent().get(0).getUserId()).isEqualTo("alice");
+        assertThat(dto.getContent().get(0).getCourseId()).isEqualTo("curse-asd3451");
+        assertThat(dto.getContent().get(1).getGroupId()).isEqualTo("group-dsa2342");
         assertThat(dto.getContent().get(1).getPoints()).isEqualTo(50);
 
         // Пагинация

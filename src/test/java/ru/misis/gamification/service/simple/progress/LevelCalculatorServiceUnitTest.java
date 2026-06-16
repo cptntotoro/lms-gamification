@@ -5,47 +5,103 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import ru.misis.gamification.service.simple.progress.processors.*;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LevelCalculatorServiceUnitTest {
 
     private LevelCalculatorServiceImpl service;
+    private Map<LevelCalculatorProcessorName, LevelCalculatorProcessor> processorMap;
 
     @BeforeEach
     void setUp() throws Exception {
         service = new LevelCalculatorServiceImpl();
+        // Build processors with default values
+        processorMap = buildProcessors(500, 200, 1000L);
+        service.setProcessors(Set.copyOf(processorMap.values()));
         setFormula("TRIANGULAR");
-        setBase(500);
-        setIncrement(200);
-        setFallbackIncrement(1000L);
     }
 
+    /**
+     * Создаёт набор процессоров с заданными значениями.
+     */
+    private Map<LevelCalculatorProcessorName, LevelCalculatorProcessor> buildProcessors(int base, int increment, long fallbackIncrement) throws Exception {
+        Map<LevelCalculatorProcessorName, LevelCalculatorProcessor> map = new HashMap<>();
+
+        TriangularLevelCalculatorProcessor triangular = new TriangularLevelCalculatorProcessor();
+        setField(triangular, "base", base);
+        map.put(LevelCalculatorProcessorName.TRIANGULAR, triangular);
+
+        QuadraticLevelCalculatorProcessor quadratic = new QuadraticLevelCalculatorProcessor();
+        setField(quadratic, "base", base);
+        map.put(LevelCalculatorProcessorName.QUADRATIC, quadratic);
+
+        LinearLevelCalculatorProcessor linear = new LinearLevelCalculatorProcessor();
+        setField(linear, "base", base);
+        setField(linear, "increment", increment);
+        map.put(LevelCalculatorProcessorName.LINEAR, linear);
+
+        FallbackLevelCalculatorProcessor fallback = new FallbackLevelCalculatorProcessor();
+        setField(fallback, "fallbackIncrement", fallbackIncrement);
+        map.put(LevelCalculatorProcessorName.FALLBACK, fallback);
+
+        return map;
+    }
+
+    /**
+     * Устанавливает значение приватного поля через рефлексию.
+     */
+    private void setField(Object target, String fieldName, Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
+    }
+
+    /**
+     * Устанавливает формулу в сервисе.
+     */
     private void setFormula(String formula) throws Exception {
         Field field = LevelCalculatorServiceImpl.class.getDeclaredField("formula");
         field.setAccessible(true);
         field.set(service, formula);
     }
 
+    /**
+     * Обновляет базовое значение во всех процессорах, где оно есть.
+     */
     private void setBase(int base) throws Exception {
-        Field field = LevelCalculatorServiceImpl.class.getDeclaredField("base");
-        field.setAccessible(true);
-        field.set(service, base);
+        for (LevelCalculatorProcessor processor : processorMap.values()) {
+            try {
+                setField(processor, "base", base);
+            } catch (NoSuchFieldException ignored) {
+                // не все процессоры имеют поле base
+            }
+        }
     }
 
+    /**
+     * Обновляет прирост в линейном процессоре.
+     */
     private void setIncrement(int increment) throws Exception {
-        Field field = LevelCalculatorServiceImpl.class.getDeclaredField("increment");
-        field.setAccessible(true);
-        field.set(service, increment);
+        LinearLevelCalculatorProcessor linear = (LinearLevelCalculatorProcessor) processorMap.get(LevelCalculatorProcessorName.LINEAR);
+        setField(linear, "increment", increment);
     }
 
+    /**
+     * Обновляет fallbackIncrement в fallback-процессоре.
+     */
     private void setFallbackIncrement(long value) throws Exception {
-        Field field = LevelCalculatorServiceImpl.class.getDeclaredField("fallbackIncrement");
-        field.setAccessible(true);
-        field.set(service, value);
+        FallbackLevelCalculatorProcessor fallback = (FallbackLevelCalculatorProcessor) processorMap.get(LevelCalculatorProcessorName.FALLBACK);
+        setField(fallback, "fallbackIncrement", value);
     }
+
+    // ---------------------------- Тесты ----------------------------
 
     @ParameterizedTest
     @CsvSource({
@@ -64,9 +120,9 @@ class LevelCalculatorServiceUnitTest {
             "LINEAR, 500, 2",
             "LINEAR, 1199, 2",
             "LINEAR, 1200, 3",
-            "CUSTOM_FORMULA, 0, 1",
-            "CUSTOM_FORMULA, 1000, 2",
-            "CUSTOM_FORMULA, 2000, 3"
+            "FALLBACK, 0, 1",
+            "FALLBACK, 1000, 2",
+            "FALLBACK, 2000, 3"
     })
     void calculateLevel_returnsCorrectLevel(String formula, int points, int expected) throws Exception {
         setFormula(formula);
@@ -93,7 +149,7 @@ class LevelCalculatorServiceUnitTest {
             "LINEAR, 1, 700",
             "LINEAR, 2, 900",
             "LINEAR, 3, 1100",
-            "CUSTOM, 1, 1000"
+            "FALLBACK, 1, 1000"
     })
     void pointsToNextLevel_returnsCorrectValue(String formula, int level, long expected) throws Exception {
         setFormula(formula);
@@ -158,7 +214,7 @@ class LevelCalculatorServiceUnitTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"TRIANGULAR", "QUADRATIC", "LINEAR", "UNKNOWN", "triangular", "quadratic", "linear", "unknown"})
+    @ValueSource(strings = {"TRIANGULAR", "QUADRATIC", "LINEAR", "FALLBACK", "triangular", "quadratic", "linear", "fallback"})
     void differentFormulas_switchCorrectly(String formula) throws Exception {
         setFormula(formula);
         setBase(500);

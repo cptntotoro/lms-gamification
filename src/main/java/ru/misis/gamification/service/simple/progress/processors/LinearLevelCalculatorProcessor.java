@@ -21,9 +21,9 @@ public class LinearLevelCalculatorProcessor implements LevelCalculatorProcessor 
 
 
     /**
-     * Расчёт уровня по квадратичной модели
+     * Расчёт уровня по линейной модели
      * <p>
-     * Формула: L = ⌊ √(total / base) ⌋ + 1
+     * Итеративно вычисляет кумулятивную сумму: base + increment × (0 + 1 + ... + (level-1))
      * </p>
      *
      * @param total Накопленные очки
@@ -32,8 +32,13 @@ public class LinearLevelCalculatorProcessor implements LevelCalculatorProcessor 
     @Override
     public int calculateLevel(int total) {
         if (total <= 0) return 1;
-        double n = Math.sqrt(total / (double) base);
-        return Math.max(1, (int) Math.floor(n) + 1);
+        int level = 1;
+        int sum = 0;
+        while (sum <= total) {
+            sum += base + increment * (level - 1);
+            level++;
+        }
+        return level - 1;
     }
 
 
