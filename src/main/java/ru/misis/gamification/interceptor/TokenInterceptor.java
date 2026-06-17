@@ -41,7 +41,8 @@ public class TokenInterceptor implements HandlerInterceptor {
 
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         response.setContentType("application/json");
-        String errorMessage = String.format("{\"error\": \"'%s' is not valid\"}", headerName);
+        response.setCharacterEncoding("UTF-8");
+        String errorMessage = "{\"message\": \"Токен не валиден\"}";
         response.getWriter().write(errorMessage);
         return false;
     }

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -40,6 +41,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
+@Tag(name = "User", description = "Списки курсов и лидерборд")
 public class UserCoursesController {
 
     private static final int DEFAULT_PAGE_SIZE = 50;
