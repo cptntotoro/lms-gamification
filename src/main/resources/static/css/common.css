@@ -374,6 +374,9 @@ body {
     color: var(--color-text-muted);
     font-weight: 500;
 }
+.demo-nav a.underline-point {
+    text-decoration: underline;
+}
 .demo-nav a:hover {
     color: var(--color-primary);
 }
