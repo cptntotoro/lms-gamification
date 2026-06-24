@@ -31,7 +31,8 @@ import ru.misis.gamification.service.application.user.UserStatisticsApplicationS
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
-@Tag(name = "User", description = "API для виджетов и фронтенда пользователей")
+@Tag(name = "User - Профиль и прогресс",
+        description = "Данные пользователя для виджетов: глобальный прогресс, статистика по курсам")
 public class UserController {
 
     /**

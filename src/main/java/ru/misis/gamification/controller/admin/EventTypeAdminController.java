@@ -35,7 +35,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/event-types")
 @RequiredArgsConstructor
-@Tag(name = "Admin - Типы событий", description = "CRUD-операции с типами событий (настройка начисления очков за действия в LMS)")
+@Tag(name = "Admin - Типы событий",
+        description = "CRUD-операции с типами событий (настройка начисления очков за действия в LMS)")
 public class EventTypeAdminController {
 
     /**

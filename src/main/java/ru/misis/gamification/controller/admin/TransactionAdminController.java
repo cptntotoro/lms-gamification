@@ -30,7 +30,7 @@ import ru.misis.gamification.service.application.transaction.TransactionHistoryA
 @RestController
 @RequestMapping("/api/v1/admin/transactions")
 @RequiredArgsConstructor
-@Tag(name = "Admin - Транзакции", description = "Административные операции с транзакциями")
+@Tag(name = "Admin - Транзакции", description = "Просмотр истории транзакций пользователей")
 public class TransactionAdminController {
 
     /**

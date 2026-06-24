@@ -33,7 +33,8 @@ import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicat
  * <p>
  */
 @PreAuthorize("hasRole('ADMIN')")
-@Tag(name = "Analytics — Лидерборд и статистика")
+@Tag(name = "Admin - Лидерборд и статистика", description = "Аналитика и лидерборды (по курсам и группам)")
+@Tag(name = "Teacher - Лидерборд и статистика", description = "Аналитика и лидерборды (по курсам и группам)")
 @RestController
 @RequestMapping("/api/v1/admin/analytics/leaderboard")
 @RequiredArgsConstructor

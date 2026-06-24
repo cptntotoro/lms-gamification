@@ -16,7 +16,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import ru.misis.gamification.dto.analytics.UserCourseGroupLeaderboardDto;
 import ru.misis.gamification.dto.user.response.UserCoursesResponseDto;
 import ru.misis.gamification.mapper.LeaderboardMapper;
@@ -24,8 +28,6 @@ import ru.misis.gamification.model.UserCourseGroupLeaderboardView;
 import ru.misis.gamification.model.UserCoursesView;
 import ru.misis.gamification.service.application.leaderboard.LeaderboardApplicationService;
 import ru.misis.gamification.service.application.user.UserStatisticsApplicationService;
-
-import java.util.List;
 
 /**
  * REST-контроллер для получения списка всех курсов пользователя с глобальной статистикой.
@@ -41,7 +43,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-@Tag(name = "User", description = "Списки курсов и лидерборд")
+@Tag(name = "User - Курсы и лидерборд", description = "Список курсов пользователя и персонализированный лидерборд")
 public class UserCoursesController {
 
     private static final int DEFAULT_PAGE_SIZE = 50;
