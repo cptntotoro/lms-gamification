@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +26,7 @@ import ru.misis.gamification.service.application.awarding.LmsEventProcessorAppli
 @RequestMapping("/api/v1/event")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "LMS Events", description = "Приём и обработка событий от LMS-платформы")
+@Tag(name = "LMS - События", description = "Приём и обработка событий обучения от LMS-платформы")
 public class LmsController {
 
     /**

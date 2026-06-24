@@ -30,7 +30,7 @@ import ru.misis.gamification.service.application.user.UserAdminApplicationServic
 @RestController
 @RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
-@Tag(name = "Admin - Пользователи", description = "Административные операции с пользователями и их транзакциями")
+@Tag(name = "Admin - Пользователи", description = "Управление пользователями и их данными для администратора")
 public class UserAdminController {
 
     /**
